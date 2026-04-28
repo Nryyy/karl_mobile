@@ -59,10 +59,16 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) {
         return;
       }
-      context.goNamed('welcome', queryParameters: {'name': userName});
+      context.goNamed('welcome', extra: userName);
     } on AuthFailure catch (error) {
+      if (!mounted) {
+        return;
+      }
       _showError(error.message);
     } catch (_) {
+      if (!mounted) {
+        return;
+      }
       _showError('Не вдалося увійти. Спробуйте ще раз.');
     } finally {
       if (mounted) {
@@ -79,10 +85,16 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) {
         return;
       }
-      context.goNamed('welcome', queryParameters: {'name': userName});
+      context.goNamed('welcome', extra: userName);
     } on AuthFailure catch (error) {
+      if (!mounted) {
+        return;
+      }
       _showError(error.message);
     } catch (_) {
+      if (!mounted) {
+        return;
+      }
       _showError('Не вдалося увійти через Google.');
     } finally {
       if (mounted) {

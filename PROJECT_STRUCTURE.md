@@ -22,6 +22,7 @@
 ### Documentation
 - `pubspec.yaml` - Added go_router and google_fonts dependencies
 - `LOGIN_PAGE_DESIGN.md` - Comprehensive design documentation
+- `README.md` - Includes Firebase options generation instructions
 
 ## Complete Project Tree
 
@@ -101,12 +102,22 @@ cd karl_mobile
 flutter pub get
 ```
 
-### 2. Run the App
+### 2. Generate Firebase Options
+```bash
+dart pub global activate flutterfire_cli
+flutterfire configure --project=karl-ab16c --platforms=android,ios,web \
+	--out=lib/firebase_options.dart
+```
+
+Run this before `flutter analyze`, `flutter test`, or `flutter run` on a clean
+checkout if `lib/firebase_options.dart` has not been committed.
+
+### 3. Run the App
 ```bash
 flutter run
 ```
 
-### 3. Check Code Quality
+### 4. Check Code Quality
 ```bash
 flutter analyze    # No errors ✅
 dart format lib/   # Auto-formatted

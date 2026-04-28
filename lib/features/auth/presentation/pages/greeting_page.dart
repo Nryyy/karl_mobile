@@ -32,6 +32,9 @@ class _GreetingPageState extends State<GreetingPage> {
       }
       context.goNamed('login');
     } catch (_) {
+      if (!mounted) {
+        return;
+      }
       _showMessage('Не вдалося вийти з акаунта.');
     } finally {
       if (mounted) {
