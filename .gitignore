@@ -1,47 +1,114 @@
+# ============================================
+# Flutter/Dart Project .gitignore
+# ============================================
+
 # Miscellaneous
 *.class
 *.log
 *.pyc
 *.swp
+*.orig
 .DS_Store
+Thumbs.db
 .atom/
-.build/
 .buildlog/
 .history
 .svn/
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# IDE and Editor
+.idea/
+.github/
+#.vscode/
 *.iml
 *.ipr
 *.iws
-.idea/
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
+# Flutter/Dart/Pub
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
+.packages
+.metadata
 .pub-cache/
 .pub/
 /build/
 /coverage/
 
-# Symbolication related
+# Symbolication and Obfuscation
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# Android
+/android/.gradle/
 /android/app/debug
 /android/app/profile
 /android/app/release
+**/android/**/build/
+/android/local.properties
+android/key.properties
+*.gradle
+.gradle/
 
-.github/
+# iOS
+/ios/Pods/
+/ios/Runner.xcworkspace/
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+*.xcworkspace
+DerivedData/
+*.hmap
+*.ipa
+*.app
+Pods/
+Podfile.lock
+
+# Build Artifacts
+*.apk
+*.aab
+*.xcarchive
+
+# Secrets and Credentials
+.env
+.env.*
+!.env.example
+secrets.yaml
+secret-*.json
+google-services.json
+GoogleService-Info.plist
+*serviceAccount*.json
+firebase-adminsdk*.json
+google-credentials.json
+firebase_options.dart
+
+# Keys and Certificates
+*.jks
+*.keystore
+*.p12
+*.pem
+*.pfx
+*.key
+*.crt
+*.mobileprovision
+keystore.properties
+
+# Firebase and Tooling
+.firebase/
+*.seed
+*.pid
+*.pid.lock
+log/
+node_modules/
+
+# Optional: Git LFS
+# Uncomment if using git-lfs for large files:
+# *.png
+# *.mp4
+
+# End of .gitignore

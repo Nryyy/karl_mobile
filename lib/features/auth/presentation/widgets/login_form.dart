@@ -6,12 +6,15 @@ import 'password_field.dart';
 
 /// Login form widget with validation and state management.
 class LoginForm extends StatefulWidget {
-  final VoidCallback onSubmitted;
+  final Future<void> Function(String email, String password)
+  onEmailPasswordSubmitted;
+  final Future<void> Function() onGooglePressed;
   final bool isLoading;
 
   const LoginForm({
     super.key,
-    required this.onSubmitted,
+    required this.onEmailPasswordSubmitted,
+    required this.onGooglePressed,
     this.isLoading = false,
   });
 
@@ -61,15 +64,22 @@ class _LoginFormState extends State<LoginForm> {
     return null;
   }
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
     setState(() {
       _emailError = _validateEmail(_emailController.text);
       _passwordError = _validatePassword(_passwordController.text);
     });
 
     if (_emailError == null && _passwordError == null) {
-      widget.onSubmitted();
+      await widget.onEmailPasswordSubmitted(
+        _emailController.text,
+        _passwordController.text,
+      );
     }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    await widget.onGooglePressed();
   }
 
   @override
@@ -122,7 +132,6 @@ class _LoginFormState extends State<LoginForm> {
           ),
           const SizedBox(height: 24),
 
-          // Login button
           ElevatedButton(
             onPressed: widget.isLoading ? null : _handleSubmit,
             child: Padding(
@@ -139,12 +148,45 @@ class _LoginFormState extends State<LoginForm> {
                       ),
                     )
                   : Text(
-                      'Увійти',
+                      'Увійти через email',
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Expanded(child: Divider(color: AppColors.border)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'або',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+              ),
+              const Expanded(child: Divider(color: AppColors.border)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: widget.isLoading ? null : _handleGoogleLogin,
+            icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
+            label: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                'Увійти через Google',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],

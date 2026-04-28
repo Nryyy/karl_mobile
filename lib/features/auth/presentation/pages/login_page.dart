@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../data/firebase_auth_service.dart';
+import '../../domain/auth_failure.dart';
+import '../../domain/auth_service.dart';
 import '../widgets/login_form.dart';
 import '../widgets/platform_features_section.dart';
 
@@ -17,6 +21,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
+  final AuthService _authService = FirebaseAuthService();
 
   final List<PlatformFeature> _features = [
     PlatformFeature(
@@ -43,19 +48,65 @@ class _LoginPageState extends State<LoginPage> {
     ),
   ];
 
-  Future<void> _handleLogin() async {
-    // Simulate login process
+  Future<void> _handleEmailPasswordLogin(String email, String password) async {
     setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      // Navigate to home page
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Вхід успішний!')));
+    try {
+      final userName = await _authService.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (!mounted) {
+        return;
+      }
+      context.goNamed('welcome', extra: userName);
+    } on AuthFailure catch (error) {
+      if (!mounted) {
+        return;
+      }
+      _showError(error.message);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showError('Не вдалося увійти. Спробуйте ще раз.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final userName = await _authService.signInWithGoogle();
+      if (!mounted) {
+        return;
+      }
+      context.goNamed('welcome', extra: userName);
+    } on AuthFailure catch (error) {
+      if (!mounted) {
+        return;
+      }
+      _showError(error.message);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showError('Не вдалося увійти через Google.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -112,7 +163,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 20),
                       LoginForm(
-                        onSubmitted: _handleLogin,
+                        onEmailPasswordSubmitted: _handleEmailPasswordLogin,
+                        onGooglePressed: _handleGoogleLogin,
                         isLoading: _isLoading,
                       ),
                     ],
