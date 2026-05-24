@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/documents/presentation/pages/documents_page.dart';
+import '../../features/documents/domain/document_models.dart';
 import '../../features/navigation/presentation/pages/account_page.dart';
+import '../../features/navigation/presentation/pages/dashboard_page.dart';
 import '../../features/navigation/presentation/pages/section_page.dart';
 import '../../presentation/widgets/bottom_nav_bar.dart';
 
@@ -54,11 +56,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/dashboard',
           name: 'dashboard',
-          builder: (context, state) => const SectionPage(
-            title: 'Dashboard',
-            icon: Icons.dashboard_outlined,
-            description: 'Головна сторінка з оглядом активності.',
-          ),
+          builder: (context, state) => const DashboardPage(),
         ),
         GoRoute(
           path: '/documents',
@@ -66,6 +64,19 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) {
             final userName = _resolveUserName(state.extra);
             return DocumentsPage(userName: userName);
+          },
+        ),
+        GoRoute(
+          path: '/documents/new',
+          name: 'document_new',
+          builder: (context, state) => const DocumentEditorPage(),
+        ),
+        GoRoute(
+          path: '/documents/:id',
+          name: 'document_detail',
+          builder: (context, state) {
+            final doc = state.extra is DocumentListItem ? state.extra as DocumentListItem : null;
+            return DocumentDetailPage(document: doc);
           },
         ),
         GoRoute(

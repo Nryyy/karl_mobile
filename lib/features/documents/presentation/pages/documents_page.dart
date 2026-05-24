@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -8,20 +8,16 @@ import '../../../auth/domain/auth_service.dart';
 import '../../data/documents_repository.dart';
 import '../../domain/document_models.dart';
 
-/// Main post-login page showing the document circulation dashboard.
+/// Main post-login page showing the document list.
 class DocumentsPage extends StatefulWidget {
-  /// Creates the documents dashboard.
+  /// Creates the documents page.
   DocumentsPage({super.key, this.userName, DocumentsRepository? repository})
-    : repository =
-          repository ??
-          HttpDocumentsRepository(
-            accessTokenProvider: _defaultAccessTokenProvider,
-          );
+    : repository = repository ?? MockDocumentsRepository();
 
   /// Display name of the authenticated user.
   final String? userName;
 
-  /// Repository used to load the document list.
+  /// Repository used to load documents.
   final DocumentsRepository repository;
 
   @override
@@ -34,6 +30,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
   late Future<List<DocumentListItem>> _documentsFuture;
   String _searchQuery = '';
+  String _selectedStatusFilter = 'all';
   bool _isSigningOut = false;
 
   @override
@@ -62,6 +59,16 @@ class _DocumentsPageState extends State<DocumentsPage> {
     });
   }
 
+  void _selectStatusFilter(String filter) {
+    if (_selectedStatusFilter == filter) {
+      return;
+    }
+
+    setState(() {
+      _selectedStatusFilter = filter;
+    });
+  }
+
   Future<void> _refreshDocuments() async {
     setState(() {
       _documentsFuture = widget.repository.fetchDocuments();
@@ -74,19 +81,13 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
     try {
       await _authService.signOut();
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       context.goNamed('login');
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       _showMessage('Не вдалося вийти з акаунта.');
     } finally {
-      if (mounted) {
-        setState(() => _isSigningOut = false);
-      }
+      if (mounted) setState(() => _isSigningOut = false);
     }
   }
 
@@ -98,9 +99,6 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final userName = _resolveUserName();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Документообіг'),
@@ -134,85 +132,54 @@ class _DocumentsPageState extends State<DocumentsPage> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting &&
                 !snapshot.hasData) {
-              return _buildScrollableState(child: const _LoadingState());
+              return const Center(child: CircularProgressIndicator());
             }
 
             if (snapshot.hasError) {
               final message = snapshot.error is DocumentsRepositoryException
                   ? snapshot.error.toString()
                   : 'Не вдалося завантажити документи.';
-              return _buildScrollableState(
-                child: _ErrorState(
-                  message: message,
-                  onRetry: _refreshDocuments,
-                ),
+
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(24),
+                children: [
+                  _ErrorState(message: message, onRetry: _refreshDocuments),
+                ],
               );
             }
 
             final documents = snapshot.data ?? const <DocumentListItem>[];
-            final filteredDocuments = _filterDocuments(documents);
+            final filteredDocuments = documents
+                .where((document) {
+                  return _matchesSearch(document) &&
+                      _matchesStatusFilter(document);
+                })
+                .toList(growable: false);
 
-            return CustomScrollView(
+            return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: _DashboardHeader(
-                    userName: userName,
-                    totalDocuments: documents.length,
-                    activeApprovalFlows: documents
-                        .where((document) => document.approvalFlow.isActive)
-                        .length,
-                    filteredDocuments: filteredDocuments.length,
-                    isRefreshing:
-                        snapshot.connectionState == ConnectionState.waiting,
-                  ),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+              children: [
+                _DocumentsSimpleHeader(
+                  searchController: _searchController,
+                  selectedStatusFilter: _selectedStatusFilter,
+                  onSelectStatusFilter: _selectStatusFilter,
                 ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.search),
-                        hintText:
-                            'Пошук за назвою, автором, статусом або тегом',
-                      ),
-                    ),
-                  ),
-                ),
+                const SizedBox(height: 12),
                 if (filteredDocuments.isEmpty)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _EmptyState(isSearchActive: _searchQuery.isNotEmpty),
+                  _EmptyState(
+                    isSearchActive:
+                        _searchQuery.isNotEmpty ||
+                        _selectedStatusFilter != 'all',
                   )
-                else ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                      child: _DocumentStatsRow(
-                        totalDocuments: documents.length,
-                        filteredDocuments: filteredDocuments.length,
-                        activeApprovalFlows: documents
-                            .where((document) => document.approvalFlow.isActive)
-                            .length,
-                        colorScheme: colorScheme,
-                      ),
+                else
+                  ...filteredDocuments.map(
+                    (document) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _SimpleDocumentCard(document: document),
                     ),
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    sliver: SliverList.separated(
-                      itemCount: filteredDocuments.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        return _DocumentCard(
-                          document: filteredDocuments[index],
-                        );
-                      },
-                    ),
-                  ),
-                ],
               ],
             );
           },
@@ -221,389 +188,73 @@ class _DocumentsPageState extends State<DocumentsPage> {
     );
   }
 
-  Widget _buildScrollableState({required Widget child}) {
-    return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [SliverFillRemaining(hasScrollBody: false, child: child)],
-    );
-  }
-
-  String _resolveUserName() {
-    final explicitName = widget.userName?.trim();
-    if (explicitName != null && explicitName.isNotEmpty) {
-      return explicitName;
-    }
-
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final displayName = currentUser?.displayName?.trim();
-    if (displayName != null && displayName.isNotEmpty) {
-      return displayName;
-    }
-
-    final email = currentUser?.email?.trim();
-    if (email != null && email.isNotEmpty) {
-      final localPart = email.split('@').first;
-      if (localPart.isNotEmpty) {
-        return localPart
-            .replaceAll(RegExp(r'[._-]+'), ' ')
-            .split(' ')
-            .where((part) => part.isNotEmpty)
-            .map((part) => part[0].toUpperCase() + part.substring(1))
-            .join(' ');
-      }
-    }
-
-    return 'користувач';
-  }
-
-  List<DocumentListItem> _filterDocuments(List<DocumentListItem> documents) {
+  bool _matchesSearch(DocumentListItem document) {
     if (_searchQuery.isEmpty) {
-      return documents;
+      return true;
     }
 
     final query = _searchQuery.toLowerCase();
-    return documents
-        .where((document) {
-          final searchValues = <String>[
-            document.title,
-            document.authorName,
-            document.fileType,
-            document.status.name,
-            document.metadata.category,
-            ...document.metadata.tags,
-          ];
+    final searchValues = <String>[
+      document.title,
+      document.authorName,
+      document.fileType,
+      document.status.name,
+      document.metadata.category,
+      ...document.metadata.tags,
+    ];
 
-          return searchValues.any(
-            (value) => value.toLowerCase().contains(query),
-          );
-        })
-        .toList(growable: false);
+    return searchValues.any((value) => value.toLowerCase().contains(query));
+  }
+
+  bool _matchesStatusFilter(DocumentListItem document) {
+    switch (_selectedStatusFilter) {
+      case 'waiting':
+        return _matchesStatus(document.status.name, <String>[
+          'очіку',
+          'pending',
+        ]);
+      case 'process':
+        return _matchesStatus(document.status.name, <String>[
+          'проц',
+          'progress',
+          'review',
+        ]);
+      case 'approved':
+        return _matchesStatus(document.status.name, <String>[
+          'затвер',
+          'approve',
+          'signed',
+          'done',
+        ]);
+      case 'rejected':
+        return _matchesStatus(document.status.name, <String>[
+          'відхил',
+          'reject',
+          'cancel',
+          'error',
+        ]);
+      case 'all':
+      default:
+        return true;
+    }
+  }
+
+  bool _matchesStatus(String statusName, List<String> keywords) {
+    final normalized = statusName.toLowerCase();
+    return keywords.any(normalized.contains);
   }
 }
 
-Future<String?> _defaultAccessTokenProvider() async {
-  final currentUser = FirebaseAuth.instance.currentUser;
-  if (currentUser == null) {
-    return null;
-  }
-
-  return currentUser.getIdToken();
-}
-
-class _DashboardHeader extends StatelessWidget {
-  const _DashboardHeader({
-    required this.userName,
-    required this.totalDocuments,
-    required this.activeApprovalFlows,
-    required this.filteredDocuments,
-    required this.isRefreshing,
+class _DocumentsSimpleHeader extends StatelessWidget {
+  const _DocumentsSimpleHeader({
+    required this.searchController,
+    required this.selectedStatusFilter,
+    required this.onSelectStatusFilter,
   });
 
-  final String userName;
-  final int totalDocuments;
-  final int activeApprovalFlows;
-  final int filteredDocuments;
-  final bool isRefreshing;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primary, AppColors.primaryLight],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x22000000),
-              blurRadius: 24,
-              offset: Offset(0, 12),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.folder_copy_outlined,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Вітаємо, $userName',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Ось актуальні документи, етапи погодження та службові матеріали.',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.9),
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  _StatChip(label: 'Усього', value: totalDocuments.toString()),
-                  _StatChip(
-                    label: 'Після фільтра',
-                    value: filteredDocuments.toString(),
-                  ),
-                  _StatChip(
-                    label: 'Активні узгодження',
-                    value: activeApprovalFlows.toString(),
-                  ),
-                  if (isRefreshing)
-                    const _StatChip(label: 'Синхронізація', value: 'оновлення'),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Категорії: документи, договори, заявки, звіти',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onPrimary.withValues(alpha: 0.9),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-      ),
-      child: Text(
-        '$label: $value',
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-class _DocumentStatsRow extends StatelessWidget {
-  const _DocumentStatsRow({
-    required this.totalDocuments,
-    required this.filteredDocuments,
-    required this.activeApprovalFlows,
-    required this.colorScheme,
-  });
-
-  final int totalDocuments;
-  final int filteredDocuments;
-  final int activeApprovalFlows;
-  final ColorScheme colorScheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        _MiniStatCard(
-          label: 'Всього документів',
-          value: totalDocuments.toString(),
-          icon: Icons.description_outlined,
-          accentColor: colorScheme.primary,
-        ),
-        _MiniStatCard(
-          label: 'Відфільтровано',
-          value: filteredDocuments.toString(),
-          icon: Icons.filter_alt_outlined,
-          accentColor: AppColors.accent,
-        ),
-        _MiniStatCard(
-          label: 'Активні потоки',
-          value: activeApprovalFlows.toString(),
-          icon: Icons.hub_outlined,
-          accentColor: AppColors.warning,
-        ),
-      ],
-    );
-  }
-}
-
-class _MiniStatCard extends StatelessWidget {
-  const _MiniStatCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.accentColor,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color accentColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 160),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: accentColor),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      value,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(label, style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DocumentCard extends StatelessWidget {
-  const _DocumentCard({required this.document});
-
-  final DocumentListItem document;
-
-  @override
-  Widget build(BuildContext context) {
-    final statusColor = _statusColor(document.status.name);
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        leading: CircleAvatar(
-          backgroundColor: statusColor.withValues(alpha: 0.12),
-          child: Icon(Icons.description_outlined, color: statusColor),
-        ),
-        title: Text(
-          document.title.isEmpty ? 'Без назви' : document.title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${document.authorName.isEmpty ? 'Невідомий автор' : document.authorName} · ${document.status.name.isEmpty ? 'Статус не вказано' : document.status.name}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _DocumentChip(
-                    label: document.fileType.isEmpty
-                        ? 'file'
-                        : document.fileType,
-                    color: AppColors.primary,
-                  ),
-                  if (document.metadata.category.isNotEmpty)
-                    _DocumentChip(
-                      label: document.metadata.category,
-                      color: AppColors.secondary,
-                    ),
-                  if (document.metadata.pageCount > 0)
-                    _DocumentChip(
-                      label: '${document.metadata.pageCount} стор.',
-                      color: AppColors.info,
-                    ),
-                  if (document.metadata.version > 0)
-                    _DocumentChip(
-                      label: 'v${document.metadata.version}',
-                      color: AppColors.accent,
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        children: [_DocumentDetails(document: document)],
-      ),
-    );
-  }
-}
-
-class _DocumentDetails extends StatelessWidget {
-  const _DocumentDetails({required this.document});
-
-  final DocumentListItem document;
+  final TextEditingController searchController;
+  final String selectedStatusFilter;
+  final ValueChanged<String> onSelectStatusFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -612,347 +263,287 @@ class _DocumentDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text('Мої документи', style: theme.textTheme.titleLarge),
+        const SizedBox(height: 6),
+        Text(
+          'Пошук, фільтри та список документів',
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: searchController,
+          decoration: const InputDecoration(
+            prefixIcon: Icon(Icons.search),
+            hintText: 'Пошук за назвою, автором або типом',
+          ),
+        ),
+        const SizedBox(height: 12),
         Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            _DetailTile(
-              label: 'Створено',
-              value: _formatDate(document.createdAt),
-              icon: Icons.event_available_outlined,
+            _FilterChip(
+              label: 'Всі',
+              selected: selectedStatusFilter == 'all',
+              onSelected: () => onSelectStatusFilter('all'),
             ),
-            _DetailTile(
-              label: 'Оновлено',
-              value: _formatDate(document.updatedAt),
-              icon: Icons.update_outlined,
+            _FilterChip(
+              label: 'Очікують',
+              selected: selectedStatusFilter == 'waiting',
+              onSelected: () => onSelectStatusFilter('waiting'),
             ),
-            _DetailTile(
-              label: 'Розмір файлу',
-              value: _formatFileSize(document.metadata.fileSize),
-              icon: Icons.storage_outlined,
+            _FilterChip(
+              label: 'В процесі',
+              selected: selectedStatusFilter == 'process',
+              onSelected: () => onSelectStatusFilter('process'),
             ),
-            _DetailTile(
-              label: 'Google Drive ID',
-              value: document.googleDriveFileId.isEmpty
-                  ? 'Не вказано'
-                  : document.googleDriveFileId,
-              icon: Icons.link_outlined,
+            _FilterChip(
+              label: 'Затверджено',
+              selected: selectedStatusFilter == 'approved',
+              onSelected: () => onSelectStatusFilter('approved'),
+            ),
+            _FilterChip(
+              label: 'Відхилено',
+              selected: selectedStatusFilter == 'rejected',
+              onSelected: () => onSelectStatusFilter('rejected'),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        if (document.approvalFlow.isActive) ...[
-          Text(
-            'Погодження',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _FlowSummary(document: document),
-          const SizedBox(height: 16),
-        ],
-        if (document.signatures.isNotEmpty) ...[
-          Text(
-            'Підписи',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...document.signatures.map(
-            (signature) => _PersonRecordTile(
-              icon: Icons.verified_outlined,
-              title: signature.userName.isEmpty
-                  ? 'Без імені'
-                  : signature.userName,
-              subtitle:
-                  '${signature.signatureType.isEmpty ? 'Тип не вказано' : signature.signatureType} · ${_formatDate(signature.signedAt)}',
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-        if (document.comments.isNotEmpty) ...[
-          Text(
-            'Коментарі',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...document.comments.map(
-            (comment) => _PersonRecordTile(
-              icon: Icons.mode_comment_outlined,
-              title: comment.userName.isEmpty ? 'Без імені' : comment.userName,
-              subtitle: comment.comment.isEmpty
-                  ? _formatDate(comment.createdAt)
-                  : '${comment.comment} · ${_formatDate(comment.createdAt)}',
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-        Text(
-          'Посилання та службові дані',
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        _SelectableTextRow(label: 'Web preview', value: document.webViewLink),
-        const SizedBox(height: 8),
-        _SelectableTextRow(
-          label: 'Web content',
-          value: document.webContentLink,
-        ),
-        const SizedBox(height: 8),
-        _SelectableTextRow(label: 'Автор ID', value: document.authorId),
       ],
     );
   }
 }
 
-class _FlowSummary extends StatelessWidget {
-  const _FlowSummary({required this.document});
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onSelected(),
+    );
+  }
+}
+
+class _SimpleDocumentCard extends StatelessWidget {
+  const _SimpleDocumentCard({required this.document});
 
   final DocumentListItem document;
 
   @override
   Widget build(BuildContext context) {
-    if (document.approvalFlow.steps.isEmpty) {
-      return Text(
-        'Етапи погодження не додані.',
-        style: Theme.of(context).textTheme.bodyMedium,
-      );
-    }
+    final statusColor = _statusColor(document.status.name);
+    final createdAt = _formatDate(document.createdAt).split(' ').first;
 
-    final currentStep = document.approvalFlow.currentStep;
-
-    return Column(
-      children: document.approvalFlow.steps
-          .map((step) {
-            final isCurrent = step.stepOrder == currentStep;
-            final statusColor = _statusColor(step.status.name);
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isCurrent
-                    ? AppColors.primary.withValues(alpha: 0.08)
-                    : AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => GoRouter.of(
+          context,
+        ).go('/documents/${document.id}', extra: document),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: statusColor.withValues(alpha: 0.14),
-                    child: Text(
-                      step.stepOrder.toString(),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          step.approverName.isEmpty
-                              ? 'Без імені'
-                              : step.approverName,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          document.title.isEmpty ? 'Без назви' : document.title,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${step.status.name.isEmpty ? 'Статус не вказано' : step.status.name} · ${step.approverEmail.isEmpty ? 'email відсутній' : step.approverEmail}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                          document.authorName.isEmpty
+                              ? 'Невідомий автор'
+                              : document.authorName,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        if (step.comment.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            step.comment,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
                       ],
                     ),
                   ),
-                  if (isCurrent)
-                    const Padding(
-                      padding: EdgeInsets.only(left: 8),
-                      child: Icon(
-                        Icons.play_arrow_rounded,
-                        color: AppColors.primary,
-                      ),
+                  const SizedBox(width: 12),
+                  _StatusBadge(
+                    label: document.status.name.isEmpty
+                        ? 'Не вказано'
+                        : document.status.name,
+                    color: statusColor,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _MetaPill(
+                    icon: Icons.description_outlined,
+                    label: document.fileType.isEmpty
+                        ? 'file'
+                        : document.fileType,
+                  ),
+                  _MetaPill(icon: Icons.event_outlined, label: createdAt),
+                  if (document.metadata.category.isNotEmpty)
+                    _MetaPill(
+                      icon: Icons.folder_outlined,
+                      label: document.metadata.category,
                     ),
                 ],
               ),
-            );
-          })
-          .toList(growable: false),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _DocumentChip extends StatelessWidget {
-  const _DocumentChip({required this.label, required this.color});
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.label, required this.color});
 
   final String label;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
-      label: Text(label),
-      visualDensity: VisualDensity.compact,
-      side: BorderSide(color: color.withValues(alpha: 0.24)),
-      backgroundColor: color.withValues(alpha: 0.08),
-      labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: color,
-        fontWeight: FontWeight.w600,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
 }
 
-class _DetailTile extends StatelessWidget {
-  const _DetailTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
+class _MetaPill extends StatelessWidget {
+  const _MetaPill({required this.icon, required this.label});
 
-  final String label;
-  final String value;
   final IconData icon;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 160),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+        ],
+      ),
+    );
+  }
+}
+
+class DocumentDetailPage extends StatelessWidget {
+  const DocumentDetailPage({required this.document, super.key});
+
+  final DocumentListItem? document;
+
+  @override
+  Widget build(BuildContext context) {
+    if (document == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Документ')),
+        body: const Center(child: Text('Документ не знайдено.')),
+      );
+    }
+
+    final item = document!;
+
+    return Scaffold(
+      appBar: AppBar(title: Text(item.title.isEmpty ? 'Документ' : item.title)),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text(
+            item.title.isEmpty ? 'Без назви' : item.title,
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 12),
+          _SimpleDocumentCard(document: item),
+        ],
+      ),
+    );
+  }
+}
+
+class DocumentEditorPage extends StatefulWidget {
+  const DocumentEditorPage({super.key});
+
+  @override
+  State<DocumentEditorPage> createState() => _DocumentEditorPageState();
+}
+
+class _DocumentEditorPageState extends State<DocumentEditorPage> {
+  final TextEditingController _titleController = TextEditingController();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Документ (мок) збережено')));
+    GoRouter.of(context).go('/documents');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Новий документ')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 18, color: AppColors.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: Theme.of(context).textTheme.labelSmall),
-                  const SizedBox(height: 4),
-                  Text(
-                    value.isEmpty ? 'Не вказано' : value,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(labelText: 'Назва'),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: _save,
+              icon: const Icon(Icons.save),
+              label: const Text('Зберегти'),
             ),
           ],
         ),
       ),
     );
-  }
-}
-
-class _PersonRecordTile extends StatelessWidget {
-  const _PersonRecordTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 4),
-                Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SelectableTextRow extends StatelessWidget {
-  const _SelectableTextRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: Theme.of(context).textTheme.labelSmall),
-          const SizedBox(height: 4),
-          SelectableText(
-            value.isEmpty ? 'Не вказано' : value,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LoadingState extends StatelessWidget {
-  const _LoadingState();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: CircularProgressIndicator());
   }
 }
 
@@ -985,7 +576,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               isSearchActive
-                  ? 'Спробуйте інший запит або очистіть пошук.'
+                  ? 'Спробуйте інший запит або очистіть фільтри.'
                   : 'API поки не повернув жодного документа.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
@@ -1051,22 +642,6 @@ String _formatDate(DateTime? dateTime) {
   final hour = local.hour.toString().padLeft(2, '0');
   final minute = local.minute.toString().padLeft(2, '0');
   return '$day.$month.$year $hour:$minute';
-}
-
-String _formatFileSize(int fileSize) {
-  if (fileSize <= 0) {
-    return 'Не вказано';
-  }
-
-  const kb = 1024;
-  const mb = kb * 1024;
-  if (fileSize >= mb) {
-    return '${(fileSize / mb).toStringAsFixed(1)} MB';
-  }
-  if (fileSize >= kb) {
-    return '${(fileSize / kb).toStringAsFixed(1)} KB';
-  }
-  return '$fileSize B';
 }
 
 Color _statusColor(String statusName) {
