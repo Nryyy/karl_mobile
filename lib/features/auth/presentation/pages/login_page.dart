@@ -59,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) {
         return;
       }
-      context.goNamed('welcome', extra: userName);
+      context.goNamed('documents', extra: userName);
     } on AuthFailure catch (error) {
       if (!mounted) {
         return;
@@ -85,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) {
         return;
       }
-      context.goNamed('welcome', extra: userName);
+      context.goNamed('documents', extra: userName);
     } on AuthFailure catch (error) {
       if (!mounted) {
         return;
