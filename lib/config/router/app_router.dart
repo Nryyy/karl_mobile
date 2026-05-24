@@ -2,10 +2,14 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/documents/presentation/pages/documents_page.dart';
+import '../../features/navigation/presentation/pages/account_page.dart';
+import '../../features/navigation/presentation/pages/section_page.dart';
+import '../../presentation/widgets/bottom_nav_bar.dart';
 
 /// Application router configuration using go_router.
 /// Manages navigation between app screens.
@@ -23,7 +27,7 @@ final GoRouter appRouter = GoRouter(
     }
 
     if (isOnLogin) {
-      return '/documents';
+      return '/dashboard';
     }
 
     return null;
@@ -34,21 +38,95 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const LoginPage(),
       name: 'login',
     ),
-    GoRoute(
-      path: '/documents',
-      name: 'documents',
-      builder: (context, state) {
-        final userName = _resolveUserName(state.extra);
-        return DocumentsPage(userName: userName);
+    ShellRoute(
+      builder: (context, state, child) {
+        return Column(
+          children: <Widget>[
+            Expanded(child: child),
+            BottomNavBar(
+              currentRoute: state.uri.toString(),
+              onNavigate: (route) => GoRouter.of(context).go(route),
+            ),
+          ],
+        );
       },
-    ),
-    GoRoute(
-      path: '/welcome',
-      name: 'welcome',
-      builder: (context, state) {
-        final userName = _resolveUserName(state.extra);
-        return DocumentsPage(userName: userName);
-      },
+      routes: <RouteBase>[
+        GoRoute(
+          path: '/dashboard',
+          name: 'dashboard',
+          builder: (context, state) => const SectionPage(
+            title: 'Dashboard',
+            icon: Icons.dashboard_outlined,
+            description: 'Головна сторінка з оглядом активності.',
+          ),
+        ),
+        GoRoute(
+          path: '/documents',
+          name: 'documents',
+          builder: (context, state) {
+            final userName = _resolveUserName(state.extra);
+            return DocumentsPage(userName: userName);
+          },
+        ),
+        GoRoute(
+          path: '/templates',
+          name: 'templates',
+          builder: (context, state) => const SectionPage(
+            title: 'Шаблони',
+            icon: Icons.article_outlined,
+            description: 'Тут зберігаються шаблони ваших документів.',
+          ),
+        ),
+        GoRoute(
+          path: '/welcome',
+          name: 'welcome',
+          builder: (context, state) {
+            final userName = _resolveUserName(state.extra);
+            return DocumentsPage(userName: userName);
+          },
+        ),
+        GoRoute(
+          path: '/archive',
+          name: 'archive',
+          builder: (context, state) => const SectionPage(
+            title: 'Архів',
+            icon: Icons.archive_outlined,
+            description: 'Архівовані документи та історія.',
+          ),
+        ),
+        GoRoute(
+          path: '/account',
+          name: 'account',
+          builder: (context, state) => const AccountPage(),
+        ),
+        GoRoute(
+          path: '/settings',
+          name: 'settings',
+          builder: (context, state) => const SectionPage(
+            title: 'Налаштування',
+            icon: Icons.settings_outlined,
+            description: 'Налаштування профілю та параметри безпеки.',
+          ),
+        ),
+        GoRoute(
+          path: '/help',
+          name: 'help',
+          builder: (context, state) => const SectionPage(
+            title: 'Допомога',
+            icon: Icons.help_outline,
+            description: 'Підтримка, FAQ та корисні матеріали.',
+          ),
+        ),
+        GoRoute(
+          path: '/admin',
+          name: 'admin',
+          builder: (context, state) => const SectionPage(
+            title: 'Адмін панель',
+            icon: Icons.admin_panel_settings_outlined,
+            description: 'Інструменти адміністрування системи.',
+          ),
+        ),
+      ],
     ),
   ],
 );
