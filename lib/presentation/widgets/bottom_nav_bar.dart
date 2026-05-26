@@ -24,9 +24,9 @@ class BottomNavBar extends StatelessWidget {
       route: '/documents',
     ),
     _NavItem(
-      label: 'Шаблони',
-      icon: Icons.article_outlined,
-      route: '/templates',
+      label: 'Погодження',
+      icon: Icons.pending_actions_outlined,
+      route: '/approvals',
     ),
     _NavItem(label: 'Архів', icon: Icons.archive_outlined, route: '/archive'),
     _NavItem(label: 'Акаунт', icon: Icons.person_outline, route: '/account'),

@@ -19,7 +19,6 @@ migrate_working_dir/
 
 # IDE and Editor
 .idea/
-.github/
 #.vscode/
 *.iml
 *.ipr

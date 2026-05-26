@@ -610,8 +610,9 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
 
   String? _selectedFileType;
   String? _organizationId;
+  String? _backendAuthorId;
+  bool _googleDriveError = false;
   List<UserProfile> _allUsers = [];
-  DocumentStatus? _defaultStatus;
   final List<_ApprovalStepEntry> _approvalSteps = [];
 
   static const List<String> _fileTypes = [
@@ -634,7 +635,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
       _repository = HttpDocumentsRepository(
         accessTokenProvider: () => user.getIdToken(),
       );
-      _loadInitialData(user.uid);
+      _loadInitialData(user.uid, user.email ?? '');
     }
   }
 
@@ -648,7 +649,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
     super.dispose();
   }
 
-  Future<void> _loadInitialData(String uid) async {
+  Future<void> _loadInitialData(String uid, String email) async {
     setState(() => _isLoadingUsers = true);
     try {
       final usersFuture = _repository.fetchUsers().catchError((Object e) {
@@ -656,7 +657,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
         return <UserProfile>[];
       });
       final profileFuture = _repository
-          .fetchCurrentUser(uid)
+          .fetchCurrentUser(email)
           .then<UserProfile?>((p) => p)
           .catchError((Object e) {
         developer.log(
@@ -666,29 +667,19 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
         );
         return null;
       });
-      final statusesFuture = _repository
-          .fetchDocumentStatuses()
-          .catchError((Object e) {
-        developer.log(
-          'Failed to load statuses',
-          name: 'karl.editor',
-          error: e,
-        );
-        return <DocumentStatus>[];
-      });
-      final results = await Future.wait([
-        profileFuture,
-        usersFuture,
-        statusesFuture,
-      ]);
+      final results = await Future.wait([profileFuture, usersFuture]);
       if (!mounted) return;
       final profile = results[0] as UserProfile?;
       final users = results[1] as List<UserProfile>;
-      final statuses = results[2] as List<DocumentStatus>;
       setState(() {
-        if (profile != null) _organizationId = profile.organizationId;
-        _allUsers = users.where((u) => u.id != uid).toList(growable: false);
-        if (statuses.isNotEmpty) _defaultStatus = statuses.first;
+        if (profile != null) {
+          _organizationId = profile.organizationId;
+          _backendAuthorId = profile.id;
+        }
+        final currentBackendId = profile?.id ?? uid;
+        _allUsers = users
+            .where((u) => u.id != currentBackendId)
+            .toList(growable: false);
       });
     } finally {
       if (mounted) setState(() => _isLoadingUsers = false);
@@ -708,6 +699,12 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
         final ext = file.name.split('.').last.toLowerCase();
         if (_selectedFileType == null && _fileTypes.contains(ext)) {
           _selectedFileType = ext;
+        }
+        if (_titleController.text.trim().isEmpty) {
+          final nameWithoutExt = file.name.contains('.')
+              ? file.name.substring(0, file.name.lastIndexOf('.'))
+              : file.name;
+          _titleController.text = nameWithoutExt;
         }
       });
     }
@@ -764,32 +761,52 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
               ? user.displayName!
               : (user.email?.split('@').first ?? 'користувач');
 
+      final effectiveFileType =
+          _selectedFileType ??
+          _pickedFile?.name.split('.').last.toLowerCase();
+
+      final isEditable = const {'doc', 'docx', 'xlsx', 'xls'}
+          .contains(effectiveFileType?.toLowerCase());
+      final statusId = isEditable ? 'draft' : 'pending';
+      final statusName = isEditable ? 'Draft' : 'Pending';
+
       final documentId = await _repository.createDocument(
         title: title,
-        authorId: user.uid,
+        authorId: _backendAuthorId ?? user.uid,
         authorName: authorName,
-        statusId: _defaultStatus?.id,
-        statusName: _defaultStatus?.name,
-        fileType: _selectedFileType,
+        statusId: statusId,
+        statusName: statusName,
+        fileType: effectiveFileType,
         organizationId: _organizationId,
         approvalSteps: steps.isEmpty ? null : steps,
       );
 
       if (_pickedFile != null && _pickedFile!.bytes != null) {
-        await _repository.uploadDocumentFile(
-          documentId: documentId,
-          fileBytes: _pickedFile!.bytes!,
-          fileName: _pickedFile!.name,
-        );
-        if (!mounted) return;
-        _showMessage('Документ створено та файл завантажено.');
+        try {
+          await _repository.uploadDocumentFile(
+            documentId: documentId,
+            fileBytes: _pickedFile!.bytes!,
+            fileName: _pickedFile!.name,
+          );
+          if (!mounted) return;
+          _showMessage('Документ створено та файл завантажено.');
+          GoRouter.of(context).go('/documents');
+        } on DocumentsRepositoryException catch (e) {
+          if (!mounted) return;
+          final isGDrive = e.message.toLowerCase().contains('google drive');
+          if (isGDrive) {
+            setState(() => _googleDriveError = true);
+            _showMessage('Документ створено, але файл не завантажено.');
+          } else {
+            _showMessage(e.message);
+            GoRouter.of(context).go('/documents');
+          }
+        }
       } else {
         if (!mounted) return;
         _showMessage('Документ створено.');
+        GoRouter.of(context).go('/documents');
       }
-
-      if (!mounted) return;
-      GoRouter.of(context).go('/documents');
     } on DocumentsRepositoryException catch (e) {
       if (!mounted) return;
       _showMessage(e.message);
@@ -1136,6 +1153,65 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
               ],
             ],
           ),
+          if (_googleDriveError) ...[  
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.cloud_off_rounded,
+                    color: AppColors.warning,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Google Drive не підключено',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Документ збережено без файлу. Зверніться до адміністратора для підключення Google Drive.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextButton.icon(
+                          onPressed: () => GoRouter.of(context).go('/documents'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.warning,
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                          ),
+                          icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                          label: const Text(
+                            'Перейти до документів',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 28),
           SizedBox(
             height: 52,

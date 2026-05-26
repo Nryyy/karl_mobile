@@ -23,8 +23,8 @@ abstract class DocumentsRepository {
     List<CreateApprovalStep>? approvalSteps,
   });
 
-  /// Returns the backend profile for the given Firebase UID.
-  Future<UserProfile> fetchCurrentUser(String uid);
+  /// Returns the backend profile for the given Firebase user email.
+  Future<UserProfile> fetchCurrentUser(String email);
 
   /// Returns a list of all users (for approver selection).
   Future<List<UserProfile>> fetchUsers();
@@ -37,6 +37,26 @@ abstract class DocumentsRepository {
     required String documentId,
     required Uint8List fileBytes,
     required String fileName,
+  });
+
+  /// Returns documents sent to [userId] for approval.
+  Future<List<DocumentListItem>> fetchDocumentsSentToMe(
+    String userId,
+  );
+
+  /// Signs (approves) a document as part of the approval flow.
+  Future<void> signDocument({
+    required String documentId,
+    required String userName,
+    required String userEmail,
+  });
+
+  /// Rejects a document as part of the approval flow.
+  Future<void> rejectDocument({
+    required String documentId,
+    required String userName,
+    required String userEmail,
+    String? comment,
   });
 }
 
@@ -68,8 +88,10 @@ class HttpDocumentsRepository implements DocumentsRepository {
   }
 
   @override
-  Future<UserProfile> fetchCurrentUser(String uid) async {
-    final uri = Uri.parse('$baseUrl/api/Users/$uid');
+  Future<UserProfile> fetchCurrentUser(String email) async {
+    final uri = Uri.parse('$baseUrl/api/Users/me').replace(
+      queryParameters: {'email': email},
+    );
     final headers = <String, String>{'accept': 'application/json'};
     final accessToken = await _accessTokenProvider?.call();
     if (accessToken != null && accessToken.isNotEmpty) {
@@ -80,7 +102,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
     if (response.statusCode != 200) {
       developer.log(
-        'Users API returned ${response.statusCode} for uid=$uid.',
+        'Users/me API returned ${response.statusCode} for email=$email.',
         name: 'karl.users',
         error: response.body,
       );
@@ -273,6 +295,147 @@ class HttpDocumentsRepository implements DocumentsRepository {
     return UploadDocumentFileResponse.fromJson(
       Map<String, dynamic>.from(decoded as Map),
     );
+  }
+
+  @override
+  Future<List<DocumentListItem>> fetchDocumentsSentToMe(
+    String userId,
+  ) async {
+    final uri = Uri.parse('$baseUrl/api/Documents/sent-to-me/$userId');
+    final headers = <String, String>{'accept': 'application/json'};
+    final accessToken = await _accessTokenProvider?.call();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['authorization'] = 'Bearer $accessToken';
+    }
+
+    final response = await _client.get(uri, headers: headers);
+
+    if (response.statusCode == 401) {
+      developer.log(
+        'Documents sent-to-me API returned 401.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
+    }
+
+    if (response.statusCode != 200) {
+      developer.log(
+        'Documents sent-to-me API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      throw DocumentsRepositoryException(
+        'Не вдалося завантажити документи на погодження (${response.statusCode}).',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) {
+      throw DocumentsRepositoryException(
+        'Неочікуваний формат відповіді API документів.',
+      );
+    }
+
+    return decoded
+        .map(
+          (value) => DocumentListItem.fromJson(
+            Map<String, dynamic>.from(value as Map),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> signDocument({
+    required String documentId,
+    required String userName,
+    required String userEmail,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/Documents/$documentId/sign');
+    final headers = <String, String>{
+      'accept': 'application/json',
+      'content-type': 'application/json',
+    };
+    final accessToken = await _accessTokenProvider?.call();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['authorization'] = 'Bearer $accessToken';
+    }
+
+    final body = jsonEncode({
+      'userName': userName,
+      'userEmail': userEmail,
+    });
+
+    final response = await _client.post(uri, headers: headers, body: body);
+
+    if (response.statusCode == 401) {
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
+    }
+
+    if (response.statusCode != 200) {
+      developer.log(
+        'Documents sign API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      final detail = _extractDetail(response.body);
+      throw DocumentsRepositoryException(
+        detail.isNotEmpty
+            ? detail
+            : 'Не вдалося підписати документ (${response.statusCode}).',
+      );
+    }
+  }
+
+  @override
+  Future<void> rejectDocument({
+    required String documentId,
+    required String userName,
+    required String userEmail,
+    String? comment,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/Documents/$documentId/reject');
+    final headers = <String, String>{
+      'accept': 'application/json',
+      'content-type': 'application/json',
+    };
+    final accessToken = await _accessTokenProvider?.call();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['authorization'] = 'Bearer $accessToken';
+    }
+
+    final body = jsonEncode({
+      'userName': userName,
+      'userEmail': userEmail,
+      if (comment != null && comment.isNotEmpty) 'comment': comment,
+    });
+
+    final response = await _client.post(uri, headers: headers, body: body);
+
+    if (response.statusCode == 401) {
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
+    }
+
+    if (response.statusCode != 200) {
+      developer.log(
+        'Documents reject API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      final detail = _extractDetail(response.body);
+      throw DocumentsRepositoryException(
+        detail.isNotEmpty
+            ? detail
+            : 'Не вдалося відхилити документ (${response.statusCode}).',
+      );
+    }
   }
 
   @override

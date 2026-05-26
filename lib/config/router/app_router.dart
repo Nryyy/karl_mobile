@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/documents/data/documents_repository.dart';
+import '../../features/documents/presentation/pages/approvals_page.dart';
 import '../../features/documents/presentation/pages/documents_page.dart';
 import '../../features/documents/domain/document_models.dart';
 import '../../features/navigation/presentation/pages/account_page.dart';
@@ -91,6 +92,25 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) {
             final doc = state.extra is DocumentListItem ? state.extra as DocumentListItem : null;
             return DocumentDetailPage(document: doc);
+          },
+        ),
+        GoRoute(
+          path: '/approvals',
+          name: 'approvals',
+          builder: (context, state) => ApprovalsPage(
+            repository: HttpDocumentsRepository(
+              accessTokenProvider: _firebaseAccessToken,
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/approvals/:id',
+          name: 'approval_detail',
+          builder: (context, state) {
+            final args = state.extra is ApprovalDetailArgs
+                ? state.extra as ApprovalDetailArgs
+                : null;
+            return ApprovalDetailPage(args: args);
           },
         ),
         GoRoute(
