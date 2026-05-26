@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -9,6 +10,34 @@ import '../domain/document_models.dart';
 abstract class DocumentsRepository {
   /// Loads the latest documents.
   Future<List<DocumentListItem>> fetchDocuments();
+
+  /// Creates a new document and returns its id.
+  Future<String> createDocument({
+    required String title,
+    required String authorId,
+    required String authorName,
+    String? statusId,
+    String? statusName,
+    String? fileType,
+    String? organizationId,
+    List<CreateApprovalStep>? approvalSteps,
+  });
+
+  /// Returns the backend profile for the given Firebase UID.
+  Future<UserProfile> fetchCurrentUser(String uid);
+
+  /// Returns a list of all users (for approver selection).
+  Future<List<UserProfile>> fetchUsers();
+
+  /// Returns distinct statuses extracted from existing documents.
+  Future<List<DocumentStatus>> fetchDocumentStatuses();
+
+  /// Uploads a file for an existing document.
+  Future<UploadDocumentFileResponse> uploadDocumentFile({
+    required String documentId,
+    required Uint8List fileBytes,
+    required String fileName,
+  });
 }
 
 /// HTTP repository that reads documents from the API.
@@ -36,6 +65,214 @@ class HttpDocumentsRepository implements DocumentsRepository {
     if (_ownsClient) {
       _client.close();
     }
+  }
+
+  @override
+  Future<UserProfile> fetchCurrentUser(String uid) async {
+    final uri = Uri.parse('$baseUrl/api/Users/$uid');
+    final headers = <String, String>{'accept': 'application/json'};
+    final accessToken = await _accessTokenProvider?.call();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['authorization'] = 'Bearer $accessToken';
+    }
+
+    final response = await _client.get(uri, headers: headers);
+
+    if (response.statusCode != 200) {
+      developer.log(
+        'Users API returned ${response.statusCode} for uid=$uid.',
+        name: 'karl.users',
+        error: response.body,
+      );
+      throw DocumentsRepositoryException(
+        'Не вдалося отримати профіль користувача (${response.statusCode}).',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    return UserProfile.fromJson(Map<String, dynamic>.from(decoded as Map));
+  }
+
+  @override
+  Future<List<UserProfile>> fetchUsers() async {
+    final uri = Uri.parse('$baseUrl/api/Users');
+    final headers = <String, String>{'accept': 'application/json'};
+    final accessToken = await _accessTokenProvider?.call();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['authorization'] = 'Bearer $accessToken';
+    }
+
+    final response = await _client.get(uri, headers: headers);
+
+    if (response.statusCode != 200) {
+      developer.log(
+        'Users API returned ${response.statusCode}.',
+        name: 'karl.users',
+        error: response.body,
+      );
+      throw DocumentsRepositoryException(
+        'Не вдалося отримати список користувачів (${response.statusCode}).',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) {
+      throw DocumentsRepositoryException(
+        'Неочікуваний формат відповіді API користувачів.',
+      );
+    }
+    return decoded
+        .map(
+          (value) =>
+              UserProfile.fromJson(Map<String, dynamic>.from(value as Map)),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<DocumentStatus>> fetchDocumentStatuses() async {
+    final documents = await fetchDocuments();
+    final seen = <String>{};
+    return documents
+        .map((d) => d.status)
+        .where((s) => s.id.isNotEmpty && seen.add(s.id))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<String> createDocument({
+    required String title,
+    required String authorId,
+    required String authorName,
+    String? statusId,
+    String? statusName,
+    String? fileType,
+    String? organizationId,
+    List<CreateApprovalStep>? approvalSteps,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/Documents');
+    final headers = <String, String>{
+      'accept': 'application/json',
+      'content-type': 'application/json',
+    };
+    final accessToken = await _accessTokenProvider?.call();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['authorization'] = 'Bearer $accessToken';
+    }
+
+    final bodyMap = <String, dynamic>{
+      'title': title,
+      'authorId': authorId,
+      'authorName': authorName,
+      if (statusId != null && statusId.isNotEmpty) 'statusId': statusId,
+      if (statusName != null && statusName.isNotEmpty) 'statusName': statusName,
+      if (fileType != null && fileType.isNotEmpty) 'fileType': fileType,
+      if (organizationId != null && organizationId.isNotEmpty)
+        'organizationId': organizationId,
+      if (approvalSteps != null && approvalSteps.isNotEmpty)
+        'approvalSteps': approvalSteps.map((s) => s.toJson()).toList(),
+    };
+
+    final body = jsonEncode(bodyMap);
+
+    final response = await _client.post(uri, headers: headers, body: body);
+
+    if (response.statusCode == 401) {
+      developer.log(
+        'Documents API returned 401 on create.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
+    }
+
+    if (response.statusCode != 201) {
+      developer.log(
+        'Documents API returned ${response.statusCode} on create.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      throw DocumentsRepositoryException(
+        'Не вдалося створити документ (${response.statusCode}).',
+      );
+    }
+
+    final location = response.headers['location'] ?? '';
+    if (location.isNotEmpty) {
+      return location.split('/').last;
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map) {
+        final id = decoded['id']?.toString() ?? '';
+        if (id.isNotEmpty) return id;
+      }
+    } catch (_) {}
+
+    throw DocumentsRepositoryException(
+      'Не вдалося отримати ідентифікатор нового документа.',
+    );
+  }
+
+  @override
+  Future<UploadDocumentFileResponse> uploadDocumentFile({
+    required String documentId,
+    required Uint8List fileBytes,
+    required String fileName,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/Documents/$documentId/file');
+    final request = http.MultipartRequest('POST', uri)
+      ..files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          fileBytes,
+          filename: fileName,
+        ),
+      );
+
+    final accessToken = await _accessTokenProvider?.call();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      request.headers['authorization'] = 'Bearer $accessToken';
+    }
+
+    final streamedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 401) {
+      developer.log(
+        'Documents API returned 401 on file upload.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
+    }
+
+    if (response.statusCode != 200) {
+      developer.log(
+        'Documents API returned ${response.statusCode} on file upload.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      final detail = _extractDetail(response.body);
+      final isGoogleDrive =
+          detail.toLowerCase().contains('google drive') ||
+          detail.toLowerCase().contains('google account');
+      throw DocumentsRepositoryException(
+        isGoogleDrive
+            ? 'Google Drive не підключено. Зверніться до адміністратора для підключення облікового запису Google.'
+            : 'Не вдалося завантажити файл (${response.statusCode}).',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    return UploadDocumentFileResponse.fromJson(
+      Map<String, dynamic>.from(decoded as Map),
+    );
   }
 
   @override
@@ -88,130 +325,14 @@ class HttpDocumentsRepository implements DocumentsRepository {
   }
 }
 
-/// In-memory mock repository used for development and tests.
-class MockDocumentsRepository implements DocumentsRepository {
-  MockDocumentsRepository({Duration delay = const Duration(milliseconds: 400)})
-    : _delay = delay;
-
-  final Duration _delay;
-
-  @override
-  Future<List<DocumentListItem>> fetchDocuments() async {
-    await Future<void>.delayed(_delay);
-
-    final now = DateTime.now();
-
-    return List<DocumentListItem>.unmodifiable([
-      DocumentListItem(
-        id: 'doc-001',
-        title: 'Угода про співпрацю',
-        authorId: 'user-1',
-        authorName: 'Іван Петренко',
-        status: const DocumentStatus(id: 's1', name: 'Очікує'),
-        fileType: 'pdf',
-        googleDriveFileId: 'gdrive-1',
-        webViewLink: '',
-        webContentLink: '',
-        createdAt: now.subtract(const Duration(days: 10)),
-        updatedAt: now.subtract(const Duration(days: 2)),
-        signatures: const [],
-        comments: const [],
-        approvalFlow: const ApprovalFlow(
-          isActive: true,
-          steps: <ApprovalStep>[],
-          currentStep: 1,
-        ),
-        metadata: const DocumentMetadata(
-          version: 1,
-          tags: <String>['contract'],
-          category: 'Договори',
-          fileSize: 102400,
-          pageCount: 12,
-        ),
-      ),
-      DocumentListItem(
-        id: 'doc-002',
-        title: 'Звіт за березень',
-        authorId: 'user-2',
-        authorName: 'Олена Коваль',
-        status: const DocumentStatus(id: 's2', name: 'Затверджено'),
-        fileType: 'xlsx',
-        googleDriveFileId: 'gdrive-2',
-        webViewLink: '',
-        webContentLink: '',
-        createdAt: now.subtract(const Duration(days: 40)),
-        updatedAt: now.subtract(const Duration(days: 30)),
-        signatures: const [],
-        comments: const [],
-        approvalFlow: const ApprovalFlow(
-          isActive: false,
-          steps: <ApprovalStep>[],
-          currentStep: 0,
-        ),
-        metadata: const DocumentMetadata(
-          version: 2,
-          tags: <String>['report'],
-          category: 'Звіти',
-          fileSize: 204800,
-          pageCount: 6,
-        ),
-      ),
-      DocumentListItem(
-        id: 'doc-003',
-        title: 'Заява на відпустку',
-        authorId: 'user-3',
-        authorName: 'Марія Сидоренко',
-        status: const DocumentStatus(id: 's3', name: 'В процесі'),
-        fileType: 'docx',
-        googleDriveFileId: 'gdrive-3',
-        webViewLink: '',
-        webContentLink: '',
-        createdAt: now.subtract(const Duration(days: 3)),
-        updatedAt: now.subtract(const Duration(hours: 20)),
-        signatures: const [],
-        comments: const [],
-        approvalFlow: const ApprovalFlow(
-          isActive: true,
-          steps: <ApprovalStep>[],
-          currentStep: 2,
-        ),
-        metadata: const DocumentMetadata(
-          version: 1,
-          tags: <String>['hr'],
-          category: 'Заявки',
-          fileSize: 51200,
-          pageCount: 2,
-        ),
-      ),
-      DocumentListItem(
-        id: 'doc-004',
-        title: 'Пропозиція постачальнику',
-        authorId: 'user-1',
-        authorName: 'Іван Петренко',
-        status: const DocumentStatus(id: 's4', name: 'Відхилено'),
-        fileType: 'pdf',
-        googleDriveFileId: 'gdrive-4',
-        webViewLink: '',
-        webContentLink: '',
-        createdAt: now.subtract(const Duration(days: 18)),
-        updatedAt: now.subtract(const Duration(days: 15)),
-        signatures: const [],
-        comments: const [],
-        approvalFlow: const ApprovalFlow(
-          isActive: false,
-          steps: <ApprovalStep>[],
-          currentStep: 0,
-        ),
-        metadata: const DocumentMetadata(
-          version: 1,
-          tags: <String>['offer'],
-          category: 'Документи',
-          fileSize: 40960,
-          pageCount: 4,
-        ),
-      ),
-    ]);
-  }
+String _extractDetail(String body) {
+  try {
+    final decoded = jsonDecode(body);
+    if (decoded is Map) {
+      return decoded['detail']?.toString() ?? decoded['title']?.toString() ?? '';
+    }
+  } catch (_) {}
+  return body;
 }
 
 /// Exception thrown when the documents API cannot be read.

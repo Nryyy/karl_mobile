@@ -111,8 +111,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isSmallScreen = MediaQuery.of(context).size.height < 800;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -173,10 +171,8 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 32),
 
                 // Sign up link
-                if (!isSmallScreen) ...[
-                  _buildSignUpSection(),
-                  const SizedBox(height: 24),
-                ],
+                _buildSignUpSection(),
+                const SizedBox(height: 24),
 
                 // Platform features section
                 PlatformFeaturesSection(features: _features),
@@ -277,9 +273,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
           const SizedBox(width: 12),
           OutlinedButton(
-            onPressed: () {
-              // Navigate to sign up
-            },
+            onPressed: () => context.goNamed('register'),
             child: Text(
               'Зареєструватися',
               style: GoogleFonts.inter(

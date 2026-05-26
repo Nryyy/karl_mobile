@@ -112,6 +112,12 @@ class DocumentStatus {
       name: _readString(json['name']),
     );
   }
+
+  @override
+  bool operator ==(Object other) => other is DocumentStatus && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Represents a document signature.
@@ -315,6 +321,127 @@ class DocumentMetadata {
       category: _readString(json['category']),
       fileSize: _readInt(json['fileSize']),
       pageCount: _readInt(json['pageCount']),
+    );
+  }
+}
+
+/// Represents a user profile returned by the users API.
+@immutable
+class UserProfile {
+  /// Creates a user profile.
+  const UserProfile({
+    required this.id,
+    required this.email,
+    required this.fullName,
+    required this.role,
+    required this.organizationId,
+    required this.organizationName,
+  });
+
+  /// User identifier.
+  final String id;
+
+  /// User email.
+  final String email;
+
+  /// Display name.
+  final String fullName;
+
+  /// User role.
+  final String role;
+
+  /// Organization identifier.
+  final String organizationId;
+
+  /// Organization name.
+  final String organizationName;
+
+  /// Creates a user profile from JSON.
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      id: _readString(json['id']),
+      email: _readString(json['email']),
+      fullName: _readString(json['fullName']),
+      role: _readString(json['role']),
+      organizationId: _readString(json['organizationId']),
+      organizationName: _readString(json['organizationName']),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) => other is UserProfile && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+/// Represents a single approval step for document creation.
+@immutable
+class CreateApprovalStep {
+  /// Creates a create approval step.
+  const CreateApprovalStep({
+    required this.stepOrder,
+    required this.approverId,
+    required this.approverName,
+    required this.approverEmail,
+  });
+
+  /// Step order (1-based).
+  final int stepOrder;
+
+  /// Approver user identifier.
+  final String approverId;
+
+  /// Approver display name.
+  final String approverName;
+
+  /// Approver email.
+  final String approverEmail;
+
+  /// Converts to JSON map.
+  Map<String, dynamic> toJson() => {
+    'stepOrder': stepOrder,
+    'approverId': approverId,
+    'approverName': approverName,
+    'approverEmail': approverEmail,
+  };
+}
+
+/// Response returned after uploading a document file.
+@immutable
+class UploadDocumentFileResponse {
+  /// Creates an upload document file response.
+  const UploadDocumentFileResponse({
+    required this.documentId,
+    required this.googleDriveFileId,
+    required this.webViewLink,
+    required this.webContentLink,
+    required this.fileSize,
+  });
+
+  /// Identifier of the document.
+  final String documentId;
+
+  /// Google Drive file identifier.
+  final String googleDriveFileId;
+
+  /// Link for Google Drive web preview.
+  final String webViewLink;
+
+  /// Link for Google Drive web content.
+  final String webContentLink;
+
+  /// File size in bytes.
+  final int fileSize;
+
+  /// Creates an upload response from JSON.
+  factory UploadDocumentFileResponse.fromJson(Map<String, dynamic> json) {
+    return UploadDocumentFileResponse(
+      documentId: _readString(json['documentId']),
+      googleDriveFileId: _readString(json['googleDriveFileId']),
+      webViewLink: _readString(json['webViewLink']),
+      webContentLink: _readString(json['webContentLink']),
+      fileSize: _readInt(json['fileSize']),
     );
   }
 }

@@ -1,3 +1,6 @@
+import 'dart:developer' as developer;
+
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -7,12 +10,12 @@ import '../../../auth/data/firebase_auth_service.dart';
 import '../../../auth/domain/auth_service.dart';
 import '../../data/documents_repository.dart';
 import '../../domain/document_models.dart';
+import '../widgets/google_drive_preview.dart';
 
 /// Main post-login page showing the document list.
 class DocumentsPage extends StatefulWidget {
   /// Creates the documents page.
-  DocumentsPage({super.key, this.userName, DocumentsRepository? repository})
-    : repository = repository ?? MockDocumentsRepository();
+  const DocumentsPage({super.key, this.userName, required this.repository});
 
   /// Display name of the authenticated user.
   final String? userName;
@@ -124,6 +127,11 @@ class _DocumentsPageState extends State<DocumentsPage> {
           ),
           const SizedBox(width: 8),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => GoRouter.of(context).go('/documents/new'),
+        icon: const Icon(Icons.add),
+        label: const Text('Новий документ'),
       ),
       body: RefreshIndicator(
         onRefresh: _refreshDocuments,
@@ -458,28 +466,96 @@ class _MetaPill extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: AppColors.primary),
           const SizedBox(width: 6),
-          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          Flexible(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class DocumentDetailPage extends StatelessWidget {
+class DocumentDetailPage extends StatefulWidget {
   const DocumentDetailPage({required this.document, super.key});
 
   final DocumentListItem? document;
 
   @override
+  State<DocumentDetailPage> createState() => _DocumentDetailPageState();
+}
+
+class _DocumentDetailPageState extends State<DocumentDetailPage> {
+  bool _isUploading = false;
+
+  Future<void> _handleUploadFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      withData: true,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx', 'xlsx', 'xls', 'png', 'jpg'],
+    );
+
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.first;
+    if (file.bytes == null) {
+      _showMessage('Не вдалося прочитати файл.');
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      _showMessage('Сесія авторизації недійсна. Увійдіть ще раз.');
+      return;
+    }
+
+    final document = widget.document!;
+    final repository = HttpDocumentsRepository(
+      accessTokenProvider: () => user.getIdToken(),
+    );
+
+    setState(() => _isUploading = true);
+    try {
+      final response = await repository.uploadDocumentFile(
+        documentId: document.id,
+        fileBytes: file.bytes!,
+        fileName: file.name,
+      );
+      if (!mounted) return;
+      _showMessage(
+        'Файл завантажено. Розмір: ${_formatFileSize(response.fileSize)}',
+      );
+    } on DocumentsRepositoryException catch (e) {
+      if (!mounted) return;
+      _showMessage(e.message);
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage('Не вдалося завантажити файл.');
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+      repository.dispose();
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (document == null) {
+    if (widget.document == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Документ')),
         body: const Center(child: Text('Документ не знайдено.')),
       );
     }
 
-    final item = document!;
+    final item = widget.document!;
 
     return Scaffold(
       appBar: AppBar(title: Text(item.title.isEmpty ? 'Документ' : item.title)),
@@ -492,6 +568,26 @@ class DocumentDetailPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _SimpleDocumentCard(document: item),
+          if (item.webViewLink.isNotEmpty) ...[  
+            const SizedBox(height: 20),
+            Text(
+              'Перегляд документа',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                height: 500,
+                child: GoogleDrivePreview(webViewLink: item.webViewLink),
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          _UploadFileSection(
+            isUploading: _isUploading,
+            onUpload: _handleUploadFile,
+          ),
         ],
       ),
     );
@@ -508,40 +604,825 @@ class DocumentEditorPage extends StatefulWidget {
 class _DocumentEditorPageState extends State<DocumentEditorPage> {
   final TextEditingController _titleController = TextEditingController();
 
+  PlatformFile? _pickedFile;
+  bool _isSaving = false;
+  bool _isLoadingUsers = false;
+
+  String? _selectedFileType;
+  String? _organizationId;
+  List<UserProfile> _allUsers = [];
+  DocumentStatus? _defaultStatus;
+  final List<_ApprovalStepEntry> _approvalSteps = [];
+
+  static const List<String> _fileTypes = [
+    'pdf',
+    'docx',
+    'doc',
+    'xlsx',
+    'xls',
+    'png',
+    'jpg',
+  ];
+
+  late final HttpDocumentsRepository _repository;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _repository = HttpDocumentsRepository(
+        accessTokenProvider: () => user.getIdToken(),
+      );
+      _loadInitialData(user.uid);
+    }
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
+    _repository.dispose();
+    for (final step in _approvalSteps) {
+      step.dispose();
+    }
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _loadInitialData(String uid) async {
+    setState(() => _isLoadingUsers = true);
+    try {
+      final usersFuture = _repository.fetchUsers().catchError((Object e) {
+        developer.log('Failed to load users', name: 'karl.editor', error: e);
+        return <UserProfile>[];
+      });
+      final profileFuture = _repository
+          .fetchCurrentUser(uid)
+          .then<UserProfile?>((p) => p)
+          .catchError((Object e) {
+        developer.log(
+          'Failed to load current user profile',
+          name: 'karl.editor',
+          error: e,
+        );
+        return null;
+      });
+      final statusesFuture = _repository
+          .fetchDocumentStatuses()
+          .catchError((Object e) {
+        developer.log(
+          'Failed to load statuses',
+          name: 'karl.editor',
+          error: e,
+        );
+        return <DocumentStatus>[];
+      });
+      final results = await Future.wait([
+        profileFuture,
+        usersFuture,
+        statusesFuture,
+      ]);
+      if (!mounted) return;
+      final profile = results[0] as UserProfile?;
+      final users = results[1] as List<UserProfile>;
+      final statuses = results[2] as List<DocumentStatus>;
+      setState(() {
+        if (profile != null) _organizationId = profile.organizationId;
+        _allUsers = users.where((u) => u.id != uid).toList(growable: false);
+        if (statuses.isNotEmpty) _defaultStatus = statuses.first;
+      });
+    } finally {
+      if (mounted) setState(() => _isLoadingUsers = false);
+    }
+  }
+
+  Future<void> _pickFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      withData: true,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx', 'xlsx', 'xls', 'png', 'jpg'],
+    );
+    if (result != null && result.files.isNotEmpty) {
+      final file = result.files.first;
+      setState(() {
+        _pickedFile = file;
+        final ext = file.name.split('.').last.toLowerCase();
+        if (_selectedFileType == null && _fileTypes.contains(ext)) {
+          _selectedFileType = ext;
+        }
+      });
+    }
+  }
+
+  void _addApprovalStep() {
+    setState(() {
+      _approvalSteps.add(_ApprovalStepEntry());
+    });
+  }
+
+  void _removeApprovalStep(int index) {
+    setState(() {
+      _approvalSteps[index].dispose();
+      _approvalSteps.removeAt(index);
+    });
+  }
+
+  Future<void> _save() async {
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      _showMessage('Введіть назву документа.');
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      _showMessage('Сесія авторизації недійсна. Увійдіть ще раз.');
+      return;
+    }
+
+    final steps = <CreateApprovalStep>[];
+    for (var i = 0; i < _approvalSteps.length; i++) {
+      final entry = _approvalSteps[i];
+      if (entry.selectedUser == null) {
+        _showMessage('Оберіть погоджувача для кроку ${i + 1}.');
+        return;
+      }
+      steps.add(
+        CreateApprovalStep(
+          stepOrder: i + 1,
+          approverId: entry.selectedUser!.id,
+          approverName: entry.selectedUser!.fullName,
+          approverEmail: entry.selectedUser!.email,
+        ),
+      );
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final authorName =
+          user.displayName?.trim().isNotEmpty == true
+              ? user.displayName!
+              : (user.email?.split('@').first ?? 'користувач');
+
+      final documentId = await _repository.createDocument(
+        title: title,
+        authorId: user.uid,
+        authorName: authorName,
+        statusId: _defaultStatus?.id,
+        statusName: _defaultStatus?.name,
+        fileType: _selectedFileType,
+        organizationId: _organizationId,
+        approvalSteps: steps.isEmpty ? null : steps,
+      );
+
+      if (_pickedFile != null && _pickedFile!.bytes != null) {
+        await _repository.uploadDocumentFile(
+          documentId: documentId,
+          fileBytes: _pickedFile!.bytes!,
+          fileName: _pickedFile!.name,
+        );
+        if (!mounted) return;
+        _showMessage('Документ створено та файл завантажено.');
+      } else {
+        if (!mounted) return;
+        _showMessage('Документ створено.');
+      }
+
+      if (!mounted) return;
+      GoRouter.of(context).go('/documents');
+    } on DocumentsRepositoryException catch (e) {
+      if (!mounted) return;
+      _showMessage(e.message);
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage('Не вдалося зберегти документ.');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _showMessage(String message) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Документ (мок) збережено')));
-    GoRouter.of(context).go('/documents');
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasFile = _pickedFile != null;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Новий документ')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Назва'),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        title: const Text('Новий документ'),
+        centerTitle: false,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          _SectionCard(
+            children: [
+              _FieldLabel('Назва документа', required: true),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _titleController,
+                style: theme.textTheme.bodyLarge,
+                decoration: InputDecoration(
+                  hintText: 'Введіть назву документа',
+                  filled: true,
+                  fillColor: AppColors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _FieldLabel('Тип файлу'),
+              const SizedBox(height: 6),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedFileType,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: AppColors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                ),
+                hint: const Text('Оберіть тип файлу'),
+                items: _fileTypes
+                    .map(
+                      (t) => DropdownMenuItem(
+                        value: t,
+                        child: Text(t.toUpperCase()),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _selectedFileType = v),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _SectionCard(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.attach_file_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Файл документа',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              GestureDetector(
+                onTap: _pickFile,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 24,
+                    horizontal: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: hasFile
+                        ? AppColors.accent.withValues(alpha: 0.05)
+                        : AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: hasFile
+                          ? AppColors.accent.withValues(alpha: 0.4)
+                          : AppColors.border,
+                      width: hasFile ? 1.5 : 1,
+                      strokeAlign: BorderSide.strokeAlignInside,
+                    ),
+                  ),
+                  child: hasFile
+                      ? Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.accent.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.description_rounded,
+                                color: AppColors.accent,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _pickedFile!.name,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _formatFileSize(
+                                      _pickedFile!.size,
+                                    ),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: () =>
+                                  setState(() => _pickedFile = null),
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                size: 18,
+                                color: AppColors.textSecondary,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                              tooltip: 'Видалити файл',
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            const Icon(
+                              Icons.cloud_upload_outlined,
+                              size: 40,
+                              color: AppColors.disabled,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Натисніть, щоб вибрати файл',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'PDF, DOCX, XLSX, PNG, JPG',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _SectionCard(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.route_rounded,
+                          color: AppColors.warning,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Маршрут погодження',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_isLoadingUsers)
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  else
+                    TextButton.icon(
+                      onPressed: _addApprovalStep,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                      ),
+                      icon: const Icon(Icons.add_circle_outline, size: 16),
+                      label: const Text(
+                        'Додати крок',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                ],
+              ),
+              if (_approvalSteps.isEmpty) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.border,
+                      style: BorderStyle.solid,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        size: 16,
+                        color: AppColors.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Без маршруту погодження',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: 12),
+                ...List.generate(_approvalSteps.length, (i) {
+                  final step = _approvalSteps[i];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _ApprovalStepRow(
+                      stepNumber: i + 1,
+                      selectedUser: step.selectedUser,
+                      users: _allUsers,
+                      onRemove: () => _removeApprovalStep(i),
+                      onUserChanged: (u) =>
+                          setState(() => step.selectedUser = u),
+                    ),
+                  );
+                }),
+              ],
+            ],
+          ),
+          const SizedBox(height: 28),
+          SizedBox(
+            height: 52,
+            child: FilledButton(
+              onPressed: _isSaving ? null : _save,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                disabledBackgroundColor: AppColors.disabled,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isSaving
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          'Збереження...',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.save_outlined, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Зберегти документ',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: _save,
-              icon: const Icon(Icons.save),
-              label: const Text('Зберегти'),
-            ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 12,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text, {this.required = false});
+
+  final String text;
+  final bool required;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+            letterSpacing: 0.2,
+          ),
         ),
+        if (required)
+          const Text(
+            ' *',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.error,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ApprovalStepEntry {
+  UserProfile? selectedUser;
+
+  void dispose() {}
+}
+
+class _ApprovalStepRow extends StatelessWidget {
+  const _ApprovalStepRow({
+    required this.stepNumber,
+    required this.selectedUser,
+    required this.users,
+    required this.onRemove,
+    required this.onUserChanged,
+  });
+
+  final int stepNumber;
+  final UserProfile? selectedUser;
+  final List<UserProfile> users;
+  final VoidCallback onRemove;
+  final ValueChanged<UserProfile?> onUserChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '$stepNumber',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: DropdownButtonFormField<UserProfile>(
+              initialValue: selectedUser,
+              hint: const Text('Оберіть погоджувача'),
+              isExpanded: true,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+              ),
+              items: users
+                  .map(
+                    (u) => DropdownMenuItem(
+                      value: u,
+                      child: Text(
+                        u.fullName.isNotEmpty ? u.fullName : u.email,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: onUserChanged,
+            ),
+          ),
+          IconButton(
+            onPressed: onRemove,
+            icon: const Icon(Icons.close, size: 18),
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UploadFileSection extends StatelessWidget {
+  const _UploadFileSection({
+    required this.isUploading,
+    required this.onUpload,
+  });
+
+  final bool isUploading;
+  final VoidCallback onUpload;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 12,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.upload_file_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Завантажити файл',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: isUploading
+                ? const Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  )
+                : OutlinedButton.icon(
+                    onPressed: onUpload,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.attach_file_rounded, size: 18),
+                    label: const Text(
+                      'Вибрати та завантажити файл',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -628,6 +1509,12 @@ class _ErrorState extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatFileSize(int bytes) {
+  if (bytes < 1024) return '$bytes Б';
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} КБ';
+  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} МБ';
 }
 
 String _formatDate(DateTime? dateTime) {

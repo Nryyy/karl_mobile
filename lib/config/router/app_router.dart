@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/documents/data/documents_repository.dart';
 import '../../features/documents/presentation/pages/documents_page.dart';
 import '../../features/documents/domain/document_models.dart';
 import '../../features/navigation/presentation/pages/account_page.dart';
@@ -22,13 +24,15 @@ final GoRouter appRouter = GoRouter(
   ),
   redirect: (context, state) {
     final isLoggedIn = FirebaseAuth.instance.currentUser != null;
-    final isOnLogin = state.matchedLocation == '/';
+    final location = state.matchedLocation;
+    final isOnLogin = location == '/';
+    final isOnRegister = location == '/register';
 
     if (!isLoggedIn) {
-      return isOnLogin ? null : '/';
+      return (isOnLogin || isOnRegister) ? null : '/';
     }
 
-    if (isOnLogin) {
+    if (isOnLogin || isOnRegister) {
       return '/dashboard';
     }
 
@@ -39,6 +43,11 @@ final GoRouter appRouter = GoRouter(
       path: '/',
       builder: (context, state) => const LoginPage(),
       name: 'login',
+    ),
+    GoRoute(
+      path: '/register',
+      builder: (context, state) => const RegisterPage(),
+      name: 'register',
     ),
     ShellRoute(
       builder: (context, state, child) {
@@ -63,7 +72,12 @@ final GoRouter appRouter = GoRouter(
           name: 'documents',
           builder: (context, state) {
             final userName = _resolveUserName(state.extra);
-            return DocumentsPage(userName: userName);
+            return DocumentsPage(
+              userName: userName,
+              repository: HttpDocumentsRepository(
+                accessTokenProvider: _firebaseAccessToken,
+              ),
+            );
           },
         ),
         GoRoute(
@@ -93,7 +107,12 @@ final GoRouter appRouter = GoRouter(
           name: 'welcome',
           builder: (context, state) {
             final userName = _resolveUserName(state.extra);
-            return DocumentsPage(userName: userName);
+            return DocumentsPage(
+              userName: userName,
+              repository: HttpDocumentsRepository(
+                accessTokenProvider: _firebaseAccessToken,
+              ),
+            );
           },
         ),
         GoRoute(
@@ -141,6 +160,14 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
+
+Future<String?> _firebaseAccessToken() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) {
+    return null;
+  }
+  return user.getIdToken();
+}
 
 String _resolveUserName(Object? extra) {
   if (extra is String && extra.trim().isNotEmpty) {
