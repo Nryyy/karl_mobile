@@ -27,7 +27,7 @@ abstract class DocumentsRepository {
   Future<UserProfile> fetchCurrentUser(String email);
 
   /// Returns a list of all users (for approver selection).
-  Future<List<UserProfile>> fetchUsers();
+  Future<List<UserProfile>> fetchUsers({String? organizationId});
 
   /// Returns distinct statuses extracted from existing documents.
   Future<List<DocumentStatus>> fetchDocumentStatuses();
@@ -40,9 +40,7 @@ abstract class DocumentsRepository {
   });
 
   /// Returns documents sent to [userId] for approval.
-  Future<List<DocumentListItem>> fetchDocumentsSentToMe(
-    String userId,
-  );
+  Future<List<DocumentListItem>> fetchDocumentsSentToMe(String userId);
 
   /// Signs (approves) a document as part of the approval flow.
   Future<void> signDocument({
@@ -89,9 +87,9 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<UserProfile> fetchCurrentUser(String email) async {
-    final uri = Uri.parse('$baseUrl/api/Users/me').replace(
-      queryParameters: {'email': email},
-    );
+    final uri = Uri.parse(
+      '$baseUrl/api/Users/me',
+    ).replace(queryParameters: {'email': email});
     final headers = <String, String>{'accept': 'application/json'};
     final accessToken = await _accessTokenProvider?.call();
     if (accessToken != null && accessToken.isNotEmpty) {
@@ -116,8 +114,8 @@ class HttpDocumentsRepository implements DocumentsRepository {
   }
 
   @override
-  Future<List<UserProfile>> fetchUsers() async {
-    final uri = Uri.parse('$baseUrl/api/Users');
+  Future<List<UserProfile>> fetchUsers({String? organizationId}) async {
+    final uri = Uri.parse('$baseUrl/api/Users/active');
     final headers = <String, String>{'accept': 'application/json'};
     final accessToken = await _accessTokenProvider?.call();
     if (accessToken != null && accessToken.isNotEmpty) {
@@ -143,11 +141,19 @@ class HttpDocumentsRepository implements DocumentsRepository {
         'Неочікуваний формат відповіді API користувачів.',
       );
     }
-    return decoded
+    final users = decoded
         .map(
           (value) =>
               UserProfile.fromJson(Map<String, dynamic>.from(value as Map)),
         )
+        .toList(growable: false);
+
+    if (organizationId == null || organizationId.isEmpty) {
+      return users;
+    }
+
+    return users
+        .where((user) => user.organizationId == organizationId)
         .toList(growable: false);
   }
 
@@ -248,11 +254,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
     final uri = Uri.parse('$baseUrl/api/Documents/$documentId/file');
     final request = http.MultipartRequest('POST', uri)
       ..files.add(
-        http.MultipartFile.fromBytes(
-          'file',
-          fileBytes,
-          filename: fileName,
-        ),
+        http.MultipartFile.fromBytes('file', fileBytes, filename: fileName),
       );
 
     final accessToken = await _accessTokenProvider?.call();
@@ -298,9 +300,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
   }
 
   @override
-  Future<List<DocumentListItem>> fetchDocumentsSentToMe(
-    String userId,
-  ) async {
+  Future<List<DocumentListItem>> fetchDocumentsSentToMe(String userId) async {
     final uri = Uri.parse('$baseUrl/api/Documents/sent-to-me/$userId');
     final headers = <String, String>{'accept': 'application/json'};
     final accessToken = await _accessTokenProvider?.call();
@@ -364,10 +364,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
       headers['authorization'] = 'Bearer $accessToken';
     }
 
-    final body = jsonEncode({
-      'userName': userName,
-      'userEmail': userEmail,
-    });
+    final body = jsonEncode({'userName': userName, 'userEmail': userEmail});
 
     final response = await _client.post(uri, headers: headers, body: body);
 
@@ -492,7 +489,9 @@ String _extractDetail(String body) {
   try {
     final decoded = jsonDecode(body);
     if (decoded is Map) {
-      return decoded['detail']?.toString() ?? decoded['title']?.toString() ?? '';
+      return decoded['detail']?.toString() ??
+          decoded['title']?.toString() ??
+          '';
     }
   } catch (_) {}
   return body;

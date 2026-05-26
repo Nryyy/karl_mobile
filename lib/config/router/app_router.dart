@@ -66,7 +66,11 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/dashboard',
           name: 'dashboard',
-          builder: (context, state) => const DashboardPage(),
+          builder: (context, state) => DashboardPage(
+            repository: HttpDocumentsRepository(
+              accessTokenProvider: _firebaseAccessToken,
+            ),
+          ),
         ),
         GoRoute(
           path: '/documents',
@@ -90,7 +94,9 @@ final GoRouter appRouter = GoRouter(
           path: '/documents/:id',
           name: 'document_detail',
           builder: (context, state) {
-            final doc = state.extra is DocumentListItem ? state.extra as DocumentListItem : null;
+            final doc = state.extra is DocumentListItem
+                ? state.extra as DocumentListItem
+                : null;
             return DocumentDetailPage(document: doc);
           },
         ),

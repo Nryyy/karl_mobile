@@ -1,16 +1,65 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../documents/data/documents_repository.dart';
+import '../../../documents/domain/document_models.dart';
+import '../../../documents/domain/document_visibility.dart';
 
-/// Mobile-first mock dashboard page based on the provided design.
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+/// Mobile-first dashboard page that summarizes the user's documents.
+class DashboardPage extends StatefulWidget {
+  const DashboardPage({super.key, required this.repository});
+
+  final DocumentsRepository repository;
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  late final Future<_DashboardStats> _statsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _statsFuture = _loadStats();
+  }
+
+  Future<_DashboardStats> _loadStats() async {
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null) {
+      return const _DashboardStats();
+    }
+
+    final email = firebaseUser.email ?? '';
+    final profile = await widget.repository.fetchCurrentUser(email);
+    final results = await Future.wait([
+      widget.repository.fetchDocuments(),
+      widget.repository.fetchDocumentsSentToMe(profile.id),
+    ]);
+
+    final allDocuments = results[0] as List<DocumentListItem>;
+    final sentToMe = results[1] as List<DocumentListItem>;
+    final visibleDocuments = mergeVisibleDocuments(
+      currentUserId: profile.id,
+      allDocuments: allDocuments,
+      sentToMe: sentToMe,
+    );
+
+    return _DashboardStats(
+      pending: visibleDocuments
+          .where((document) => isPendingApprovalForUser(document, profile.id))
+          .length,
+      approved: visibleDocuments.where(isApprovedDocument).length,
+      recent: visibleDocuments.where(isRecentDocument).length,
+      total: visibleDocuments.length,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final String userName = _resolveUserName();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Головна'),
@@ -18,7 +67,7 @@ class DashboardPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: FilledButton.icon(
-              onPressed: () {},
+              onPressed: () => GoRouter.of(context).go('/documents/new'),
               icon: const Icon(Icons.add_circle_outline, size: 18),
               label: const Text('Новий документ'),
             ),
@@ -41,9 +90,18 @@ class DashboardPage extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 12),
-          const _StatsGrid(),
+          FutureBuilder<_DashboardStats>(
+            future: _statsFuture,
+            builder: (context, snapshot) {
+              final stats = snapshot.data ?? const _DashboardStats();
+              return _StatsGrid(stats: stats);
+            },
+          ),
           const SizedBox(height: 14),
-          const _QuickActionsCard(),
+          _QuickActionsCard(
+            onCreateDocument: () => GoRouter.of(context).go('/documents/new'),
+            onOpenTemplates: () => GoRouter.of(context).go('/templates'),
+          ),
           const SizedBox(height: 14),
           const _ActivityCard(),
           const SizedBox(height: 14),
@@ -72,7 +130,9 @@ class DashboardPage extends StatelessWidget {
 }
 
 class _StatsGrid extends StatelessWidget {
-  const _StatsGrid();
+  const _StatsGrid({required this.stats});
+
+  final _DashboardStats stats;
 
   @override
   Widget build(BuildContext context) {
@@ -83,22 +143,45 @@ class _StatsGrid extends StatelessWidget {
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
       childAspectRatio: 1.9,
-      children: const <Widget>[
-        _StatTile(label: 'Очікують', value: '2', valueColor: AppColors.warning),
+      children: <Widget>[
+        _StatTile(
+          label: 'Очікують',
+          value: stats.pending.toString(),
+          valueColor: AppColors.warning,
+        ),
         _StatTile(
           label: 'Затверджено',
-          value: '0',
+          value: stats.approved.toString(),
           valueColor: AppColors.success,
         ),
-        _StatTile(label: 'За 7 днів', value: '2', valueColor: AppColors.info),
+        _StatTile(
+          label: 'За 7 днів',
+          value: stats.recent.toString(),
+          valueColor: AppColors.info,
+        ),
         _StatTile(
           label: 'Всього',
-          value: '2',
+          value: stats.total.toString(),
           valueColor: AppColors.primaryLight,
         ),
       ],
     );
   }
+}
+
+@immutable
+class _DashboardStats {
+  const _DashboardStats({
+    this.pending = 0,
+    this.approved = 0,
+    this.recent = 0,
+    this.total = 0,
+  });
+
+  final int pending;
+  final int approved;
+  final int recent;
+  final int total;
 }
 
 class _StatTile extends StatelessWidget {
@@ -141,7 +224,13 @@ class _StatTile extends StatelessWidget {
 }
 
 class _QuickActionsCard extends StatelessWidget {
-  const _QuickActionsCard();
+  const _QuickActionsCard({
+    required this.onCreateDocument,
+    required this.onOpenTemplates,
+  });
+
+  final VoidCallback onCreateDocument;
+  final VoidCallback onOpenTemplates;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +251,7 @@ class _QuickActionsCard extends StatelessWidget {
               children: <Widget>[
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: onCreateDocument,
                     icon: const Icon(Icons.upload_file_outlined),
                     label: const Text('Завантажити'),
                   ),
@@ -170,7 +259,7 @@ class _QuickActionsCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: onOpenTemplates,
                     icon: const Icon(Icons.article_outlined),
                     label: const Text('Шаблони'),
                   ),

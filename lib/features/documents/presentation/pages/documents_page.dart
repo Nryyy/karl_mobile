@@ -10,6 +10,7 @@ import '../../../auth/data/firebase_auth_service.dart';
 import '../../../auth/domain/auth_service.dart';
 import '../../data/documents_repository.dart';
 import '../../domain/document_models.dart';
+import '../../domain/document_visibility.dart';
 import '../widgets/google_drive_preview.dart';
 
 /// Main post-login page showing the document list.
@@ -40,7 +41,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
   void initState() {
     super.initState();
     _searchController.addListener(_handleSearchChanged);
-    _documentsFuture = widget.repository.fetchDocuments();
+    _documentsFuture = _loadVisibleDocuments();
   }
 
   @override
@@ -74,9 +75,32 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
   Future<void> _refreshDocuments() async {
     setState(() {
-      _documentsFuture = widget.repository.fetchDocuments();
+      _documentsFuture = _loadVisibleDocuments();
     });
     await _documentsFuture;
+  }
+
+  Future<List<DocumentListItem>> _loadVisibleDocuments() async {
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null) {
+      return const <DocumentListItem>[];
+    }
+
+    final email = firebaseUser.email ?? '';
+    final profile = await widget.repository.fetchCurrentUser(email);
+    final results = await Future.wait([
+      widget.repository.fetchDocuments(),
+      widget.repository.fetchDocumentsSentToMe(profile.id),
+    ]);
+
+    final allDocuments = results[0] as List<DocumentListItem>;
+    final sentToMe = results[1] as List<DocumentListItem>;
+
+    return mergeVisibleDocuments(
+      currentUserId: profile.id,
+      allDocuments: allDocuments,
+      sentToMe: sentToMe,
+    );
   }
 
   Future<void> _handleSignOut() async {
@@ -568,7 +592,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
           ),
           const SizedBox(height: 12),
           _SimpleDocumentCard(document: item),
-          if (item.webViewLink.isNotEmpty) ...[  
+          if (item.webViewLink.isNotEmpty) ...[
             const SizedBox(height: 20),
             Text(
               'Перегляд документа',
@@ -652,25 +676,31 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
   Future<void> _loadInitialData(String uid, String email) async {
     setState(() => _isLoadingUsers = true);
     try {
-      final usersFuture = _repository.fetchUsers().catchError((Object e) {
-        developer.log('Failed to load users', name: 'karl.editor', error: e);
-        return <UserProfile>[];
-      });
       final profileFuture = _repository
           .fetchCurrentUser(email)
           .then<UserProfile?>((p) => p)
           .catchError((Object e) {
-        developer.log(
-          'Failed to load current user profile',
-          name: 'karl.editor',
-          error: e,
-        );
-        return null;
-      });
-      final results = await Future.wait([profileFuture, usersFuture]);
+            developer.log(
+              'Failed to load current user profile',
+              name: 'karl.editor',
+              error: e,
+            );
+            return null;
+          });
+
+      final profile = await profileFuture;
+      final users = await _repository
+          .fetchUsers(organizationId: profile?.organizationId)
+          .catchError((Object e) {
+            developer.log(
+              'Failed to load users',
+              name: 'karl.editor',
+              error: e,
+            );
+            return <UserProfile>[];
+          });
+
       if (!mounted) return;
-      final profile = results[0] as UserProfile?;
-      final users = results[1] as List<UserProfile>;
       setState(() {
         if (profile != null) {
           _organizationId = profile.organizationId;
@@ -756,17 +786,19 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
     setState(() => _isSaving = true);
 
     try {
-      final authorName =
-          user.displayName?.trim().isNotEmpty == true
-              ? user.displayName!
-              : (user.email?.split('@').first ?? 'користувач');
+      final authorName = user.displayName?.trim().isNotEmpty == true
+          ? user.displayName!
+          : (user.email?.split('@').first ?? 'користувач');
 
       final effectiveFileType =
-          _selectedFileType ??
-          _pickedFile?.name.split('.').last.toLowerCase();
+          _selectedFileType ?? _pickedFile?.name.split('.').last.toLowerCase();
 
-      final isEditable = const {'doc', 'docx', 'xlsx', 'xls'}
-          .contains(effectiveFileType?.toLowerCase());
+      final isEditable = const {
+        'doc',
+        'docx',
+        'xlsx',
+        'xls',
+      }.contains(effectiveFileType?.toLowerCase());
       final statusId = isEditable ? 'draft' : 'pending';
       final statusName = isEditable ? 'Draft' : 'Pending';
 
@@ -992,9 +1024,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    _formatFileSize(
-                                      _pickedFile!.size,
-                                    ),
+                                    _formatFileSize(_pickedFile!.size),
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: AppColors.textSecondary,
                                     ),
@@ -1153,7 +1183,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
               ],
             ],
           ),
-          if (_googleDriveError) ...[  
+          if (_googleDriveError) ...[
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
@@ -1179,27 +1209,31 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                       children: [
                         Text(
                           'Google Drive не підключено',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Документ збережено без файлу. Зверніться до адміністратора для підключення Google Drive.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
                         const SizedBox(height: 10),
                         TextButton.icon(
-                          onPressed: () => GoRouter.of(context).go('/documents'),
+                          onPressed: () =>
+                              GoRouter.of(context).go('/documents'),
                           style: TextButton.styleFrom(
                             foregroundColor: AppColors.warning,
                             visualDensity: VisualDensity.compact,
                             padding: EdgeInsets.zero,
                           ),
-                          icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                          icon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 16,
+                          ),
                           label: const Text(
                             'Перейти до документів',
                             style: TextStyle(fontSize: 13),
@@ -1416,10 +1450,7 @@ class _ApprovalStepRow extends StatelessWidget {
 }
 
 class _UploadFileSection extends StatelessWidget {
-  const _UploadFileSection({
-    required this.isUploading,
-    required this.onUpload,
-  });
+  const _UploadFileSection({required this.isUploading, required this.onUpload});
 
   final bool isUploading;
   final VoidCallback onUpload;
