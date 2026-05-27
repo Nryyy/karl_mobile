@@ -48,7 +48,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   }
 
   Future<List<DocumentListItem>> _fetchFiltered(String userId) async {
-    final docs = await widget.repository.fetchDocuments();
+    final docs = await widget.repository.fetchDocuments(archived: false);
     return docs.where(_isPendingForMe).toList(growable: false);
   }
 

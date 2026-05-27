@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../documents/data/documents_repository.dart';
-import '../../../documents/domain/document_models.dart';
 import '../../../documents/domain/document_visibility.dart';
 
 /// Mobile-first dashboard page that summarizes the user's documents.
@@ -35,12 +34,12 @@ class _DashboardPageState extends State<DashboardPage> {
     final email = firebaseUser.email ?? '';
     final profile = await widget.repository.fetchCurrentUser(email);
     final results = await Future.wait([
-      widget.repository.fetchDocuments(),
-      widget.repository.fetchDocumentsSentToMe(profile.id),
+      widget.repository.fetchDocuments(archived: false),
+      widget.repository.fetchDocumentsSentToMe(profile.id, archived: false),
     ]);
 
-    final allDocuments = results[0] as List<DocumentListItem>;
-    final sentToMe = results[1] as List<DocumentListItem>;
+    final allDocuments = results[0];
+    final sentToMe = results[1];
     final visibleDocuments = mergeVisibleDocuments(
       currentUserId: profile.id,
       allDocuments: allDocuments,

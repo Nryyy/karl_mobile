@@ -6,10 +6,12 @@ import 'package:http/http.dart' as http;
 
 import '../domain/document_models.dart';
 
+final Set<String> _archivedDocumentIds = <String>{};
+
 /// Abstraction for fetching documents from a data source.
 abstract class DocumentsRepository {
-  /// Loads the latest documents.
-  Future<List<DocumentListItem>> fetchDocuments();
+  /// Loads documents, optionally filtered by archive state.
+  Future<List<DocumentListItem>> fetchDocuments({bool? archived});
 
   /// Creates a new document and returns its id.
   Future<String> createDocument({
@@ -40,7 +42,10 @@ abstract class DocumentsRepository {
   });
 
   /// Returns documents sent to [userId] for approval.
-  Future<List<DocumentListItem>> fetchDocumentsSentToMe(String userId);
+  Future<List<DocumentListItem>> fetchDocumentsSentToMe(
+    String userId, {
+    bool? archived,
+  });
 
   /// Signs (approves) a document as part of the approval flow.
   Future<void> signDocument({
@@ -56,6 +61,15 @@ abstract class DocumentsRepository {
     required String userEmail,
     String? comment,
   });
+
+  /// Archives a document (soft archive).
+  Future<void> archiveDocument(String documentId);
+
+  /// Restores a previously archived document.
+  Future<void> restoreDocument(String documentId);
+
+  /// Deletes a document. If [permanent] is true, performs a hard delete.
+  Future<void> deleteDocument(String documentId, {bool permanent = false});
 }
 
 /// HTTP repository that reads documents from the API.
@@ -159,7 +173,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<List<DocumentStatus>> fetchDocumentStatuses() async {
-    final documents = await fetchDocuments();
+    final documents = await fetchDocuments(archived: false);
     final seen = <String>{};
     return documents
         .map((d) => d.status)
@@ -300,7 +314,10 @@ class HttpDocumentsRepository implements DocumentsRepository {
   }
 
   @override
-  Future<List<DocumentListItem>> fetchDocumentsSentToMe(String userId) async {
+  Future<List<DocumentListItem>> fetchDocumentsSentToMe(
+    String userId, {
+    bool? archived,
+  }) async {
     final uri = Uri.parse('$baseUrl/api/Documents/sent-to-me/$userId');
     final headers = <String, String>{'accept': 'application/json'};
     final accessToken = await _accessTokenProvider?.call();
@@ -339,13 +356,15 @@ class HttpDocumentsRepository implements DocumentsRepository {
       );
     }
 
-    return decoded
+    final documents = decoded
         .map(
           (value) => DocumentListItem.fromJson(
             Map<String, dynamic>.from(value as Map),
           ),
         )
         .toList(growable: false);
+
+    return _filterArchivedDocuments(documents, archived: archived);
   }
 
   @override
@@ -387,6 +406,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
             : 'Не вдалося підписати документ (${response.statusCode}).',
       );
     }
+
   }
 
   @override
@@ -433,10 +453,159 @@ class HttpDocumentsRepository implements DocumentsRepository {
             : 'Не вдалося відхилити документ (${response.statusCode}).',
       );
     }
+
+    _archivedDocumentIds.remove(documentId);
   }
 
   @override
-  Future<List<DocumentListItem>> fetchDocuments() async {
+  @override
+  Future<void> archiveDocument(String documentId) async {
+    final uri = Uri.parse('$baseUrl/api/Documents/$documentId');
+    final headers = <String, String>{
+      'accept': 'application/json',
+      'content-type': 'application/json',
+    };
+    final accessToken = await _accessTokenProvider?.call();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['authorization'] = 'Bearer $accessToken';
+    }
+
+    final body = jsonEncode({'archived': true});
+
+    final response = await _client.put(uri, headers: headers, body: body);
+
+    if (response.statusCode == 401) {
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
+    }
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      developer.log(
+        'Documents archive update API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      final detail = _extractDetail(response.body);
+      throw DocumentsRepositoryException(
+        detail.isNotEmpty
+            ? detail
+            : 'Не вдалося архівувати документ (${response.statusCode}).',
+      );
+    }
+
+    _archivedDocumentIds.add(documentId);
+  }
+
+  @override
+  Future<void> restoreDocument(String documentId) async {
+    final uri = Uri.parse('$baseUrl/api/Documents/$documentId');
+    final headers = <String, String>{
+      'accept': 'application/json',
+      'content-type': 'application/json',
+    };
+    final accessToken = await _accessTokenProvider?.call();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['authorization'] = 'Bearer $accessToken';
+    }
+
+    final body = jsonEncode({'archived': false});
+
+    final response = await _client.put(uri, headers: headers, body: body);
+
+    if (response.statusCode == 401) {
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
+    }
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      developer.log(
+        'Documents restore update API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      final detail = _extractDetail(response.body);
+      throw DocumentsRepositoryException(
+        detail.isNotEmpty
+            ? detail
+            : 'Не вдалося відновити документ (${response.statusCode}).',
+      );
+    }
+
+    _archivedDocumentIds.remove(documentId);
+  }
+
+  @override
+  Future<void> deleteDocument(String documentId, {bool permanent = false}) async {
+    final uri = Uri.parse('$baseUrl/api/Documents/$documentId')
+        .replace(queryParameters: permaQuery(permanent));
+    final headers = <String, String>{'accept': 'application/json'};
+    final accessToken = await _accessTokenProvider?.call();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['authorization'] = 'Bearer $accessToken';
+    }
+
+    final response = await _client.delete(uri, headers: headers);
+
+    if (response.statusCode == 401) {
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
+    }
+
+    if (response.statusCode != 204 && response.statusCode != 200) {
+      developer.log(
+        'Documents delete API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
+      final detail = _extractDetail(response.body);
+      throw DocumentsRepositoryException(
+        detail.isNotEmpty
+            ? detail
+            : 'Не вдалося видалити документ (${response.statusCode}).',
+      );
+    }
+
+    _archivedDocumentIds.remove(documentId);
+  }
+
+  List<DocumentListItem> _filterArchivedDocuments(
+    List<DocumentListItem> documents, {
+    bool? archived,
+  }) {
+    if (archived == null) {
+      return documents;
+    }
+
+    return documents
+        .where((document) => _isArchivedDocument(document) == archived)
+        .toList(growable: false);
+  }
+
+  bool _isArchivedDocument(DocumentListItem document) {
+    if (_archivedDocumentIds.contains(document.id)) {
+      return true;
+    }
+
+    final statusName = document.status.name.toLowerCase();
+    final statusId = document.status.id.toLowerCase();
+    return statusName.contains('архів') ||
+        statusName.contains('archive') ||
+        statusName.contains('archived') ||
+        statusId.contains('архів') ||
+        statusId.contains('archive') ||
+        statusId.contains('archived');
+  }
+
+  Map<String, String>? permaQuery(bool permanent) {
+    if (!permanent) return null;
+    return {'permanent': 'true'};
+  }
+
+  @override
+  Future<List<DocumentListItem>> fetchDocuments({bool? archived}) async {
     final uri = Uri.parse('$baseUrl/api/Documents');
     final headers = <String, String>{'accept': 'application/json'};
     final accessToken = await _accessTokenProvider?.call();
@@ -475,13 +644,15 @@ class HttpDocumentsRepository implements DocumentsRepository {
       );
     }
 
-    return decoded
+    final documents = decoded
         .map(
           (value) => DocumentListItem.fromJson(
             Map<String, dynamic>.from(value as Map),
           ),
         )
         .toList(growable: false);
+
+    return _filterArchivedDocuments(documents, archived: archived);
   }
 }
 

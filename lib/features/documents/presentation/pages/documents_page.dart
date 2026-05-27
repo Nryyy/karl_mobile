@@ -89,18 +89,26 @@ class _DocumentsPageState extends State<DocumentsPage> {
     final email = firebaseUser.email ?? '';
     final profile = await widget.repository.fetchCurrentUser(email);
     final results = await Future.wait([
-      widget.repository.fetchDocuments(),
-      widget.repository.fetchDocumentsSentToMe(profile.id),
+      widget.repository.fetchDocuments(archived: false),
+      widget.repository.fetchDocumentsSentToMe(profile.id, archived: false),
     ]);
 
-    final allDocuments = results[0] as List<DocumentListItem>;
-    final sentToMe = results[1] as List<DocumentListItem>;
+    final allDocuments = results[0];
+    final sentToMe = results[1];
 
-    return mergeVisibleDocuments(
+    final merged = mergeVisibleDocuments(
       currentUserId: profile.id,
       allDocuments: allDocuments,
       sentToMe: sentToMe,
     );
+
+    // Exclude archived documents from the main documents page.
+    return merged
+        .where((d) {
+          final name = d.status.name.toLowerCase();
+          return !(name.contains('архів') || name.contains('archive') || name.contains('archived'));
+        })
+        .toList(growable: false);
   }
 
   Future<void> _handleSignOut() async {
@@ -209,7 +217,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
                   ...filteredDocuments.map(
                     (document) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: _SimpleDocumentCard(document: document),
+                      child: SimpleDocumentCard(document: document, repository: widget.repository, onChanged: _refreshDocuments),
                     ),
                   ),
               ],
@@ -367,13 +375,149 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-class _SimpleDocumentCard extends StatelessWidget {
-  const _SimpleDocumentCard({required this.document});
+class SimpleDocumentCard extends StatefulWidget {
+  const SimpleDocumentCard({
+    required this.document,
+    this.repository,
+    this.onChanged,
+    this.allowPermanentDelete = false,
+  });
 
   final DocumentListItem document;
+  final DocumentsRepository? repository;
+  final VoidCallback? onChanged;
+  final bool allowPermanentDelete;
+
+  @override
+  State<SimpleDocumentCard> createState() => _SimpleDocumentCardState();
+}
+
+class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
+  bool _isProcessing = false;
+
+  bool get _isArchived {
+    if (widget.allowPermanentDelete) {
+      return true;
+    }
+
+    final name = widget.document.status.name.toLowerCase();
+    return name.contains('архів') || name.contains('archive') || name.contains('archived');
+  }
+
+  void _refreshParent() {
+    widget.onChanged?.call();
+  }
+
+  Future<void> _archive() async {
+    if (widget.repository == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Repository not available.')));
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Архівувати документ?'),
+        content: const Text('Документ буде переміщено в архів.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Скасувати')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Архівувати')),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isProcessing = true);
+    try {
+      await widget.repository!.archiveDocument(widget.document.id);
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: const Text('Документ архівовано.'),
+            action: SnackBarAction(
+              label: 'Відмінити',
+              onPressed: () async {
+                try {
+                  await widget.repository!.restoreDocument(widget.document.id);
+                  if (!mounted) return;
+                  _refreshParent();
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Архівацію скасовано.')),
+                  );
+                } on DocumentsRepositoryException catch (e) {
+                  if (!mounted) return;
+                  messenger.showSnackBar(SnackBar(content: Text(e.message)));
+                } catch (_) {
+                  if (!mounted) return;
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Не вдалося відновити документ.')),
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      _refreshParent();
+    } on DocumentsRepositoryException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Не вдалося архівувати документ.')));
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _delete() async {
+    if (widget.repository == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Repository not available.')));
+      return;
+    }
+
+    if (!_isArchived) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Видалення дозволено лише з архіву.')));
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Видалити документ?'),
+        content: const Text('Цю операцію не можна скасувати. Ви впевнені?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Скасувати')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Видалити')),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isProcessing = true);
+    try {
+      await widget.repository!.deleteDocument(widget.document.id, permanent: true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Документ видалено.')));
+      widget.onChanged?.call();
+    } on DocumentsRepositoryException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Не вдалося видалити документ.')));
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final document = widget.document;
     final statusColor = _statusColor(document.status.name);
     final createdAt = _formatDate(document.createdAt).split(' ').first;
 
@@ -416,6 +560,27 @@ class _SimpleDocumentCard extends StatelessWidget {
                         ? 'Не вказано'
                         : document.status.name,
                     color: statusColor,
+                  ),
+                  const SizedBox(width: 8),
+                  PopupMenuButton<String>(
+                    enabled: !_isProcessing,
+                    onSelected: (v) async {
+                      if (v == 'archive') await _archive();
+                      if (v == 'delete') await _delete();
+                    },
+                    itemBuilder: (context) => <PopupMenuEntry<String>>[
+                      if (!_isArchived)
+                        const PopupMenuItem<String>(
+                          value: 'archive',
+                          child: Text('Архівувати'),
+                        ),
+                      if (_isArchived)
+                        const PopupMenuItem<String>(
+                          value: 'delete',
+                          child: Text('Видалити назавжди'),
+                        ),
+                    ],
+                    icon: const Icon(Icons.more_vert),
                   ),
                 ],
               ),
@@ -591,7 +756,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 12),
-          _SimpleDocumentCard(document: item),
+          SimpleDocumentCard(document: item, repository: null),
           if (item.webViewLink.isNotEmpty) ...[
             const SizedBox(height: 20),
             Text(

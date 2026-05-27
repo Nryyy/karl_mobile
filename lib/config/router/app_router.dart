@@ -10,6 +10,7 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/documents/data/documents_repository.dart';
 import '../../features/documents/presentation/pages/approvals_page.dart';
 import '../../features/documents/presentation/pages/documents_page.dart';
+import '../../features/documents/presentation/pages/archive_page.dart';
 import '../../features/documents/domain/document_models.dart';
 import '../../features/navigation/presentation/pages/account_page.dart';
 import '../../features/navigation/presentation/pages/dashboard_page.dart';
@@ -144,10 +145,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/archive',
           name: 'archive',
-          builder: (context, state) => const SectionPage(
-            title: 'Архів',
-            icon: Icons.archive_outlined,
-            description: 'Архівовані документи та історія.',
+          builder: (context, state) => ArchivePage(
+            repository: HttpDocumentsRepository(
+              accessTokenProvider: _firebaseAccessToken,
+            ),
           ),
         ),
         GoRoute(
