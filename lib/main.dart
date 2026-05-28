@@ -2,6 +2,12 @@ import 'dart:developer' as developer;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
+import 'core/providers/locale_provider.dart';
+
+import 'core/providers/theme_provider.dart';
 
 import 'config/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -67,21 +73,35 @@ Future<void> main() async {
     return;
   }
 
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Karl',
-      routerConfig: appRouter,
-      
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light,
+    // fallback to light; the ThemeNotifier will update on load
+    return Consumer(
+      builder: (context, ref, _) {
+        final themeMode = ref.watch(themeNotifierProvider);
+        final localeAsync = ref.watch(localeProvider);
+        final locale = localeAsync.asData?.value;
+        return MaterialApp.router(
+          title: AppLocalizations.of(context)?.appTitle ?? 'Karl',
+          routerConfig: appRouter,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeMode,
+          locale: locale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('uk'), Locale('pl')],
+        );
+      },
     );
   }
 }

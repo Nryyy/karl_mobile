@@ -15,6 +15,7 @@ import '../../features/documents/domain/document_models.dart';
 import '../../features/navigation/presentation/pages/account_page.dart';
 import '../../features/navigation/presentation/pages/dashboard_page.dart';
 import '../../features/navigation/presentation/pages/section_page.dart';
+import '../../features/navigation/presentation/pages/settings_page.dart';
 import '../../presentation/widgets/bottom_nav_bar.dart';
 
 /// Application router configuration using go_router.
@@ -159,11 +160,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/settings',
           name: 'settings',
-          builder: (context, state) => const SectionPage(
-            title: 'Налаштування',
-            icon: Icons.settings_outlined,
-            description: 'Налаштування профілю та параметри безпеки.',
-          ),
+          builder: (context, state) => const SettingsPage(),
         ),
         GoRoute(
           path: '/help',

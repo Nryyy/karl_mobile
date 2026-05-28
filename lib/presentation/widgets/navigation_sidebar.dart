@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
+
+import '../../core/providers/locale_provider.dart';
 import '_sidebar_item.dart';
 
 typedef NavigateCallback = void Function(String route);
 
-class NavigationSidebar extends StatefulWidget {
+class NavigationSidebar extends ConsumerStatefulWidget {
   const NavigationSidebar({
     Key? key,
     required this.currentRoute,
@@ -16,10 +20,10 @@ class NavigationSidebar extends StatefulWidget {
   final NavigateCallback onNavigate;
 
   @override
-  State<NavigationSidebar> createState() => _NavigationSidebarState();
+  ConsumerState<NavigationSidebar> createState() => _NavigationSidebarState();
 }
 
-class _NavigationSidebarState extends State<NavigationSidebar> {
+class _NavigationSidebarState extends ConsumerState<NavigationSidebar> {
   static const double _expandedWidth = 240;
   static const double _collapsedWidth = 72;
 
@@ -52,10 +56,27 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                         vertical: 8,
                       ),
                       child: Text(
-                        'Меню',
+                        AppLocalizations.of(context)?.dashboard ?? 'Menu',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
+                  // Always show language icon so it's visible in collapsed state
+                  PopupMenuButton<String>(
+                    tooltip: AppLocalizations.of(context)?.language ?? 'Language',
+                    icon: const Icon(Icons.language),
+                    onSelected: (value) async {
+                      Locale? locale;
+                      if (value == 'system') locale = null;
+                      else locale = Locale(value);
+                      await ref.read(localeProvider.notifier).setLocale(locale);
+                    },
+                    itemBuilder: (ctx) => [
+                      const PopupMenuItem(value: 'system', child: Text('System')),
+                      const PopupMenuItem(value: 'en', child: Text('English')),
+                      const PopupMenuItem(value: 'uk', child: Text('Українська')),
+                      const PopupMenuItem(value: 'pl', child: Text('Polski')),
+                    ],
+                  ),
                   IconButton(
                     tooltip: _collapsed ? 'Розгорнути' : 'Згорнути',
                     onPressed: _toggle,
@@ -127,13 +148,45 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                   horizontal: 8.0,
                   vertical: 6,
                 ),
-                child: SidebarItem(
-                  label: 'Допомога',
-                  icon: Icons.help_outline,
-                  selected: widget.currentRoute == '/help',
-                  onTap: () => widget.onNavigate('/help'),
-                  tooltip: 'Отримати допомогу',
-                  showLabel: !_collapsed,
+                child: Column(
+                  children: [
+                    SidebarItem(
+                      label: AppLocalizations.of(context)?.help ?? 'Help',
+                      icon: Icons.help_outline,
+                      selected: widget.currentRoute == '/help',
+                      onTap: () => widget.onNavigate('/help'),
+                      tooltip: AppLocalizations.of(context)?.help ?? 'Help',
+                      showLabel: !_collapsed,
+                    ),
+                    const SizedBox(height: 8),
+                    // Language selector
+                    Row(
+                      mainAxisAlignment: _collapsed
+                          ? MainAxisAlignment.center
+                          : MainAxisAlignment.start,
+                      children: [
+                        if (!_collapsed)
+                          Text(AppLocalizations.of(context)?.language ?? 'Language'),
+                        const SizedBox(width: 8),
+                        PopupMenuButton<String>(
+                          tooltip: AppLocalizations.of(context)?.language ?? 'Language',
+                          icon: const Icon(Icons.language),
+                          onSelected: (value) async {
+                            Locale? locale;
+                            if (value == 'system') locale = null;
+                            else locale = Locale(value);
+                            await ref.read(localeProvider.notifier).setLocale(locale);
+                          },
+                          itemBuilder: (ctx) => [
+                            const PopupMenuItem(value: 'system', child: Text('System')),
+                            const PopupMenuItem(value: 'en', child: Text('English')),
+                            const PopupMenuItem(value: 'uk', child: Text('Українська')),
+                            const PopupMenuItem(value: 'pl', child: Text('Polski')),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],

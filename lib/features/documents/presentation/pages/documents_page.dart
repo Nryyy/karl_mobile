@@ -4,17 +4,20 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
+
+import '../../providers/documents_provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/data/firebase_auth_service.dart';
 import '../../../auth/domain/auth_service.dart';
 import '../../data/documents_repository.dart';
 import '../../domain/document_models.dart';
-import '../../domain/document_visibility.dart';
 import '../widgets/google_drive_preview.dart';
 
 /// Main post-login page showing the document list.
-class DocumentsPage extends StatefulWidget {
+class DocumentsPage extends ConsumerStatefulWidget {
   /// Creates the documents page.
   const DocumentsPage({super.key, this.userName, required this.repository});
 
@@ -25,14 +28,12 @@ class DocumentsPage extends StatefulWidget {
   final DocumentsRepository repository;
 
   @override
-  State<DocumentsPage> createState() => _DocumentsPageState();
+  ConsumerState<DocumentsPage> createState() => _DocumentsPageState();
 }
 
-class _DocumentsPageState extends State<DocumentsPage> {
+class _DocumentsPageState extends ConsumerState<DocumentsPage> {
   final AuthService _authService = FirebaseAuthService();
   final TextEditingController _searchController = TextEditingController();
-
-  late Future<List<DocumentListItem>> _documentsFuture;
   String _searchQuery = '';
   String _selectedStatusFilter = 'all';
   bool _isSigningOut = false;
@@ -41,7 +42,6 @@ class _DocumentsPageState extends State<DocumentsPage> {
   void initState() {
     super.initState();
     _searchController.addListener(_handleSearchChanged);
-    _documentsFuture = _loadVisibleDocuments();
   }
 
   @override
@@ -74,43 +74,9 @@ class _DocumentsPageState extends State<DocumentsPage> {
   }
 
   Future<void> _refreshDocuments() async {
-    setState(() {
-      _documentsFuture = _loadVisibleDocuments();
-    });
-    await _documentsFuture;
+    await ref.read(documentsProvider.notifier).refresh();
   }
-
-  Future<List<DocumentListItem>> _loadVisibleDocuments() async {
-    final firebaseUser = FirebaseAuth.instance.currentUser;
-    if (firebaseUser == null) {
-      return const <DocumentListItem>[];
-    }
-
-    final email = firebaseUser.email ?? '';
-    final profile = await widget.repository.fetchCurrentUser(email);
-    final results = await Future.wait([
-      widget.repository.fetchDocuments(archived: false),
-      widget.repository.fetchDocumentsSentToMe(profile.id, archived: false),
-    ]);
-
-    final allDocuments = results[0];
-    final sentToMe = results[1];
-
-    final merged = mergeVisibleDocuments(
-      currentUserId: profile.id,
-      allDocuments: allDocuments,
-      sentToMe: sentToMe,
-    );
-
-    // Exclude archived documents from the main documents page.
-    return merged
-        .where((d) {
-          final name = d.status.name.toLowerCase();
-          return !(name.contains('архів') || name.contains('archive') || name.contains('archived'));
-        })
-        .toList(growable: false);
-  }
-
+  
   Future<void> _handleSignOut() async {
     setState(() => _isSigningOut = true);
 
@@ -120,32 +86,30 @@ class _DocumentsPageState extends State<DocumentsPage> {
       context.goNamed('login');
     } catch (_) {
       if (!mounted) return;
-      _showMessage('Не вдалося вийти з акаунта.');
+      _showMessage(AppLocalizations.of(context)?.signOut ?? 'Could not sign out.');
     } finally {
       if (mounted) setState(() => _isSigningOut = false);
     }
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Документообіг'),
+        title: Text(AppLocalizations.of(context)?.documents ?? 'Documents'),
         actions: [
           IconButton(
             onPressed: _refreshDocuments,
-            tooltip: 'Оновити документи',
+            tooltip: AppLocalizations.of(context)?.refresh ?? 'Refresh',
             icon: const Icon(Icons.refresh_outlined),
           ),
           IconButton(
             onPressed: _isSigningOut ? null : _handleSignOut,
-            tooltip: 'Вийти',
+            tooltip: AppLocalizations.of(context)?.signOut ?? 'Sign out',
             icon: _isSigningOut
                 ? const SizedBox(
                     width: 20,
@@ -163,38 +127,22 @@ class _DocumentsPageState extends State<DocumentsPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => GoRouter.of(context).go('/documents/new'),
         icon: const Icon(Icons.add),
-        label: const Text('Новий документ'),
+        label: Text(AppLocalizations.of(context)?.upload ?? 'New document'),
       ),
       body: RefreshIndicator(
         onRefresh: _refreshDocuments,
-        child: FutureBuilder<List<DocumentListItem>>(
-          future: _documentsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting &&
-                !snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              final message = snapshot.error is DocumentsRepositoryException
-                  ? snapshot.error.toString()
-                  : 'Не вдалося завантажити документи.';
-
-              return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24),
-                children: [
-                  _ErrorState(message: message, onRetry: _refreshDocuments),
-                ],
-              );
-            }
-
-            final documents = snapshot.data ?? const <DocumentListItem>[];
+        child: ref.watch(documentsProvider).when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, st) => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(24),
+            children: [
+              _ErrorState(message: err is DocumentsRepositoryException ? err.toString() : (AppLocalizations.of(context)?.firebaseInitError ?? 'Failed to load documents.'), onRetry: _refreshDocuments),
+            ],
+          ),
+          data: (documents) {
             final filteredDocuments = documents
-                .where((document) {
-                  return _matchesSearch(document) &&
-                      _matchesStatusFilter(document);
-                })
+                .where((document) => _matchesSearch(document) && _matchesStatusFilter(document))
                 .toList(growable: false);
 
             return ListView(
@@ -209,9 +157,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
                 const SizedBox(height: 12),
                 if (filteredDocuments.isEmpty)
                   _EmptyState(
-                    isSearchActive:
-                        _searchQuery.isNotEmpty ||
-                        _selectedStatusFilter != 'all',
+                    isSearchActive: _searchQuery.isNotEmpty || _selectedStatusFilter != 'all',
                   )
                 else
                   ...filteredDocuments.map(
@@ -303,18 +249,18 @@ class _DocumentsSimpleHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Мої документи', style: theme.textTheme.titleLarge),
+        Text(AppLocalizations.of(context)?.myDocuments ?? 'My Documents', style: theme.textTheme.titleLarge),
         const SizedBox(height: 6),
         Text(
-          'Пошук, фільтри та список документів',
+          AppLocalizations.of(context)?.searchHint ?? 'Search, filters and list of documents',
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 12),
         TextField(
           controller: searchController,
-          decoration: const InputDecoration(
-            prefixIcon: Icon(Icons.search),
-            hintText: 'Пошук за назвою, автором або типом',
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search),
+            hintText: AppLocalizations.of(context)?.searchHint ?? 'Search documents...',
           ),
         ),
         const SizedBox(height: 12),
@@ -323,7 +269,7 @@ class _DocumentsSimpleHeader extends StatelessWidget {
           runSpacing: 8,
           children: [
             _FilterChip(
-              label: 'Всі',
+              label: AppLocalizations.of(context)?.documents ?? 'All',
               selected: selectedStatusFilter == 'all',
               onSelected: () => onSelectStatusFilter('all'),
             ),
@@ -539,10 +485,16 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          document.title.isEmpty ? 'Без назви' : document.title,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                        Hero(
+                          tag: 'document-title-${document.id}',
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: Text(
+                              document.title.isEmpty ? 'Без назви' : document.title,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -751,9 +703,15 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(
-            item.title.isEmpty ? 'Без назви' : item.title,
-            style: Theme.of(context).textTheme.headlineSmall,
+          Hero(
+            tag: 'document-title-${item.id}',
+            child: Material(
+              type: MaterialType.transparency,
+              child: Text(
+                item.title.isEmpty ? 'Без назви' : item.title,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           SimpleDocumentCard(document: item, repository: null),
