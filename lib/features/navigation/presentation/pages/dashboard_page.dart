@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:karl_mobile/features/ai_chat/ai_chat_service.dart';
+import 'package:karl_mobile/features/ai_chat/chat_screen.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../documents/data/documents_repository.dart';
@@ -392,9 +394,32 @@ class _HelpCard extends StatelessWidget {
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
-              child: FilledButton(
-                onPressed: () {},
-                child: const Text('Написати'),
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                icon: const Icon(Icons.chat_bubble_outline),
+                onPressed: () async {
+                  final user = FirebaseAuth.instance.currentUser;
+                  String? token;
+                  if (user != null) token = await user.getIdToken();
+
+                  // Use the real backend provided (local HTTPS)
+                  final service = AiChatService(
+                    baseUrl: 'https://localhost:7229',
+                  );
+                  if (!context.mounted) return;
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ChatScreen(service: service, bearerToken: token),
+                    ),
+                  );
+                },
+                label: const Text('Поговорити з AI'),
               ),
             ),
           ],
