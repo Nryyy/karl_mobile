@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 import '../../domain/document_models.dart';
 
 /// Simple document card with Hero animation
@@ -55,7 +56,7 @@ class DocumentCard extends StatelessWidget {
                       child: Material(
                         type: MaterialType.transparency,
                         child: Text(
-                          document.title.isEmpty ? 'Без назви' : document.title,
+                          document.title.isEmpty ? (AppLocalizations.of(context)?.untitled ?? 'Untitled') : document.title,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -67,7 +68,7 @@ class DocumentCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     
                     Text(
-                      'Автор: ${document.authorName}',
+                      '${AppLocalizations.of(context)?.authorPrefix ?? 'Author:'} ${document.authorName.isEmpty ? (AppLocalizations.of(context)?.unknownAuthor ?? 'Unknown author') : document.authorName}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -344,13 +345,13 @@ class DocumentLoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Завантаження документів...'),
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(AppLocalizations.of(context)?.loadingDocuments ?? 'Loading documents...'),
         ],
       ),
     );
@@ -405,7 +406,7 @@ class DocumentErrorWidget extends StatelessWidget {
                   FilledButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Спробувати ще раз'),
+                    label: Text(AppLocalizations.of(context)?.tryAgain ?? 'Try again'),
                   ),
                 ],
               ),

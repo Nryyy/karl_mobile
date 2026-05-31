@@ -4,6 +4,7 @@ import 'ai_chat_service.dart';
 import 'models/ai_chat_response.dart';
 import 'models/ai_chat_request.dart';
 import 'package:flutter/services.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 class ChatScreen extends StatefulWidget {
   final AiChatService service;
@@ -72,7 +73,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('AI Chat')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)?.aiChatTitle ?? 'AI Chat')),
       body: Column(
         children: [
           Expanded(
@@ -122,14 +123,14 @@ class _ChatScreenState extends State<ChatScreen> {
                             elevation: 0.5,
                             borderRadius: BorderRadius.circular(12),
                             color: bg,
-                            child: InkWell(
+                                child: InkWell(
                               onLongPress: () {
                                 Clipboard.setData(
                                   ClipboardData(text: m.content),
                                 );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Скопійовано')),
-                                );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(AppLocalizations.of(context)?.copied ?? 'Copied')),
+                                    );
                               },
                               borderRadius: BorderRadius.circular(12),
                               child: Padding(
@@ -171,8 +172,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                             ScaffoldMessenger.of(
                                               context,
                                             ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Скопійовано'),
+                                              SnackBar(
+                                                content: Text(AppLocalizations.of(context)?.copied ?? 'Copied'),
                                               ),
                                             );
                                           },
@@ -218,8 +219,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       controller: _ctrl,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
-                      decoration: const InputDecoration(
-                        hintText: 'Type a message...',
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(context)?.typeMessageHint ?? 'Type a message...',
                       ),
                     ),
                   ),

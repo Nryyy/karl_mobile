@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../data/firebase_auth_service.dart';
@@ -34,7 +35,7 @@ class _GreetingPageState extends State<GreetingPage> {
       if (!mounted) {
         return;
       }
-      _showMessage('Не вдалося вийти з акаунта.');
+      _showMessage(AppLocalizations.of(context)?.signOutError ?? 'Unable to sign out.');
     } finally {
       if (mounted) {
         setState(() => _isSigningOut = false);
@@ -143,7 +144,7 @@ class _GreetingPageState extends State<GreetingPage> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('Вийти з акаунта'),
+                            : Text(AppLocalizations.of(context)?.signOut ?? 'Sign out'),
                       ),
                     ),
                   ],

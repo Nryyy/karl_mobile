@@ -71,14 +71,21 @@ class _NavigationSidebarState extends ConsumerState<NavigationSidebar> {
                       await ref.read(localeProvider.notifier).setLocale(locale);
                     },
                     itemBuilder: (ctx) => [
-                      const PopupMenuItem(value: 'system', child: Text('System')),
-                      const PopupMenuItem(value: 'en', child: Text('English')),
-                      const PopupMenuItem(value: 'uk', child: Text('Українська')),
-                      const PopupMenuItem(value: 'pl', child: Text('Polski')),
+                      PopupMenuItem(
+                        value: 'system',
+                        child: Text(AppLocalizations.of(context)?.languageSystemDefault ?? 'System')),
+                      PopupMenuItem(
+                        value: 'en', child: Text(AppLocalizations.of(context)?.languageEnglish ?? 'English')),
+                      PopupMenuItem(
+                        value: 'uk', child: Text(AppLocalizations.of(context)?.languageUkrainian ?? 'Ukrainian')),
+                      PopupMenuItem(
+                        value: 'pl', child: Text(AppLocalizations.of(context)?.languagePolish ?? 'Polish')),
                     ],
                   ),
                   IconButton(
-                    tooltip: _collapsed ? 'Розгорнути' : 'Згорнути',
+                    tooltip: _collapsed
+                        ? (AppLocalizations.of(context)?.expandSidebar ?? 'Expand')
+                        : (AppLocalizations.of(context)?.collapseSidebar ?? 'Collapse'),
                     onPressed: _toggle,
                     icon: Icon(
                       _collapsed ? Icons.arrow_forward : Icons.arrow_back,
@@ -92,51 +99,51 @@ class _NavigationSidebarState extends ConsumerState<NavigationSidebar> {
                   padding: EdgeInsets.zero,
                   children: <Widget>[
                     SidebarItem(
-                      label: 'Dashboard',
+                      label: AppLocalizations.of(context)?.dashboard ?? 'Dashboard',
                       icon: Icons.dashboard,
                       selected:
                           widget.currentRoute == '/' ||
                           widget.currentRoute == '/dashboard',
                       onTap: () => widget.onNavigate('/'),
-                      tooltip: 'Головна сторінка',
+                      tooltip: AppLocalizations.of(context)?.tooltipDashboard ?? 'Home page',
                       showLabel: !_collapsed,
                     ),
                     const SizedBox(height: 6),
                     SidebarItem(
-                      label: 'Мої документи',
+                      label: AppLocalizations.of(context)?.myDocuments ?? 'My Documents',
                       icon: Icons.description,
                       selected: widget.currentRoute == '/documents',
                       onTap: () => widget.onNavigate('/documents'),
-                      tooltip: 'Всі ваші документи',
+                      tooltip: AppLocalizations.of(context)?.tooltipMyDocuments ?? 'All your documents',
                       showLabel: !_collapsed,
                     ),
                     const SizedBox(height: 6),
                     SidebarItem(
-                      label: 'Архів',
+                      label: AppLocalizations.of(context)?.archive ?? 'Archive',
                       icon: Icons.archive,
                       selected: widget.currentRoute == '/archive',
                       onTap: () => widget.onNavigate('/archive'),
-                      tooltip: 'Архівовані документи',
+                      tooltip: AppLocalizations.of(context)?.tooltipArchive ?? 'Archived documents',
                       showLabel: !_collapsed,
                     ),
                     const SizedBox(height: 6),
                     if (widget.isAdmin) ...[
                       SidebarItem(
-                        label: 'Адмін панель',
+                        label: AppLocalizations.of(context)?.adminPanel ?? 'Admin panel',
                         icon: Icons.admin_panel_settings,
                         selected: widget.currentRoute == '/admin',
                         onTap: () => widget.onNavigate('/admin'),
-                        tooltip: 'Адмін-панель (тільки для адміністраторів)',
+                        tooltip: AppLocalizations.of(context)?.tooltipAdminPanel ?? 'Admin panel (admins only)',
                         showLabel: !_collapsed,
                       ),
                       const SizedBox(height: 6),
                     ],
                     SidebarItem(
-                      label: 'Налаштування',
+                      label: AppLocalizations.of(context)?.settings ?? 'Settings',
                       icon: Icons.settings,
                       selected: widget.currentRoute == '/settings',
                       onTap: () => widget.onNavigate('/settings'),
-                      tooltip: 'Налаштування профілю',
+                      tooltip: AppLocalizations.of(context)?.tooltipSettings ?? 'Profile settings',
                       showLabel: !_collapsed,
                     ),
                   ],
@@ -178,10 +185,15 @@ class _NavigationSidebarState extends ConsumerState<NavigationSidebar> {
                             await ref.read(localeProvider.notifier).setLocale(locale);
                           },
                           itemBuilder: (ctx) => [
-                            const PopupMenuItem(value: 'system', child: Text('System')),
-                            const PopupMenuItem(value: 'en', child: Text('English')),
-                            const PopupMenuItem(value: 'uk', child: Text('Українська')),
-                            const PopupMenuItem(value: 'pl', child: Text('Polski')),
+                            PopupMenuItem(
+                              value: 'system',
+                              child: Text(AppLocalizations.of(context)?.languageSystemDefault ?? 'System')),
+                            PopupMenuItem(
+                              value: 'en', child: Text(AppLocalizations.of(context)?.languageEnglish ?? 'English')),
+                            PopupMenuItem(
+                              value: 'uk', child: Text(AppLocalizations.of(context)?.languageUkrainian ?? 'Ukrainian')),
+                            PopupMenuItem(
+                              value: 'pl', child: Text(AppLocalizations.of(context)?.languagePolish ?? 'Polish')),
                           ],
                         ),
                       ],

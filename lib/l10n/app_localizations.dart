@@ -157,11 +157,155 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get language;
 
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @languageSystemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get languageSystemDefault;
+
+  /// No description provided for @languageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @languageUkrainian.
+  ///
+  /// In en, this message translates to:
+  /// **'Ukrainian'**
+  String get languageUkrainian;
+
+  /// No description provided for @languagePolish.
+  ///
+  /// In en, this message translates to:
+  /// **'Polish'**
+  String get languagePolish;
+
+  /// No description provided for @aboutApp.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutApp;
+
   /// No description provided for @cachedDataBanner.
   ///
   /// In en, this message translates to:
   /// **'Showing cached data (offline)'**
   String get cachedDataBanner;
+
+  /// No description provided for @adminPanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin panel'**
+  String get adminPanel;
+
+  /// No description provided for @tooltipDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Home page'**
+  String get tooltipDashboard;
+
+  /// No description provided for @tooltipMyDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'All your documents'**
+  String get tooltipMyDocuments;
+
+  /// No description provided for @tooltipArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived documents'**
+  String get tooltipArchive;
+
+  /// No description provided for @tooltipAdminPanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin panel (admins only)'**
+  String get tooltipAdminPanel;
+
+  /// No description provided for @tooltipSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile settings'**
+  String get tooltipSettings;
+
+  /// No description provided for @expandSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get expandSidebar;
+
+  /// No description provided for @collapseSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapseSidebar;
+
+  /// No description provided for @templates.
+  ///
+  /// In en, this message translates to:
+  /// **'Templates'**
+  String get templates;
+
+  /// No description provided for @templatesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Here you can store templates for your documents.'**
+  String get templatesDescription;
+
+  /// No description provided for @helpDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Support, FAQ and useful resources.'**
+  String get helpDescription;
+
+  /// No description provided for @adminDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Administration tools for the system.'**
+  String get adminDescription;
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get copied;
+
+  /// No description provided for @aiChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Chat'**
+  String get aiChatTitle;
+
+  /// No description provided for @typeMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a message...'**
+  String get typeMessageHint;
 
   /// No description provided for @noDocuments.
   ///
@@ -187,11 +331,125 @@ abstract class AppLocalizations {
   /// **'Firebase initialization error'**
   String get firebaseInitError;
 
+  /// No description provided for @unknownError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error. Check logs.'**
+  String get unknownError;
+
   /// No description provided for @ok.
   ///
   /// In en, this message translates to:
   /// **'OK'**
   String get ok;
+
+  /// No description provided for @loginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginTitle;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your credentials to access the platform'**
+  String get loginSubtitle;
+
+  /// No description provided for @feature1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Document management'**
+  String get feature1_title;
+
+  /// No description provided for @feature1_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Store and organize all documents in one place'**
+  String get feature1_desc;
+
+  /// No description provided for @feature2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'AI assistant'**
+  String get feature2_title;
+
+  /// No description provided for @feature2_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart document processing and workflow automation'**
+  String get feature2_desc;
+
+  /// No description provided for @feature3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Teamwork'**
+  String get feature3_title;
+
+  /// No description provided for @feature3_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Collaborate on documents with colleagues in real time'**
+  String get feature3_desc;
+
+  /// No description provided for @feature4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Data security'**
+  String get feature4_title;
+
+  /// No description provided for @feature4_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enterprise-grade protection for your confidential documents'**
+  String get feature4_desc;
+
+  /// No description provided for @newUser.
+  ///
+  /// In en, this message translates to:
+  /// **'New user?'**
+  String get newUser;
+
+  /// No description provided for @createAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account in minutes'**
+  String get createAccountSubtitle;
+
+  /// No description provided for @register.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get register;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacy;
+
+  /// No description provided for @terms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of use'**
+  String get terms;
+
+  /// No description provided for @footerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get footerHelp;
+
+  /// No description provided for @signInError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to sign in. Please try again.'**
+  String get signInError;
+
+  /// No description provided for @googleSignInError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to sign in with Google.'**
+  String get googleSignInError;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

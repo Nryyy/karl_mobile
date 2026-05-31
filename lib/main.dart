@@ -13,6 +13,8 @@ import 'config/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   var firebaseInitialized = true;
@@ -36,35 +38,46 @@ Future<void> main() async {
   if (!firebaseInitialized) {
     runApp(MaterialApp(
       title: 'Karl - Initialization Error',
+      navigatorKey: navigatorKey,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('en'), Locale('uk'), Locale('pl')],
       home: Scaffold(
         body: SafeArea(
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline, size: 72, color: Colors.red),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Помилка ініціалізації Firebase',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    initErrorMessage ?? 'Невідома помилка. Перевірте логи.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Keep minimal: advise user to restart the app after fixing
-                    },
-                    child: const Text('Закрити додаток'),
-                  ),
-                ],
-              ),
+              child: Builder(builder: (context) {
+                final loc = AppLocalizations.of(context);
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline, size: 72, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      loc?.firebaseInitError ?? 'Firebase initialization error',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      initErrorMessage ?? loc?.unknownError ?? 'Unknown error. Check logs.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Keep minimal: advise user to restart the app after fixing
+                      },
+                      child: Text(loc?.closeApp ?? 'Close app'),
+                    ),
+                  ],
+                );
+              }),
             ),
           ),
         ),

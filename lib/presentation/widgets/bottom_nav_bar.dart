@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 typedef NavigateCallback = void Function(String route);
 
@@ -13,58 +14,31 @@ class BottomNavBar extends StatelessWidget {
   final String currentRoute;
   final NavigateCallback onNavigate;
 
-  static const List<_NavItem> _items = <_NavItem>[
-    _NavItem(
-      label: 'Головна',
-      icon: Icons.dashboard_outlined,
-      selectedIcon: Icons.dashboard,
-      route: '/dashboard',
-    ),
-    _NavItem(
-      label: 'Документи',
-      icon: Icons.description_outlined,
-      selectedIcon: Icons.description,
-      route: '/documents',
-    ),
-    _NavItem(
-      label: 'Погодження',
-      icon: Icons.pending_actions_outlined,
-      selectedIcon: Icons.pending_actions,
-      route: '/approvals',
-    ),
-    _NavItem(
-      label: 'Архів',
-      icon: Icons.archive_outlined,
-      selectedIcon: Icons.archive,
-      route: '/archive',
-    ),
-    _NavItem(
-      label: 'Акаунт',
-      icon: Icons.person_outline,
-      selectedIcon: Icons.person,
-      route: '/account',
-    ),
-  ];
-
-  int get _currentIndex {
-    final idx = _items.indexWhere((e) => currentRoute.startsWith(e.route));
-    return idx >= 0 ? idx : 0;
-  }
+  
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final loc = AppLocalizations.of(context);
+
+    final List<_NavItem> items = <_NavItem>[
+      _NavItem(label: loc?.dashboard ?? 'Dashboard', icon: Icons.dashboard_outlined, selectedIcon: Icons.dashboard, route: '/dashboard'),
+      _NavItem(label: loc?.documents ?? 'Documents', icon: Icons.description_outlined, selectedIcon: Icons.description, route: '/documents'),
+      _NavItem(label: loc?.approvals ?? 'Approvals', icon: Icons.pending_actions_outlined, selectedIcon: Icons.pending_actions, route: '/approvals'),
+      _NavItem(label: loc?.archive ?? 'Archive', icon: Icons.archive_outlined, selectedIcon: Icons.archive, route: '/archive'),
+      _NavItem(label: loc?.account ?? 'Account', icon: Icons.person_outline, selectedIcon: Icons.person, route: '/account'),
+    ];
 
     return NavigationBar(
-      selectedIndex: _currentIndex,
-      onDestinationSelected: (index) => onNavigate(_items[index].route),
+      selectedIndex: items.indexWhere((e) => currentRoute.startsWith(e.route)) >= 0 ? items.indexWhere((e) => currentRoute.startsWith(e.route)) : 0,
+      onDestinationSelected: (index) => onNavigate(items[index].route),
       backgroundColor: colorScheme.surfaceContainer,
       indicatorColor: colorScheme.secondaryContainer,
       indicatorShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       height: 80,
-      destinations: _items.map((item) {
+      destinations: items.map((item) {
         return NavigationDestination(
           icon: Icon(item.icon),
           selectedIcon: Icon(item.selectedIcon),

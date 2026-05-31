@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 import '../../data/documents_repository.dart';
 import '../../domain/document_models.dart';
@@ -63,7 +64,7 @@ class _ArchivePageContent extends ConsumerWidget {
     final archiveAsync = ref.watch(archiveProvider);
     
     return Scaffold(
-      appBar: AppBar(title: const Text('Архів')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)?.archive ?? 'Archive')),
       body: RefreshIndicator(
         onRefresh: () => ref.read(archiveProvider.notifier).refresh(),
         child: archiveAsync.when(
@@ -124,7 +125,7 @@ class _ArchiveEmptyState extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Архів порожній',
+                  AppLocalizations.of(context)?.archiveEmptyTitle ?? 'Archive is empty',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -132,7 +133,7 @@ class _ArchiveEmptyState extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Архівовані документи з’являться тут',
+                  AppLocalizations.of(context)?.archiveEmptySubtitle ?? 'Archived documents will appear here',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -183,7 +184,7 @@ class _ArchiveErrorState extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh_outlined),
-                  label: const Text('Спробувати ще раз'),
+                  label: Text(AppLocalizations.of(context)?.tryAgain ?? 'Try again'),
                 ),
               ],
             ),

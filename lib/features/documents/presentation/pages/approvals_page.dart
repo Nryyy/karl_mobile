@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 import '../../data/documents_repository.dart';
 import '../../domain/document_models.dart';
@@ -93,11 +94,11 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Погодження'),
+        title: Text(AppLocalizations.of(context)?.approvals ?? 'Approvals'),
         actions: [
           IconButton(
             onPressed: _refresh,
-            tooltip: 'Оновити',
+            tooltip: AppLocalizations.of(context)?.refresh ?? 'Refresh',
             icon: const Icon(Icons.refresh_outlined),
           ),
           const SizedBox(width: 8),
@@ -118,7 +119,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
               final message =
                   snapshot.error is DocumentsRepositoryException
                       ? snapshot.error.toString()
-                      : 'Не вдалося завантажити документи.';
+                      : (AppLocalizations.of(context)?.unknownError ?? 'Unknown error. Check logs.');
               return _ApprovalsErrorState(
                 message: message,
                 onRetry: _refresh,
@@ -231,7 +232,7 @@ class _ApprovalDetailPageState extends State<ApprovalDetailPage> {
         userEmail: args.userEmail,
       );
       if (!mounted) return;
-      _showMessage('Документ підписано успішно.');
+      _showMessage(AppLocalizations.of(context)?.documentSigned ?? 'Document signed');
       await args.onActionDone();
       if (mounted) context.pop();
     } on DocumentsRepositoryException catch (e) {
@@ -239,7 +240,7 @@ class _ApprovalDetailPageState extends State<ApprovalDetailPage> {
       _showMessage(e.message);
     } catch (_) {
       if (!mounted) return;
-      _showMessage('Не вдалося підписати документ.');
+      _showMessage(AppLocalizations.of(context)?.unknownError ?? 'Error');
     } finally {
       if (mounted) setState(() => _isSigning = false);
     }
@@ -263,7 +264,7 @@ class _ApprovalDetailPageState extends State<ApprovalDetailPage> {
         comment: comment.isEmpty ? null : comment,
       );
       if (!mounted) return;
-      _showMessage('Документ відхилено.');
+      _showMessage(AppLocalizations.of(context)?.documentRejected ?? 'Document rejected');
       await args.onActionDone();
       if (mounted) context.pop();
     } on DocumentsRepositoryException catch (e) {
@@ -271,7 +272,7 @@ class _ApprovalDetailPageState extends State<ApprovalDetailPage> {
       _showMessage(e.message);
     } catch (_) {
       if (!mounted) return;
-      _showMessage('Не вдалося відхилити документ.');
+      _showMessage(AppLocalizations.of(context)?.unknownError ?? 'Error');
     } finally {
       if (mounted) setState(() => _isRejecting = false);
     }
@@ -287,8 +288,8 @@ class _ApprovalDetailPageState extends State<ApprovalDetailPage> {
   Widget build(BuildContext context) {
     if (_document == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Погодження')),
-        body: const Center(child: Text('Документ не знайдено.')),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)?.approvals ?? 'Approvals')),
+        body: Center(child: Text(AppLocalizations.of(context)?.documentNotFound ?? 'Document not found.')),
       );
     }
 
@@ -297,7 +298,7 @@ class _ApprovalDetailPageState extends State<ApprovalDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(doc.title.isEmpty ? 'Документ' : doc.title),
+        title: Text(doc.title.isEmpty ? (AppLocalizations.of(context)?.document ?? 'Document') : doc.title),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -308,7 +309,7 @@ class _ApprovalDetailPageState extends State<ApprovalDetailPage> {
           if (doc.webViewLink.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
-              'Перегляд документа',
+              AppLocalizations.of(context)?.viewDocument ?? 'View document',
               style: theme.textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
@@ -340,19 +341,16 @@ Future<bool?> _showSignDialog(BuildContext context) {
   return showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Підписати документ'),
-      content: const Text(
-        'Ви підтверджуєте погодження цього документа? '
-        'Дію скасувати неможливо.',
-      ),
+      title: Text(AppLocalizations.of(context)?.signDocumentTitle ?? 'Sign document'),
+      content: Text(AppLocalizations.of(context)?.signConfirm ?? 'Do you confirm approval of this document? This action cannot be undone.'),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Скасувати'),
+          child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel'),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Підписати'),
+          child: Text(AppLocalizations.of(context)?.signDocument ?? 'Sign'),
         ),
       ],
     ),
@@ -365,12 +363,12 @@ Future<String?> _showRejectDialog(BuildContext context) async {
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: const Text('Відхилити документ'),
+        title: Text(AppLocalizations.of(context)?.rejectDocumentTitle ?? 'Reject document'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Вкажіть причину відхилення (необов\'язково):'),
+            Text(AppLocalizations.of(context)?.rejectPrompt ?? 'Please provide a reason for rejection (optional):'),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
@@ -385,7 +383,7 @@ Future<String?> _showRejectDialog(BuildContext context) async {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(null),
-            child: const Text('Скасувати'),
+            child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -393,7 +391,7 @@ Future<String?> _showRejectDialog(BuildContext context) async {
               foregroundColor: Theme.of(context).colorScheme.onError,
             ),
             onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-            child: const Text('Відхилити'),
+            child: Text(AppLocalizations.of(context)?.rejectDocument ?? 'Reject'),
           ),
         ],
       );
@@ -420,7 +418,7 @@ class _ApprovalCard extends StatelessWidget {
         flow.steps.isNotEmpty && flow.currentStep < flow.steps.length
             ? flow.steps[flow.currentStep]
             : null;
-    final createdAt = _formatDate(document.createdAt).split(' ').first;
+    final createdAt = _formatDate(context, document.createdAt).split(' ').first;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -440,7 +438,7 @@ class _ApprovalCard extends StatelessWidget {
                       children: [
                         Text(
                           document.title.isEmpty
-                              ? 'Без назви'
+                              ? (AppLocalizations.of(context)?.document ?? 'Document')
                               : document.title,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -448,7 +446,7 @@ class _ApprovalCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'від ${document.authorName.isEmpty ? "невідомого" : document.authorName}',
+                          '${AppLocalizations.of(context)?.fromLabel ?? 'From'} ${document.authorName.isEmpty ? "${AppLocalizations.of(context)?.unknownError ?? 'unknown'}" : document.authorName}',
                           style: theme.textTheme.bodyMedium,
                         ),
                       ],
@@ -503,7 +501,7 @@ class _PendingBadge extends StatelessWidget {
         ),
       ),
       child: Text(
-        'Очікує',
+        AppLocalizations.of(context)?.pending ?? 'Pending',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: warningColor,
           fontWeight: FontWeight.w700,
@@ -573,27 +571,27 @@ class _DocumentInfoCard extends StatelessWidget {
             const SizedBox(height: 12),
             _InfoRow(
               icon: Icons.person_outline,
-              label: 'Автор',
+              label: AppLocalizations.of(context)?.authorPrefix ?? 'Author:',
               value: document.authorName.isEmpty
-                  ? 'Невідомий'
+                  ? (AppLocalizations.of(context)?.unknownAuthor ?? 'Unknown')
                   : document.authorName,
             ),
             const SizedBox(height: 8),
             _InfoRow(
               icon: Icons.description_outlined,
-              label: 'Тип',
+              label: AppLocalizations.of(context)?.typePrefix ?? 'Type:',
               value: document.fileType.isEmpty ? '—' : document.fileType,
             ),
             const SizedBox(height: 8),
             _InfoRow(
               icon: Icons.calendar_today_outlined,
-              label: 'Створено',
-              value: _formatDate(document.createdAt),
+              label: AppLocalizations.of(context)?.createdPrefix ?? 'Created:',
+              value: _formatDate(context, document.createdAt),
             ),
             const SizedBox(height: 8),
             _InfoRow(
               icon: Icons.flag_outlined,
-              label: 'Статус',
+              label: AppLocalizations.of(context)?.statusPrefix ?? 'Status:',
               value: document.status.name.isEmpty ? '—' : document.status.name,
             ),
           ],
@@ -624,7 +622,7 @@ class _InfoRow extends StatelessWidget {
         Icon(icon, size: 16, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: 8),
         Text(
-          '$label: ',
+          label,
           style: theme.textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
@@ -903,7 +901,7 @@ class _ApprovalsEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Немає документів для погодження',
+              AppLocalizations.of(context)?.approvalsEmptyTitle ?? 'No documents for approval',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -911,7 +909,7 @@ class _ApprovalsEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Коли вам надішлють документ на підпис, він з\'явиться тут.',
+              AppLocalizations.of(context)?.approvalsEmptySubtitle ?? "When someone sends you a document to sign, it will appear here.",
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -952,7 +950,7 @@ class _ApprovalsErrorState extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Не вдалося завантажити',
+                AppLocalizations.of(context)?.failedToLoadDocuments ?? 'Failed to load documents.',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -970,7 +968,7 @@ class _ApprovalsErrorState extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_outlined),
-                label: const Text('Спробувати ще раз'),
+                label: Text(AppLocalizations.of(context)?.tryAgain ?? 'Try again'),
               ),
             ],
           ),
@@ -980,8 +978,8 @@ class _ApprovalsErrorState extends StatelessWidget {
   }
 }
 
-String _formatDate(DateTime? dateTime) {
-  if (dateTime == null) return 'Не вказано';
+String _formatDate(BuildContext context, DateTime? dateTime) {
+  if (dateTime == null) return AppLocalizations.of(context)?.notSpecified ?? 'Not specified';
   final local = dateTime.toLocal();
   final day = local.day.toString().padLeft(2, '0');
   final month = local.month.toString().padLeft(2, '0');

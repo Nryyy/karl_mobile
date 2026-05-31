@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
@@ -124,10 +125,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/templates',
           name: 'templates',
-          builder: (context, state) => const SectionPage(
-            title: 'Шаблони',
+          builder: (context, state) => SectionPage(
+            title: AppLocalizations.of(context)?.templates ?? 'Templates',
             icon: Icons.article_outlined,
-            description: 'Тут зберігаються шаблони ваших документів.',
+            description: AppLocalizations.of(context)?.templatesDescription ?? 'Here you can store templates for your documents.',
           ),
         ),
         GoRoute(
@@ -165,19 +166,19 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/help',
           name: 'help',
-          builder: (context, state) => const SectionPage(
-            title: 'Допомога',
+          builder: (context, state) => SectionPage(
+            title: AppLocalizations.of(context)?.help ?? 'Help',
             icon: Icons.help_outline,
-            description: 'Підтримка, FAQ та корисні матеріали.',
+            description: AppLocalizations.of(context)?.helpDescription ?? 'Support, FAQ and useful resources.',
           ),
         ),
         GoRoute(
           path: '/admin',
           name: 'admin',
-          builder: (context, state) => const SectionPage(
-            title: 'Адмін панель',
+          builder: (context, state) => SectionPage(
+            title: AppLocalizations.of(context)?.adminPanel ?? 'Admin panel',
             icon: Icons.admin_panel_settings_outlined,
-            description: 'Інструменти адміністрування системи.',
+            description: AppLocalizations.of(context)?.adminDescription ?? 'Administration tools for the system.',
           ),
         ),
       ],
@@ -217,7 +218,7 @@ String _resolveUserName(Object? extra) {
     }
   }
 
-  return 'користувач';
+  return 'User';
 }
 
 /// Refreshes go_router when the auth stream emits new values.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 import '../../domain/document_models.dart';
 
@@ -32,7 +33,7 @@ class ApprovalListWidget extends ConsumerWidget {
                 child: Text(document.title.isNotEmpty ? document.title[0].toUpperCase() : '?'),
               ),
               title: Text(document.title),
-              subtitle: Text('Від: ${document.authorName}'),
+              subtitle: Text('${AppLocalizations.of(context)?.fromLabel ?? 'From'} ${document.authorName}'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 // Navigate to approval detail
@@ -99,12 +100,12 @@ class ApprovalDetailWidget extends ConsumerWidget {
                       // Handle sign action
                       if (!context.mounted) return;
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Документ підписано')),
-                      );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(AppLocalizations.of(context)?.documentSigned ?? 'Document signed')),
+                        );
                     },
                     icon: const Icon(Icons.check),
-                    label: const Text('Підписати'),
+                    label: Text(AppLocalizations.of(context)?.signDocument ?? 'Sign'),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -119,12 +120,12 @@ class ApprovalDetailWidget extends ConsumerWidget {
                       if (result != null && context.mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Документ відхилено')),
+                          SnackBar(content: Text(AppLocalizations.of(context)?.documentRejected ?? 'Document rejected')),
                         );
                       }
                     },
                     icon: const Icon(Icons.close),
-                    label: const Text('Відхилити'),
+                    label: Text(AppLocalizations.of(context)?.rejectDocument ?? 'Reject'),
                   ),
                 ),
               ],
@@ -145,7 +146,7 @@ class RejectDialog extends ConsumerWidget {
     final controller = TextEditingController();
     
     return AlertDialog(
-      title: const Text('Відхилити документ'),
+      title: Text(AppLocalizations.of(context)?.rejectDocumentTitle ?? 'Reject document'),
       content: TextField(
         controller: controller,
         decoration: const InputDecoration(
@@ -157,11 +158,11 @@ class RejectDialog extends ConsumerWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Скасувати'),
+          child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel'),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, controller.text),
-          child: const Text('Відхилити'),
+          child: Text(AppLocalizations.of(context)?.rejectDocument ?? 'Reject'),
         ),
       ],
     );

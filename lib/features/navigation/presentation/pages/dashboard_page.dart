@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:karl_mobile/features/ai_chat/ai_chat_service.dart';
 import 'package:karl_mobile/features/ai_chat/chat_screen.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 import '../../../documents/data/documents_repository.dart';
 import '../../../documents/domain/document_visibility.dart';
@@ -62,14 +63,14 @@ class _DashboardPageState extends State<DashboardPage> {
     final String userName = _resolveUserName();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Головна'),
+        title: Text(AppLocalizations.of(context)?.dashboard ?? 'Dashboard'),
         actions: <Widget>[
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: FilledButton.icon(
               onPressed: () => GoRouter.of(context).go('/documents/new'),
               icon: const Icon(Icons.add_circle_outline, size: 18),
-              label: const Text('Новий документ'),
+              label: Text(AppLocalizations.of(context)?.newDocument ?? 'New document'),
             ),
           ),
         ],
@@ -114,7 +115,7 @@ class _DashboardPageState extends State<DashboardPage> {
       return email.split('@').first;
     }
 
-    return 'користувач';
+    return AppLocalizations.of(context)?.unknownAuthor ?? 'User';
   }
 }
 
@@ -126,6 +127,7 @@ class _AnimatedGreeting extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final loc = AppLocalizations.of(context);
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -144,7 +146,7 @@ class _AnimatedGreeting extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Вітаємо, $userName',
+            '${loc?.greetingPrefix ?? 'Welcome,'} $userName',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
@@ -152,7 +154,7 @@ class _AnimatedGreeting extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Ось що відбувається з вашими документами сьогодні',
+            loc?.greetingSubtitle ?? "Here's what's happening with your documents today",
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
@@ -185,25 +187,25 @@ class _StatsGrid extends StatelessWidget {
           childAspectRatio: crossAxisCount == 4 ? 2.2 : 1.9,
           children: <Widget>[
             _StatTile(
-              label: 'Очікують',
+              label: AppLocalizations.of(context)?.statsWaiting ?? 'Waiting',
               value: stats.pending.toString(),
               valueColor: colorScheme.tertiary,
               icon: Icons.pending_actions,
             ),
             _StatTile(
-              label: 'Затверджено',
+              label: AppLocalizations.of(context)?.statsApproved ?? 'Approved',
               value: stats.approved.toString(),
               valueColor: colorScheme.primary,
               icon: Icons.check_circle,
             ),
             _StatTile(
-              label: 'За 7 днів',
+              label: AppLocalizations.of(context)?.statsLast7Days ?? 'Last 7 days',
               value: stats.recent.toString(),
               valueColor: colorScheme.secondary,
               icon: Icons.calendar_today,
             ),
             _StatTile(
-              label: 'Всього',
+              label: AppLocalizations.of(context)?.statsTotal ?? 'Total',
               value: stats.total.toString(),
               valueColor: colorScheme.onSurface,
               icon: Icons.folder,
@@ -311,7 +313,7 @@ class _QuickActionsCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'Швидкі дії',
+              AppLocalizations.of(context)?.quickActions ?? 'Quick actions',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -323,7 +325,7 @@ class _QuickActionsCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onCreateDocument,
                     icon: const Icon(Icons.upload_file_outlined),
-                    label: const Text('Завантажити'),
+                    label: Text(AppLocalizations.of(context)?.upload ?? 'Upload'),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -331,7 +333,7 @@ class _QuickActionsCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onOpenTemplates,
                     icon: const Icon(Icons.article_outlined),
-                    label: const Text('Шаблони'),
+                    label: Text(AppLocalizations.of(context)?.templates ?? 'Templates'),
                   ),
                 ),
               ],
@@ -355,19 +357,19 @@ class _ActivityCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'Активність',
+              AppLocalizations.of(context)?.activityTitle ?? 'Activity',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 2),
             Text(
-              'Останні сповіщення',
+              AppLocalizations.of(context)?.activitySubtitle ?? 'Latest notifications',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
             Text(
-              'Сповіщень немає',
+              AppLocalizations.of(context)?.noNotifications ?? 'No notifications',
               style: Theme.of(context).textTheme.bodyLarge,
             ),
           ],
@@ -395,7 +397,7 @@ class _GoogleDriveCard extends StatelessWidget {
                 Icon(Icons.cloud_done, color: colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  'Google Drive',
+                  AppLocalizations.of(context)?.googleDrive ?? 'Google Drive',
                   style: Theme.of(
                     context,
                   ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -419,14 +421,14 @@ class _GoogleDriveCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        'Підключено',
+                        AppLocalizations.of(context)?.connected ?? 'Connected',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: colorScheme.onSurface,
                         ),
                       ),
                       Text(
-                        'Файли зберігаються на Google Drive',
+                        AppLocalizations.of(context)?.googleDriveDescription ?? 'Files are stored on Google Drive',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -469,7 +471,7 @@ class _HelpCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Потребуєте підказку?',
+              AppLocalizations.of(context)?.helpTitle ?? 'Need a hint?',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -477,7 +479,7 @@ class _HelpCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Наш AI асистент допоможе вам розібратися з функціями системи',
+              AppLocalizations.of(context)?.helpSubtitle ?? 'Our AI assistant can help you understand system features',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
@@ -505,7 +507,7 @@ class _HelpCard extends StatelessWidget {
                     ),
                   );
                 },
-                label: const Text('Поговорити з AI'),
+                label: Text(AppLocalizations.of(context)?.aiChatTitle ?? 'AI Chat'),
               ),
             ),
           ],

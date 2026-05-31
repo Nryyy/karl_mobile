@@ -26,28 +26,28 @@ class SettingsPage extends ConsumerWidget {
           // Appearance Section
           _SectionHeader(
             icon: Icons.palette_outlined,
-            title: 'Зовнішній вигляд',
+            title: AppLocalizations.of(context)?.appearance ?? 'Appearance',
           ),
           const SizedBox(height: 8),
           Card(
             child: Column(
               children: [
                 _ThemeTile(
-                  label: 'Системна',
+                  label: AppLocalizations.of(context)?.themeSystem ?? 'System',
                   icon: Icons.brightness_auto,
                   isSelected: themeMode == ThemeMode.system,
                   onTap: () => ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system),
                 ),
                 const Divider(height: 1, indent: 56),
                 _ThemeTile(
-                  label: 'Світла',
+                  label: AppLocalizations.of(context)?.themeLight ?? 'Light',
                   icon: Icons.light_mode,
                   isSelected: themeMode == ThemeMode.light,
                   onTap: () => ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light),
                 ),
                 const Divider(height: 1, indent: 56),
                 _ThemeTile(
-                  label: 'Темна',
+                  label: AppLocalizations.of(context)?.themeDark ?? 'Dark',
                   icon: Icons.dark_mode,
                   isSelected: themeMode == ThemeMode.dark,
                   onTap: () => ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark),
@@ -67,28 +67,28 @@ class SettingsPage extends ConsumerWidget {
             child: Column(
               children: [
                 _LocaleTile(
-                  label: 'Системна за замовчуванням',
+                  label: AppLocalizations.of(context)?.languageSystemDefault ?? 'System default',
                   code: 'system',
                   currentLocale: currentLocale,
                   onChanged: (v) => _setLocale(ref, v),
                 ),
                 const Divider(height: 1, indent: 56),
                 _LocaleTile(
-                  label: 'English',
+                  label: AppLocalizations.of(context)?.languageEnglish ?? 'English',
                   code: 'en',
                   currentLocale: currentLocale,
                   onChanged: (v) => _setLocale(ref, v),
                 ),
                 const Divider(height: 1, indent: 56),
                 _LocaleTile(
-                  label: 'Українська',
+                  label: AppLocalizations.of(context)?.languageUkrainian ?? 'Українська',
                   code: 'uk',
                   currentLocale: currentLocale,
                   onChanged: (v) => _setLocale(ref, v),
                 ),
                 const Divider(height: 1, indent: 56),
                 _LocaleTile(
-                  label: 'Polski',
+                  label: AppLocalizations.of(context)?.languagePolish ?? 'Polski',
                   code: 'pl',
                   currentLocale: currentLocale,
                   onChanged: (v) => _setLocale(ref, v),
@@ -101,13 +101,13 @@ class SettingsPage extends ConsumerWidget {
           // About Section
           _SectionHeader(
             icon: Icons.info_outline,
-            title: 'Про додаток',
+            title: AppLocalizations.of(context)?.aboutApp ?? 'About',
           ),
           const SizedBox(height: 8),
           Card(
-            child: ListTile(
+              child: ListTile(
               leading: Icon(Icons.app_shortcut, color: colorScheme.primary),
-              title: Text('Karl Mobile'),
+              title: Text(AppLocalizations.of(context)?.appTitle ?? 'Karl'),
               subtitle: Text('v1.0.0'),
               trailing: Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
             ),

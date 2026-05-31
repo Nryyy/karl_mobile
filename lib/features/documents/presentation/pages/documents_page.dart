@@ -267,27 +267,27 @@ class _DocumentsSimpleHeader extends StatelessWidget {
           runSpacing: 8,
           children: [
             _FilterChip(
-              label: AppLocalizations.of(context)?.documents ?? 'All',
+              label: AppLocalizations.of(context)?.statusAll ?? 'All',
               selected: selectedStatusFilter == 'all',
               onSelected: () => onSelectStatusFilter('all'),
             ),
             _FilterChip(
-              label: 'Очікують',
+              label: AppLocalizations.of(context)?.statusWaiting ?? 'Waiting',
               selected: selectedStatusFilter == 'waiting',
               onSelected: () => onSelectStatusFilter('waiting'),
             ),
             _FilterChip(
-              label: 'В процесі',
+              label: AppLocalizations.of(context)?.statusInProgress ?? 'In progress',
               selected: selectedStatusFilter == 'process',
               onSelected: () => onSelectStatusFilter('process'),
             ),
             _FilterChip(
-              label: 'Затверджено',
+              label: AppLocalizations.of(context)?.statusApproved ?? 'Approved',
               selected: selectedStatusFilter == 'approved',
               onSelected: () => onSelectStatusFilter('approved'),
             ),
             _FilterChip(
-              label: 'Відхилено',
+              label: AppLocalizations.of(context)?.statusRejected ?? 'Rejected',
               selected: selectedStatusFilter == 'rejected',
               onSelected: () => onSelectStatusFilter('rejected'),
             ),
@@ -354,18 +354,18 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
 
   Future<void> _archive() async {
     if (widget.repository == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Repository not available.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.repositoryNotAvailable ?? 'Repository not available.')));
       return;
     }
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Архівувати документ?'),
-        content: const Text('Документ буде переміщено в архів.'),
+        title: Text(AppLocalizations.of(context)?.archiveDocumentTitle ?? 'Archive document?'),
+        content: Text(AppLocalizations.of(context)?.archiveDocumentContent ?? 'The document will be moved to the archive.'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Скасувати')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Архівувати')),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(AppLocalizations.of(context)?.archiveCancel ?? 'Cancel')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(AppLocalizations.of(context)?.archiveConfirm ?? 'Archive')),
         ],
       ),
     );
@@ -381,7 +381,7 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: const Text('Документ архівовано.'),
+            content: Text(AppLocalizations.of(context)?.archiveDone ?? 'Document archived.'),
             action: SnackBarAction(
               label: 'Відмінити',
               onPressed: () async {
@@ -390,7 +390,7 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                   if (!mounted) return;
                   _refreshParent();
                   messenger.showSnackBar(
-                    const SnackBar(content: Text('Архівацію скасовано.')),
+                    SnackBar(content: Text(AppLocalizations.of(context)?.archiveCancelled ?? 'Archive cancelled.')),
                   );
                 } on DocumentsRepositoryException catch (e) {
                   if (!mounted) return;
@@ -398,7 +398,7 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                 } catch (_) {
                   if (!mounted) return;
                   messenger.showSnackBar(
-                    const SnackBar(content: Text('Не вдалося відновити документ.')),
+                    SnackBar(content: Text(AppLocalizations.of(context)?.restoreFailed ?? 'Failed to restore document.')),
                   );
                 }
               },
@@ -411,7 +411,7 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Не вдалося архівувати документ.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.archiveFailed ?? 'Failed to archive document.')));
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -419,23 +419,23 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
 
   Future<void> _delete() async {
     if (widget.repository == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Repository not available.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.repositoryNotAvailable ?? 'Repository not available.')));
       return;
     }
 
     if (!_isArchived) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Видалення дозволено лише з архіву.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.deleteOnlyFromArchive ?? 'Deletion allowed only from the archive.')));
       return;
     }
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Видалити документ?'),
-        content: const Text('Цю операцію не можна скасувати. Ви впевнені?'),
+        title: Text(AppLocalizations.of(context)?.deleteDocumentTitle ?? 'Delete document?'),
+        content: Text(AppLocalizations.of(context)?.deleteDocumentContent ?? 'This action cannot be undone. Are you sure?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Скасувати')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Видалити')),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(AppLocalizations.of(context)?.deleteConfirm ?? 'Delete')),
         ],
       ),
     );
@@ -446,14 +446,14 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
     try {
       await widget.repository!.deleteDocument(widget.document.id, permanent: true);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Документ видалено.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.deleteDone ?? 'Document deleted.')));
       widget.onChanged?.call();
     } on DocumentsRepositoryException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Не вдалося видалити документ.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.deleteFailed ?? 'Failed to delete document.')));
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -488,7 +488,7 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                           child: Material(
                             type: MaterialType.transparency,
                             child: Text(
-                              document.title.isEmpty ? 'Без назви' : document.title,
+                              document.title.isEmpty ? (AppLocalizations.of(context)?.untitled ?? 'Untitled') : document.title,
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
@@ -497,8 +497,8 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                         const SizedBox(height: 4),
                         Text(
                           document.authorName.isEmpty
-                              ? 'Невідомий автор'
-                              : document.authorName,
+                            ? (AppLocalizations.of(context)?.unknownAuthor ?? 'Unknown author')
+                            : document.authorName,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
@@ -507,7 +507,7 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                   const SizedBox(width: 12),
                   _StatusBadge(
                     label: document.status.name.isEmpty
-                        ? 'Не вказано'
+                        ? (AppLocalizations.of(context)?.notSpecified ?? 'Not specified')
                         : document.status.name,
                     color: statusColor,
                   ),
@@ -520,15 +520,15 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                     },
                     itemBuilder: (context) => <PopupMenuEntry<String>>[
                       if (!_isArchived)
-                        const PopupMenuItem<String>(
-                          value: 'archive',
-                          child: Text('Архівувати'),
-                        ),
-                      if (_isArchived)
-                        const PopupMenuItem<String>(
-                          value: 'delete',
-                          child: Text('Видалити назавжди'),
-                        ),
+                            PopupMenuItem<String>(
+                              value: 'archive',
+                              child: Text(AppLocalizations.of(context)?.archive ?? 'Archive'),
+                            ),
+                          if (_isArchived)
+                            PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Text(AppLocalizations.of(context)?.deleteConfirm ?? 'Delete'),
+                            ),
                     ],
                     icon: const Icon(Icons.more_vert),
                   ),
@@ -649,7 +649,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
 
     final file = result.files.first;
     if (file.bytes == null) {
-      _showMessage('Не вдалося прочитати файл.');
+      _showMessage(AppLocalizations.of(context)?.unknownError ?? 'Unable to read file.');
       return;
     }
 
@@ -672,8 +672,9 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
         fileName: file.name,
       );
       if (!mounted) return;
+      final uploadedLabel = AppLocalizations.of(context)?.fileUploaded ?? 'File uploaded';
       _showMessage(
-        'Файл завантажено. Розмір: ${_formatFileSize(response.fileSize)}',
+        '$uploadedLabel. ${_formatFileSize(response.fileSize)}',
       );
     } on DocumentsRepositoryException catch (e) {
       if (!mounted) return;
@@ -697,15 +698,15 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
   Widget build(BuildContext context) {
     if (widget.document == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Документ')),
-        body: const Center(child: Text('Документ не знайдено.')),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)?.document ?? 'Document')),
+        body: Center(child: Text(AppLocalizations.of(context)?.documentNotFound ?? 'Document not found.')),
       );
     }
 
     final item = widget.document!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(item.title.isEmpty ? 'Документ' : item.title)),
+      appBar: AppBar(title: Text(item.title.isEmpty ? (AppLocalizations.of(context)?.document ?? 'Document') : item.title)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -713,8 +714,8 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
             tag: 'document-title-${item.id}',
             child: Material(
               type: MaterialType.transparency,
-              child: Text(
-                item.title.isEmpty ? 'Без назви' : item.title,
+                child: Text(
+                item.title.isEmpty ? (AppLocalizations.of(context)?.untitled ?? 'Untitled') : item.title,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
@@ -996,7 +997,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
       appBar: AppBar(
         backgroundColor: colorScheme.surfaceContainerLowest,
         elevation: 0,
-        title: const Text('Новий документ'),
+        title: Text(AppLocalizations.of(context)?.newDocument ?? 'New document'),
         centerTitle: false,
       ),
       body: ListView(
@@ -1062,7 +1063,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                     vertical: 12,
                   ),
                 ),
-                hint: const Text('Оберіть тип файлу'),
+                hint: Text(AppLocalizations.of(context)?.chooseFileType ?? 'Choose file type'),
                 items: _fileTypes
                     .map(
                       (t) => DropdownMenuItem(
@@ -1545,7 +1546,7 @@ class _ApprovalStepRow extends StatelessWidget {
           Expanded(
             child: DropdownButtonFormField<UserProfile>(
               initialValue: selectedUser,
-              hint: const Text('Оберіть погоджувача'),
+              hint: Text(AppLocalizations.of(context)?.chooseApprover ?? 'Choose approver'),
               isExpanded: true,
               decoration: const InputDecoration(
                 border: InputBorder.none,
@@ -1612,7 +1613,7 @@ class _UploadFileSection extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                'Завантажити файл',
+                AppLocalizations.of(context)?.uploadFile ?? 'Upload file',
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colorScheme.onSurface,
@@ -1645,9 +1646,9 @@ class _UploadFileSection extends StatelessWidget {
                       ),
                     ),
                     icon: const Icon(Icons.attach_file_rounded, size: 18),
-                    label: const Text(
-                      'Вибрати та завантажити файл',
-                      style: TextStyle(fontWeight: FontWeight.w500),
+                    label: Text(
+                      AppLocalizations.of(context)?.selectAndUpload ?? 'Select and upload file',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ),
           ),
@@ -1677,7 +1678,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              isSearchActive ? 'Нічого не знайдено' : 'Документи відсутні',
+              isSearchActive ? (AppLocalizations.of(context)?.nothingFound ?? 'Nothing found') : (AppLocalizations.of(context)?.noDocuments ?? 'No documents found'),
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -1686,8 +1687,8 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               isSearchActive
-                  ? 'Спробуйте інший запит або очистіть фільтри.'
-                  : 'API поки не повернув жодного документа.',
+                  ? (AppLocalizations.of(context)?.tryDifferentQuery ?? 'Try a different query or clear filters.')
+                  : (AppLocalizations.of(context)?.noDocumentsDescription ?? 'API did not return any documents yet.'),
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -1715,7 +1716,7 @@ class _ErrorState extends StatelessWidget {
             Icon(Icons.error_outline, size: 72, color: Theme.of(context).colorScheme.error),
             const SizedBox(height: 16),
             Text(
-              'Не вдалося завантажити документи',
+              AppLocalizations.of(context)?.failedToLoadDocuments ?? 'Failed to load documents.',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -1731,7 +1732,7 @@ class _ErrorState extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_outlined),
-              label: const Text('Спробувати ще раз'),
+              label: Text(AppLocalizations.of(context)?.tryAgain ?? 'Try again'),
             ),
           ],
         ),

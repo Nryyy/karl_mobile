@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 /// Account page with Material 3 design showing user profile and navigation options.
 class AccountPage extends StatelessWidget {
@@ -20,7 +21,7 @@ class AccountPage extends StatelessWidget {
     final avatarText = userName.isNotEmpty ? userName[0].toUpperCase() : '?';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Акаунт')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)?.account ?? 'Account')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
@@ -76,7 +77,7 @@ class AccountPage extends StatelessWidget {
           // Account Section
           _SectionHeader(
             icon: Icons.account_circle_outlined,
-            title: 'Обліковий запис',
+            title: AppLocalizations.of(context)?.account ?? 'Account',
           ),
           const SizedBox(height: 8),
           Card(
@@ -85,8 +86,8 @@ class AccountPage extends StatelessWidget {
                 _AccountTile(
                   icon: Icons.cloud_done_outlined,
                   iconColor: colorScheme.primary,
-                  title: 'Google Drive',
-                  subtitle: 'Підключено',
+                  title: AppLocalizations.of(context)?.googleDrive ?? 'Google Drive',
+                  subtitle: AppLocalizations.of(context)?.connected ?? 'Connected',
                   trailing: Container(
                     width: 8,
                     height: 8,
@@ -99,8 +100,8 @@ class AccountPage extends StatelessWidget {
                 const Divider(height: 1, indent: 56),
                 _AccountTile(
                   icon: Icons.settings_outlined,
-                  title: 'Налаштування',
-                  subtitle: 'Тема, мова, параметри',
+                  title: AppLocalizations.of(context)?.settings ?? 'Settings',
+                  subtitle: AppLocalizations.of(context)?.settingsSubtitle ?? 'Theme, language, preferences',
                   onTap: () => context.go('/settings'),
                 ),
               ],
@@ -111,7 +112,7 @@ class AccountPage extends StatelessWidget {
           // Support Section
           _SectionHeader(
             icon: Icons.support_outlined,
-            title: 'Підтримка',
+            title: AppLocalizations.of(context)?.help ?? 'Support',
           ),
           const SizedBox(height: 8),
           Card(
@@ -119,15 +120,15 @@ class AccountPage extends StatelessWidget {
               children: [
                 _AccountTile(
                   icon: Icons.help_outline,
-                  title: 'Допомога',
-                  subtitle: 'FAQ та підтримка',
+                  title: AppLocalizations.of(context)?.help ?? 'Help',
+                  subtitle: AppLocalizations.of(context)?.helpDescription ?? 'Support, FAQ and useful resources.',
                   onTap: () => context.go('/help'),
                 ),
                 const Divider(height: 1, indent: 56),
                 _AccountTile(
                   icon: Icons.admin_panel_settings_outlined,
-                  title: 'Адмін панель',
-                  subtitle: 'Інструменти адміністратора',
+                  title: AppLocalizations.of(context)?.adminPanel ?? 'Admin panel',
+                  subtitle: AppLocalizations.of(context)?.adminDescription ?? 'Administration tools for the system.',
                   onTap: () => context.go('/admin'),
                 ),
               ],
@@ -139,7 +140,7 @@ class AccountPage extends StatelessWidget {
           FilledButton.tonalIcon(
             onPressed: () => _showSignOutDialog(context),
             icon: const Icon(Icons.logout),
-            label: const Text('Вийти з акаунту'),
+            label: Text(AppLocalizations.of(context)?.signOut ?? 'Sign out'),
             style: FilledButton.styleFrom(
               minimumSize: const Size(double.infinity, 48),
             ),
@@ -156,12 +157,12 @@ class AccountPage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         icon: Icon(Icons.logout, color: colorScheme.primary),
-        title: const Text('Вийти з акаунту?'),
-        content: const Text('Ви впевнені, що хочете вийти?'),
+        title: Text(AppLocalizations.of(context)?.signOut ?? 'Sign out'),
+        content: Text(AppLocalizations.of(context)?.ok ?? 'OK'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Скасувати'),
+            child: Text(AppLocalizations.of(context)?.ok ?? 'OK'),
           ),
           FilledButton(
             onPressed: () async {
@@ -170,7 +171,7 @@ class AccountPage extends StatelessWidget {
                 context.go('/');
               }
             },
-            child: const Text('Вийти'),
+            child: Text(AppLocalizations.of(context)?.signOut ?? 'Sign out'),
           ),
         ],
       ),

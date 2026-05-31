@@ -10,14 +10,41 @@
   "upload": "Завантажити",
   "signOut": "Вийти",
   "language": "Мова",
+  "appearance": "Зовнішній вигляд",
+  "themeSystem": "Системна",
+  "themeLight": "Світла",
+  "themeDark": "Темна",
+  "languageSystemDefault": "Системна за замовчуванням",
+  "languageEnglish": "English",
+  "languageUkrainian": "Українська",
+  "languagePolish": "Polski",
+  "aboutApp": "Про додаток",
   "cachedDataBanner": "Показано кешовані дані (офлайн)",
+  "adminPanel": "Адмін панель",
+  "tooltipDashboard": "Головна сторінка",
+  "tooltipMyDocuments": "Всі ваші документи",
+  "tooltipArchive": "Архівовані документи",
+  "tooltipAdminPanel": "Адмін-панель (тільки для адміністраторів)",
+  "tooltipSettings": "Налаштування профілю",
+  "expandSidebar": "Розгорнути",
+  "collapseSidebar": "Згорнути",
+  "templates": "Шаблони",
+  "templatesDescription": "Тут зберігаються шаблони ваших документів.",
+  "helpDescription": "Підтримка, FAQ та корисні матеріали.",
+  "adminDescription": "Інструменти адміністрування системи.",
+  "copied": "Скопійовано",
+  "aiChatTitle": "AI-чат",
+  "typeMessageHint": "Введіть повідомлення...",
   "noDocuments": "Документи не знайдено",
   "searchHint": "Пошук документів...",
   "closeApp": "Закрити додаток",
   "firebaseInitError": "Помилка ініціалізації Firebase",
+  "unknownError": "Невідома помилка. Перевірте логи.",
   "ok": "OK"
   ,"loginTitle":"Вхід до системи",
   "loginSubtitle":"Введіть ваші облікові дані для доступу до платформи",
+  "appTagline":"Інтелектуальна платформа для документообігу",
+  "refresh":"Оновити",
   "feature1_title":"Управління документами",
   "feature1_desc":"Зберігайте та організуйте всі документи в одному місці",
   "feature2_title":"AI-асистент",
@@ -34,4 +61,85 @@
   "footerHelp":"Допомога"
   ,"signInError":"Не вдалося увійти. Спробуйте ще раз.",
   "googleSignInError":"Не вдалося увійти через Google."
+  ,"newDocument":"Новий документ",
+  "loadingDocuments":"Завантаження документів...",
+  "tryAgain":"Спробувати ще раз",
+  "documentSigned":"Документ підписано",
+  "documentRejected":"Документ відхилено",
+  "signDocument":"Підписати",
+  "rejectDocument":"Відхилити",
+  "account":"Акаунт"
+  ,"approvals":"Погодження",
+  "documentNotFound":"Документ не знайдено.",
+  "signDocumentTitle":"Підписати документ",
+  "rejectDocumentTitle":"Відхилити документ",
+  "rejectPrompt":"Вкажіть причину відхилення (необов'язково):",
+  "cancel":"Скасувати",
+  "fromLabel":"Від"
+  ,"document":"Документ",
+  "viewDocument":"Перегляд документа",
+  "signConfirm":"Ви підтверджуєте погодження цього документа? Дію скасувати неможливо.",
+  "rejectHint":"Причина відхилення...",
+  "pending":"Очікує"
+  ,"authorPrefix":"Автор:",
+  "statusPrefix":"Статус:",
+  "chooseAction":"Оберіть дію:",
+  "commentLabel":"Коментар (необов'язково)"
+  ,"signOutError":"Не вдалося вийти. Спробуйте ще раз."
+  ,"repositoryNotAvailable":"Репозиторій недоступний.",
+  "archiveDocumentTitle":"Архівувати документ?",
+  "archiveDocumentContent":"Документ буде переміщено в архів.",
+  "archiveCancel":"Скасувати",
+  "archiveConfirm":"Архівувати",
+  "archiveDone":"Документ архівовано.",
+  "archiveCancelled":"Архівацію скасовано."
+  ,"restoreFailed":"Не вдалося відновити документ.",
+  "archiveFailed":"Не вдалося архівувати документ.",
+  "deleteOnlyFromArchive":"Видалення дозволено лише з архіву.",
+  "deleteDocumentTitle":"Видалити документ?",
+  "deleteDocumentContent":"Цю операцію не можна скасувати. Ви впевнені?",
+  "deleteConfirm":"Видалити",
+  "deleteDone":"Документ видалено.",
+  "deleteCancelled":"Видалення скасовано.",
+  "deleteFailed":"Не вдалося видалити документ.",
+  "restoreDone":"Документ відновлено." 
+  ,"untitled":"Без назви"
+  ,"chooseFileType":"Оберіть тип файлу",
+  "chooseApprover":"Оберіть погоджувача"
+  ,"statusAll":"Усі"
+  ,"statusWaiting":"Очікують"
+  ,"statusInProgress":"В процесі"
+  ,"statusApproved":"Затверджено"
+  ,"statusRejected":"Відхилено"
+  ,"selectAndUpload":"Вибрати та завантажити файл"
+  ,"uploadFile":"Завантажити файл"
+  ,"nothingFound":"Нічого не знайдено"
+  ,"noDocumentsDescription":"API поки не повернув жодного документа."
+  ,"failedToLoadDocuments":"Не вдалося завантажити документи."
+  ,"googleDrive":"Google Drive"
+  ,"connected":"Підключено"
+  ,"googleDriveDescription":"Файли зберігаються на Google Drive"
+  ,"fileUploaded":"Файл завантажено"
+  ,"settingsSubtitle":"Тема, мова, параметри"
+  ,"unknownAuthor":"Невідомий автор"
+  ,"notSpecified":"Не вказано"
+  ,"typePrefix":"Тип:"
+  ,"createdPrefix":"Створено:"
+  ,"greetingPrefix":"Вітаємо,"
+  ,"greetingSubtitle":"Ось що відбувається з вашими документами сьогодні"
+  ,"statsWaiting":"Очікують"
+  ,"statsApproved":"Затверджено"
+  ,"statsLast7Days":"За 7 днів"
+  ,"statsTotal":"Всього"
+  ,"quickActions":"Швидкі дії"
+  ,"activityTitle":"Активність"
+  ,"activitySubtitle":"Останні сповіщення"
+  ,"noNotifications":"Сповіщень немає"
+  ,"helpTitle":"Потребуєте підказку?"
+  ,"helpSubtitle":"Наш AI асистент допоможе вам розібратися з функціями системи"
+  ,"tryDifferentQuery":"Спробуйте інший запит або очистіть фільтри."
+  ,"approvalsEmptyTitle":"Немає документів для погодження"
+  ,"approvalsEmptySubtitle":"Коли вам надішлють документ на підпис, він з'явиться тут."
+  ,"archiveEmptyTitle":"Архів порожній"
+  ,"archiveEmptySubtitle":"Архівовані документи з’являться тут"
 }

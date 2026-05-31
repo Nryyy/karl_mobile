@@ -10,14 +10,45 @@
   "upload": "Prześlij",
   "signOut": "Wyloguj",
   "language": "Język",
+  "appearance": "Wygląd",
+  "themeSystem": "Systemowy",
+  "themeLight": "Jasny",
+  "themeDark": "Ciemny",
+  "languageSystemDefault": "Domyślny systemowy",
+  "languageEnglish": "English",
+  "languageUkrainian": "Ukraiński",
+  "languagePolish": "Polski",
+  "aboutApp": "O aplikacji",
   "cachedDataBanner": "Wyświetlane dane z pamięci podręcznej (offline)",
+  "adminPanel": "Panel administracyjny",
+  "tooltipDashboard": "Strona główna",
+  "tooltipMyDocuments": "Wszystkie twoje dokumenty",
+  "tooltipArchive": "Archiwalne dokumenty",
+  "tooltipAdminPanel": "Panel administracyjny (tylko dla administratorów)",
+  "tooltipSettings": "Ustawienia profilu",
+  "expandSidebar": "Rozwiń",
+  "collapseSidebar": "Zwiń",
+  "templates": "Szablony",
+  "templatesDescription": "Tutaj możesz przechowywać szablony dokumentów.",
+  "helpDescription": "Wsparcie, FAQ i przydatne zasoby.",
+  "adminDescription": "Narzędzia administracyjne systemu.",
+  "copied": "Skopiowano",
+  "aiChatTitle": "Czat AI",
+  "typeMessageHint": "Wpisz wiadomość...",
   "noDocuments": "Brak dokumentów",
   "searchHint": "Szukaj dokumentów...",
   "closeApp": "Zamknij aplikację",
   "firebaseInitError": "Błąd inicjalizacji Firebase",
-  "ok": "OK"
-  ,"loginTitle":"Zaloguj się",
-  "loginSubtitle":"Wprowadź dane logowania, aby uzyskać dostęp do platformy",
+  "unknownError": "Nieznany błąd. Sprawdź logi.",
+  "ok": "OK",
+  "loginTitle": "Zaloguj się",
+  "approvalsEmptyTitle": "Brak dokumentów do zatwierdzenia",
+  "approvalsEmptySubtitle": "Gdy ktoś wyśle Ci dokument do podpisu, pojawi się on tutaj.",
+  "archiveEmptyTitle": "Archiwum puste",
+  "archiveEmptySubtitle": "Zarchiwizowane dokumenty pojawią się tutaj",
+  "loginSubtitle": "Wprowadź dane logowania, aby uzyskać dostęp do platformy",
+  "appTagline":"Inteligentna platforma do obiegu dokumentów",
+  "refresh":"Odśwież",
   "feature1_title":"Zarządzanie dokumentami",
   "feature1_desc":"Przechowuj i organizuj wszystkie dokumenty w jednym miejscu",
   "feature2_title":"Asystent AI",
@@ -34,4 +65,81 @@
   "footerHelp":"Pomoc"
   ,"signInError":"Nie można zalogować. Spróbuj ponownie.",
   "googleSignInError":"Nie można zalogować przez Google."
+  ,"newDocument":"Nowy dokument",
+  "loadingDocuments":"Ładowanie dokumentów...",
+  "tryAgain":"Spróbuj ponownie",
+  "documentSigned":"Dokument podpisano",
+  "documentRejected":"Dokument odrzucony",
+  "signDocument":"Podpisz",
+  "rejectDocument":"Odrzuć",
+  "account":"Konto"
+  ,"approvals":"Zatwierdzenia",
+  "documentNotFound":"Nie znaleziono dokumentu.",
+  "signDocumentTitle":"Podpisz dokument",
+  "rejectDocumentTitle":"Odrzuć dokument",
+  "rejectPrompt":"Podaj powód odrzucenia (opcjonalnie):",
+  "cancel":"Anuluj",
+  "fromLabel":"Od"
+  ,"document":"Dokument",
+  "viewDocument":"Przegląd dokumentu",
+  "signConfirm":"Czy potwierdzasz zatwierdzenie tego dokumentu? Nie można cofnąć tej operacji.",
+  "rejectHint":"Powód odrzucenia...",
+  "pending":"Oczekuje"
+  ,"authorPrefix":"Autor:",
+  "statusPrefix":"Status:",
+  "chooseAction":"Wybierz działanie:",
+  "commentLabel":"Komentarz (opcjonalnie)"
+  ,"signOutError":"Nie można wylogować. Spróbuj ponownie."
+  ,"repositoryNotAvailable":"Repozytorium niedostępne.",
+  "archiveDocumentTitle":"Archiwizować dokument?",
+  "archiveDocumentContent":"Dokument zostanie przeniesiony do archiwum.",
+  "archiveCancel":"Anuluj",
+  "archiveConfirm":"Archiwizuj",
+  "archiveDone":"Dokument zarchiwizowany.",
+  "archiveCancelled":"Archiwizowano anulowano."
+  ,"restoreFailed":"Nie można przywrócić dokumentu.",
+  "archiveFailed":"Nie można zarchiwizować dokumentu.",
+  "deleteOnlyFromArchive":"Usuwanie dozwolone tylko z archiwum.",
+  "deleteDocumentTitle":"Usunąć dokument?",
+  "deleteDocumentContent":"Tej operacji nie można cofnąć. Jesteś pewien?",
+  "deleteConfirm":"Usuń",
+  "deleteDone":"Dokument usunięto.",
+  "deleteCancelled":"Usuwanie anulowano.",
+  "deleteFailed":"Nie można usunąć dokumentu.",
+  "restoreDone":"Dokument przywrócono." 
+  ,"untitled":"Bez nazwy"
+  ,"chooseFileType":"Wybierz typ pliku",
+  "chooseApprover":"Wybierz osobę zatwierdzającą"
+  ,"statusAll": "Wszystkie"
+  ,"statusWaiting": "Oczekujące"
+  ,"statusInProgress": "W toku"
+  ,"statusApproved": "Zatwierdzone"
+  ,"statusRejected": "Odrzucone"
+  ,"selectAndUpload": "Wybierz i prześlij plik"
+  ,"uploadFile": "Prześlij plik"
+  ,"nothingFound": "Nic nie znaleziono"
+  ,"noDocumentsDescription": "API nie zwróciło jeszcze żadnych dokumentów."
+  ,"failedToLoadDocuments": "Nie udało się pobrać dokumentów."
+  ,"googleDrive": "Google Drive"
+  ,"connected": "Połączono"
+    ,"googleDriveDescription": "Pliki są przechowywane na Dysku Google"
+    ,"fileUploaded": "Plik został przesłany"
+  ,"settingsSubtitle": "Motyw, język, ustawienia"
+  ,"unknownAuthor": "Nieznany autor"
+  ,"notSpecified": "Nie określono"
+  ,"typePrefix": "Typ:"
+  ,"createdPrefix": "Utworzono:"
+  ,"greetingPrefix": "Witamy,"
+  ,"greetingSubtitle": "Oto, co dzieje się z Twoimi dokumentami dzisiaj"
+  ,"statsWaiting": "Oczekujące"
+  ,"statsApproved": "Zatwierdzone"
+  ,"statsLast7Days": "W ciągu 7 dni"
+  ,"statsTotal": "Razem"
+  ,"quickActions": "Szybkie działania"
+  ,"activityTitle": "Aktywność"
+  ,"activitySubtitle": "Najnowsze powiadomienia"
+  ,"noNotifications": "Brak powiadomień"
+  ,"helpTitle": "Potrzebujesz wskazówki?"
+  ,"helpSubtitle": "Nasz asystent AI pomoże Ci zrozumieć funkcje systemu"
+  ,"tryDifferentQuery": "Spróbuj innego zapytania lub wyczyść filtry."
 }

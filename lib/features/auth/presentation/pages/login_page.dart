@@ -10,10 +10,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/login_form.dart';
 import '../widgets/platform_features_section.dart';
 
-/// Main login page for Karl document circulation platform.
-///
-/// Provides a professional, informative interface for first-time users.
-/// Combines login form with platform features overview.
 class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
 
@@ -40,21 +36,23 @@ class LoginPage extends ConsumerWidget {
                       icon: const Icon(Icons.language),
                       onSelected: (value) async {
                         Locale? locale;
-                        if (value == 'system')
+                        if (value == 'system') {
                           locale = null;
-                        else
+                        } else {
                           locale = Locale(value);
+                        }
                         await ref.read(localeProvider.notifier).setLocale(locale);
                       },
                       itemBuilder: (ctx) => [
-                        const PopupMenuItem(value: 'system', child: Text('System')),
-                        const PopupMenuItem(value: 'en', child: Text('English')),
-                        const PopupMenuItem(value: 'uk', child: Text('Українська')),
-                        const PopupMenuItem(value: 'pl', child: Text('Polski')),
+                        PopupMenuItem(value: 'system', child: Text(AppLocalizations.of(context)?.languageSystemDefault ?? 'System')),
+                        PopupMenuItem(value: 'en', child: Text(AppLocalizations.of(context)?.languageEnglish ?? 'English')),
+                        PopupMenuItem(value: 'uk', child: Text(AppLocalizations.of(context)?.languageUkrainian ?? 'Українська')),
+                        PopupMenuItem(value: 'pl', child: Text(AppLocalizations.of(context)?.languagePolish ?? 'Polski')),
                       ],
                     ),
                   ],
                 ),
+
                 // Logo and title section
                 _buildHeaderSection(context),
                 const SizedBox(height: 32),
@@ -111,7 +109,7 @@ class LoginPage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Karl',
+          AppLocalizations.of(context)?.appTitle ?? 'Karl',
           style: GoogleFonts.inter(
             fontSize: 28,
             fontWeight: FontWeight.w700,
@@ -119,7 +117,7 @@ class LoginPage extends ConsumerWidget {
           ),
         ),
         Text(
-          'Інтелектуальна платформа для документообігу',
+          AppLocalizations.of(context)?.appTagline ?? 'Intelligent document circulation platform',
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w400,
@@ -272,9 +270,7 @@ class LoginPage extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
-      onTap: () {
-        // Navigate to link
-      },
+      onTap: () {},
       child: Text(
         text,
         style: GoogleFonts.inter(
@@ -287,25 +283,25 @@ class LoginPage extends ConsumerWidget {
   }
 
   List<PlatformFeature> _features(BuildContext context) => [
-    PlatformFeature(
-      icon: Icons.folder_open_outlined,
-      title: AppLocalizations.of(context)?.feature1Title ?? 'Document management',
-      description: AppLocalizations.of(context)?.feature1Desc ?? 'Store and organize all documents in one place',
-    ),
-    PlatformFeature(
-      icon: Icons.smart_toy_outlined,
-      title: AppLocalizations.of(context)?.feature2Title ?? 'AI assistant',
-      description: AppLocalizations.of(context)?.feature2Desc ?? 'Smart document processing and workflow automation',
-    ),
-    PlatformFeature(
-      icon: Icons.people_outline,
-      title: AppLocalizations.of(context)?.feature3Title ?? 'Teamwork',
-      description: AppLocalizations.of(context)?.feature3Desc ?? 'Collaborate on documents with colleagues in real time',
-    ),
-    PlatformFeature(
-      icon: Icons.security_outlined,
-      title: AppLocalizations.of(context)?.feature4Title ?? 'Data security',
-      description: AppLocalizations.of(context)?.feature4Desc ?? 'Enterprise-grade protection for your confidential documents',
-    ),
-  ];
+        PlatformFeature(
+          icon: Icons.folder_open_outlined,
+          title: AppLocalizations.of(context)?.feature1_title ?? 'Document management',
+          description: AppLocalizations.of(context)?.feature1_desc ?? 'Store and organize all documents in one place',
+        ),
+        PlatformFeature(
+          icon: Icons.smart_toy_outlined,
+          title: AppLocalizations.of(context)?.feature2_title ?? 'AI assistant',
+          description: AppLocalizations.of(context)?.feature2_desc ?? 'Smart document processing and workflow automation',
+        ),
+        PlatformFeature(
+          icon: Icons.people_outline,
+          title: AppLocalizations.of(context)?.feature3_title ?? 'Teamwork',
+          description: AppLocalizations.of(context)?.feature3_desc ?? 'Collaborate on documents with colleagues in real time',
+        ),
+        PlatformFeature(
+          icon: Icons.security_outlined,
+          title: AppLocalizations.of(context)?.feature4_title ?? 'Data security',
+          description: AppLocalizations.of(context)?.feature4_desc ?? 'Enterprise-grade protection for your confidential documents',
+        ),
+      ];
 }

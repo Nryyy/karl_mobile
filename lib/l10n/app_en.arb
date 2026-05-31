@@ -10,14 +10,45 @@
   "upload": "Upload",
   "signOut": "Sign out",
   "language": "Language",
+  "appearance": "Appearance",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "languageSystemDefault": "System default",
+  "languageEnglish": "English",
+  "languageUkrainian": "Ukrainian",
+  "languagePolish": "Polish",
+  "aboutApp": "About",
   "cachedDataBanner": "Showing cached data (offline)",
+  "adminPanel": "Admin panel",
+  "tooltipDashboard": "Home page",
+  "tooltipMyDocuments": "All your documents",
+  "tooltipArchive": "Archived documents",
+  "tooltipAdminPanel": "Admin panel (admins only)",
+  "tooltipSettings": "Profile settings",
+  "expandSidebar": "Expand",
+  "collapseSidebar": "Collapse",
+  "templates": "Templates",
+  "templatesDescription": "Here you can store templates for your documents.",
+  "helpDescription": "Support, FAQ and useful resources.",
+  "adminDescription": "Administration tools for the system.",
+  "copied": "Copied",
+  "aiChatTitle": "AI Chat",
+  "typeMessageHint": "Type a message...",
   "noDocuments": "No documents found",
   "searchHint": "Search documents...",
   "closeApp": "Close app",
   "firebaseInitError": "Firebase initialization error",
-  "ok": "OK"
-  ,"loginTitle":"Sign in",
-  "loginSubtitle":"Enter your credentials to access the platform",
+  "unknownError": "Unknown error. Check logs.",
+  "ok": "OK",
+  "loginTitle": "Sign in",
+  "approvalsEmptyTitle": "No documents for approval",
+  "approvalsEmptySubtitle": "When someone sends you a document to sign, it will appear here.",
+  "archiveEmptyTitle": "Archive is empty",
+  "archiveEmptySubtitle": "Archived documents will appear here",
+  "loginSubtitle": "Enter your credentials to access the platform",
+  "appTagline":"Intelligent document circulation platform",
+  "refresh":"Refresh",
   "feature1_title":"Document management",
   "feature1_desc":"Store and organize all documents in one place",
   "feature2_title":"AI assistant",
@@ -34,4 +65,81 @@
   "footerHelp":"Help"
   ,"signInError":"Unable to sign in. Please try again.",
   "googleSignInError":"Unable to sign in with Google."
+  ,"newDocument":"New document",
+  "loadingDocuments":"Loading documents...",
+  "tryAgain":"Try again",
+  "documentSigned":"Document signed",
+  "documentRejected":"Document rejected",
+  "signDocument":"Sign",
+  "rejectDocument":"Reject",
+  "account":"Account"
+  ,"approvals":"Approvals",
+  "documentNotFound":"Document not found.",
+  "signDocumentTitle":"Sign document",
+  "rejectDocumentTitle":"Reject document",
+  "rejectPrompt":"Please provide a reason for rejection (optional):",
+  "cancel":"Cancel",
+  "fromLabel":"From"
+  ,"document":"Document",
+  "viewDocument":"View document",
+  "signConfirm":"Do you confirm approval of this document? This action cannot be undone.",
+  "rejectHint":"Reason for rejection...",
+  "pending":"Pending"
+  ,"authorPrefix":"Author:",
+  "statusPrefix":"Status:",
+  "chooseAction":"Choose an action:",
+  "commentLabel":"Comment (optional)"
+  ,"signOutError":"Unable to sign out. Please try again."
+  ,"repositoryNotAvailable":"Repository not available.",
+  "archiveDocumentTitle":"Archive document?",
+  "archiveDocumentContent":"The document will be moved to the archive.",
+  "archiveCancel":"Cancel",
+  "archiveConfirm":"Archive",
+  "archiveDone":"Document archived.",
+  "archiveCancelled":"Archive cancelled."
+  ,"restoreFailed":"Failed to restore document.",
+  "archiveFailed":"Failed to archive document.",
+  "deleteOnlyFromArchive":"Deletion allowed only from the archive.",
+  "deleteDocumentTitle":"Delete document?",
+  "deleteDocumentContent":"This action cannot be undone. Are you sure?",
+  "deleteConfirm":"Delete",
+  "deleteDone":"Document deleted.",
+  "deleteCancelled":"Deletion cancelled.",
+  "deleteFailed":"Failed to delete document.",
+  "restoreDone":"Document restored." 
+  ,"untitled":"Untitled"
+  ,"chooseFileType":"Choose file type",
+  "chooseApprover":"Choose approver"
+  ,"statusAll":"All"
+  ,"statusWaiting":"Waiting"
+  ,"statusInProgress":"In progress"
+  ,"statusApproved":"Approved"
+  ,"statusRejected":"Rejected"
+  ,"selectAndUpload":"Select and upload file"
+  ,"uploadFile":"Upload file"
+  ,"nothingFound":"Nothing found"
+  ,"noDocumentsDescription":"API did not return any documents yet."
+  ,"failedToLoadDocuments":"Failed to load documents."
+  ,"googleDrive":"Google Drive"
+  ,"connected":"Connected"
+  ,"googleDriveDescription":"Files are stored on Google Drive"
+  ,"fileUploaded":"File uploaded"
+  ,"settingsSubtitle":"Theme, language, preferences"
+  ,"unknownAuthor":"Unknown author"
+  ,"notSpecified":"Not specified"
+  ,"typePrefix":"Type:"
+  ,"createdPrefix":"Created:"
+  ,"greetingPrefix":"Welcome,"
+  ,"greetingSubtitle":"Here's what's happening with your documents today"
+  ,"statsWaiting":"Waiting"
+  ,"statsApproved":"Approved"
+  ,"statsLast7Days":"Last 7 days"
+  ,"statsTotal":"Total"
+  ,"quickActions":"Quick actions"
+  ,"activityTitle":"Activity"
+  ,"activitySubtitle":"Latest notifications"
+  ,"noNotifications":"No notifications"
+  ,"helpTitle":"Need a hint?"
+  ,"helpSubtitle":"Our AI assistant can help you understand system features"
+  ,"tryDifferentQuery":"Try a different query or clear filters."
 }
