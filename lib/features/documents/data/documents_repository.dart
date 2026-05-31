@@ -96,55 +96,105 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<UserProfile> fetchCurrentUser(String email) async {
-    final response = await _apiClient.get('/Users/me?email=$email');
+    try {
+      final response = await _apiClient.get('/Users/me?email=$email');
 
-    if (response.statusCode != 200) {
-      developer.log(
-        'Users/me API returned ${response.statusCode} for email=$email.',
-        name: 'karl.users',
-        error: response.body,
-      );
-      throw DocumentsRepositoryException(
-        'Не вдалося отримати профіль користувача (${response.statusCode}).',
-      );
+      if (response.statusCode != 200) {
+        developer.log(
+          'Users/me API returned ${response.statusCode} for email=$email.',
+          name: 'karl.users',
+          error: response.body,
+        );
+        
+        // Try to load from cache
+        final cached = await LocalStorage.loadCachedCurrentUser();
+        if (cached != null) {
+          developer.log('Using cached current user for email=$email', name: 'karl.users');
+          return cached;
+        }
+        
+        throw DocumentsRepositoryException(
+          'Не вдалося отримати профіль користувача (${response.statusCode}).',
+        );
+      }
+
+      final decoded = jsonDecode(response.body);
+      final userProfile = UserProfile.fromJson(Map<String, dynamic>.from(decoded as Map));
+      
+      // Cache the successful response
+      await LocalStorage.saveCachedCurrentUserJson(response.body);
+      
+      return userProfile;
+    } catch (e) {
+      if (e is DocumentsRepositoryException) rethrow;
+      
+      developer.log('Users/me API request failed, attempting cache.', name: 'karl.users', error: e);
+      final cached = await LocalStorage.loadCachedCurrentUser();
+      if (cached != null) {
+        return cached;
+      }
+      rethrow;
     }
-
-    final decoded = jsonDecode(response.body);
-    return UserProfile.fromJson(Map<String, dynamic>.from(decoded as Map));
   }
 
   @override
   Future<List<UserProfile>> fetchUsers({String? organizationId}) async {
-    final response = await _apiClient.get('/Users/active');
+    try {
+      final response = await _apiClient.get('/Users/active');
 
-    if (response.statusCode != 200) {
-      developer.log(
-        'Users API returned ${response.statusCode}.',
-        name: 'karl.users',
-        error: response.body,
-      );
-      throw DocumentsRepositoryException(
-        'Не вдалося отримати список користувачів (${response.statusCode}).',
-      );
+      if (response.statusCode != 200) {
+        developer.log(
+          'Users API returned ${response.statusCode}.',
+          name: 'karl.users',
+          error: response.body,
+        );
+        
+        // Try to load from cache
+        final cached = await LocalStorage.loadCachedUsers();
+        if (cached.isNotEmpty) {
+          developer.log('Using cached users', name: 'karl.users');
+          return organizationId == null || organizationId.isEmpty 
+              ? cached 
+              : cached.where((user) => user.organizationId == organizationId).toList(growable: false);
+        }
+        
+        throw DocumentsRepositoryException(
+          'Не вдалося отримати список користувачів (${response.statusCode}).',
+        );
+      }
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! List) {
+        throw DocumentsRepositoryException(
+          'Неочікуваний формат відповіді API користувачів.',
+        );
+      }
+      final users = decoded
+          .map(
+            (value) => UserProfile.fromJson(Map<String, dynamic>.from(value as Map)),
+          )
+          .toList(growable: false);
+
+      // Cache the successful response
+      await LocalStorage.saveCachedUsersJson(response.body);
+
+      if (organizationId == null || organizationId.isEmpty) {
+        return users;
+      }
+
+      return users.where((user) => user.organizationId == organizationId).toList(growable: false);
+    } catch (e) {
+      if (e is DocumentsRepositoryException) rethrow;
+      
+      developer.log('Users API request failed, attempting cache.', name: 'karl.users', error: e);
+      final cached = await LocalStorage.loadCachedUsers();
+      if (cached.isNotEmpty) {
+        return organizationId == null || organizationId.isEmpty 
+            ? cached 
+            : cached.where((user) => user.organizationId == organizationId).toList(growable: false);
+      }
+      rethrow;
     }
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! List) {
-      throw DocumentsRepositoryException(
-        'Неочікуваний формат відповіді API користувачів.',
-      );
-    }
-    final users = decoded
-        .map(
-          (value) => UserProfile.fromJson(Map<String, dynamic>.from(value as Map)),
-        )
-        .toList(growable: false);
-
-    if (organizationId == null || organizationId.isEmpty) {
-      return users;
-    }
-
-    return users.where((user) => user.organizationId == organizationId).toList(growable: false);
   }
 
   @override
@@ -257,26 +307,48 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<List<DocumentListItem>> fetchDocumentsSentToMe(String userId, {bool? archived}) async {
-    final response = await _apiClient.get('/Documents/sent-to-me/$userId');
+    try {
+      final response = await _apiClient.get('/Documents/sent-to-me/$userId');
 
-    if (response.statusCode == 401) {
-      developer.log('Documents sent-to-me API returned 401.', name: 'karl.documents', error: response.body);
-      throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
+      if (response.statusCode == 401) {
+        developer.log('Documents sent-to-me API returned 401.', name: 'karl.documents', error: response.body);
+        throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
+      }
+
+      if (response.statusCode != 200) {
+        developer.log('Documents sent-to-me API returned ${response.statusCode}.', name: 'karl.documents', error: response.body);
+        
+        // Try to load from cache
+        final cached = await LocalStorage.loadCachedSentToMeDocuments();
+        if (cached.isNotEmpty) {
+          developer.log('Using cached sent-to-me documents', name: 'karl.documents');
+          return _filterArchivedDocuments(cached, archived: archived);
+        }
+        
+        throw DocumentsRepositoryException('Не вдалося завантажити документи на погодження (${response.statusCode}).');
+      }
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! List) {
+        throw DocumentsRepositoryException('Неочікуваний формат відповіді API документів.');
+      }
+
+      final documents = decoded.map((value) => DocumentListItem.fromJson(Map<String, dynamic>.from(value as Map))).toList(growable: false);
+      
+      // Cache the successful response
+      await LocalStorage.saveCachedSentToMeDocumentsJson(response.body);
+
+      return _filterArchivedDocuments(documents, archived: archived);
+    } catch (e) {
+      if (e is DocumentsRepositoryException) rethrow;
+      
+      developer.log('Documents sent-to-me API request failed, attempting cache.', name: 'karl.documents', error: e);
+      final cached = await LocalStorage.loadCachedSentToMeDocuments();
+      if (cached.isNotEmpty) {
+        return _filterArchivedDocuments(cached, archived: archived);
+      }
+      rethrow;
     }
-
-    if (response.statusCode != 200) {
-      developer.log('Documents sent-to-me API returned ${response.statusCode}.', name: 'karl.documents', error: response.body);
-      throw DocumentsRepositoryException('Не вдалося завантажити документи на погодження (${response.statusCode}).');
-    }
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! List) {
-      throw DocumentsRepositoryException('Неочікуваний формат відповіді API документів.');
-    }
-
-    final documents = decoded.map((value) => DocumentListItem.fromJson(Map<String, dynamic>.from(value as Map))).toList(growable: false);
-
-    return _filterArchivedDocuments(documents, archived: archived);
   }
 
   @override
