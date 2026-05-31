@@ -55,32 +55,22 @@ class _ArchivePageState extends State<ArchivePage> {
             }
 
             if (snapshot.hasError) {
-              return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24),
-                children: [
-                  Text('Не вдалося завантажити архів.'),
-                ],
-              );
+              return _ArchiveErrorState(onRetry: _refresh);
             }
 
             final documents = snapshot.data ?? const <DocumentListItem>[];
             if (documents.isEmpty) {
-              return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24),
-                children: const [Center(child: Text('Архів порожній'))],
-              );
+              return const _ArchiveEmptyState();
             }
 
             return ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               itemCount: documents.length,
               itemBuilder: (context, index) {
                 final document = documents[index];
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: SimpleDocumentCard(
                     document: document,
                     repository: widget.repository,
@@ -93,6 +83,100 @@ class _ArchivePageState extends State<ArchivePage> {
           },
         ),
       ),
+    );
+  }
+}
+
+class _ArchiveEmptyState extends StatelessWidget {
+  const _ArchiveEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(24),
+      children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 80),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.archive_outlined,
+                  size: 72,
+                  color: colorScheme.outline,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Архів порожній',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Архівовані документи з’являться тут',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ArchiveErrorState extends StatelessWidget {
+  const _ArchiveErrorState({required this.onRetry});
+
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(24),
+      children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 80),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 72,
+                  color: colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Не вдалося завантажити архів',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh_outlined),
+                  label: const Text('Спробувати ще раз'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

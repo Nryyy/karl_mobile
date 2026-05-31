@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 typedef NavigateCallback = void Function(String route);
 
+/// Material 3 NavigationBar with modern styling and animations.
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({
-    Key? key,
+    super.key,
     required this.currentRoute,
     required this.onNavigate,
-  }) : super(key: key);
+  });
 
   final String currentRoute;
   final NavigateCallback onNavigate;
@@ -16,20 +17,33 @@ class BottomNavBar extends StatelessWidget {
     _NavItem(
       label: 'Головна',
       icon: Icons.dashboard_outlined,
+      selectedIcon: Icons.dashboard,
       route: '/dashboard',
     ),
     _NavItem(
       label: 'Документи',
       icon: Icons.description_outlined,
+      selectedIcon: Icons.description,
       route: '/documents',
     ),
     _NavItem(
       label: 'Погодження',
       icon: Icons.pending_actions_outlined,
+      selectedIcon: Icons.pending_actions,
       route: '/approvals',
     ),
-    _NavItem(label: 'Архів', icon: Icons.archive_outlined, route: '/archive'),
-    _NavItem(label: 'Акаунт', icon: Icons.person_outline, route: '/account'),
+    _NavItem(
+      label: 'Архів',
+      icon: Icons.archive_outlined,
+      selectedIcon: Icons.archive,
+      route: '/archive',
+    ),
+    _NavItem(
+      label: 'Акаунт',
+      icon: Icons.person_outline,
+      selectedIcon: Icons.person,
+      route: '/account',
+    ),
   ];
 
   int get _currentIndex {
@@ -39,15 +53,25 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      type: BottomNavigationBarType.fixed,
-      onTap: (index) => onNavigate(_items[index].route),
-      items: _items
-          .map(
-            (i) => BottomNavigationBarItem(icon: Icon(i.icon), label: i.label),
-          )
-          .toList(),
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return NavigationBar(
+      selectedIndex: _currentIndex,
+      onDestinationSelected: (index) => onNavigate(_items[index].route),
+      backgroundColor: colorScheme.surfaceContainer,
+      indicatorColor: colorScheme.secondaryContainer,
+      indicatorShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      height: 80,
+      destinations: _items.map((item) {
+        return NavigationDestination(
+          icon: Icon(item.icon),
+          selectedIcon: Icon(item.selectedIcon),
+          label: item.label,
+          tooltip: item.label,
+        );
+      }).toList(),
     );
   }
 }
@@ -56,9 +80,11 @@ class _NavItem {
   const _NavItem({
     required this.label,
     required this.icon,
+    required this.selectedIcon,
     required this.route,
   });
   final String label;
   final IconData icon;
+  final IconData selectedIcon;
   final String route;
 }

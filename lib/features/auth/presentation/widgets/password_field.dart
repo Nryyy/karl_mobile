@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_colors.dart';
 
 /// Custom password input field with show/hide toggle and validation.
 class PasswordField extends StatefulWidget {
@@ -29,6 +28,8 @@ class _PasswordFieldState extends State<PasswordField> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Focus(
       onFocusChange: (hasFocus) {
         setState(() => _isFocused = hasFocus);
@@ -42,7 +43,9 @@ class _PasswordFieldState extends State<PasswordField> {
           hintText: '••••••••',
           prefixIcon: Icon(
             Icons.lock_outline,
-            color: _isFocused ? AppColors.primary : AppColors.textTertiary,
+            color: _isFocused
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
           ),
           suffixIcon: GestureDetector(
             onTap: () => setState(() => _isObscured = !_isObscured),
@@ -50,14 +53,14 @@ class _PasswordFieldState extends State<PasswordField> {
               _isObscured
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
-              color: AppColors.textTertiary,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           errorText: widget.errorText,
           errorMaxLines: 2,
         ),
         textInputAction: widget.textInputAction ?? TextInputAction.done,
-        style: GoogleFonts.inter(fontSize: 16, color: AppColors.textPrimary),
+        style: GoogleFonts.inter(fontSize: 16, color: colorScheme.onSurface),
       ),
     );
   }

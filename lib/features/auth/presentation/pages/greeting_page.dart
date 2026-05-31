@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../data/firebase_auth_service.dart';
 import '../../domain/auth_service.dart';
 
@@ -51,8 +50,10 @@ class _GreetingPageState extends State<GreetingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.surfaceContainerLowest,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -62,12 +63,12 @@ class _GreetingPageState extends State<GreetingPage> {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: colorScheme.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border),
-                  boxShadow: const [
+                  border: Border.all(color: colorScheme.outline),
+                  boxShadow: [
                     BoxShadow(
-                      color: Color(0x14000000),
+                      color: colorScheme.shadow.withValues(alpha: 0.08),
                       blurRadius: 24,
                       offset: Offset(0, 10),
                     ),
@@ -81,16 +82,19 @@ class _GreetingPageState extends State<GreetingPage> {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.primary, AppColors.primaryLight],
+                        gradient: LinearGradient(
+                          colors: [
+                            colorScheme.primary,
+                            colorScheme.primaryContainer,
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.verified_outlined,
-                        color: AppColors.white,
+                        color: colorScheme.onPrimary,
                         size: 30,
                       ),
                     ),
@@ -100,7 +104,7 @@ class _GreetingPageState extends State<GreetingPage> {
                       style: GoogleFonts.inter(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -109,7 +113,7 @@ class _GreetingPageState extends State<GreetingPage> {
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         height: 1.5,
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -166,16 +170,18 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.primary),
+          Icon(icon, color: colorScheme.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -186,7 +192,7 @@ class _InfoTile extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -195,7 +201,7 @@ class _InfoTile extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     height: 1.4,
-                    color: AppColors.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

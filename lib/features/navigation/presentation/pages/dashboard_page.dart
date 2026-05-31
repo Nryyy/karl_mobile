@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:karl_mobile/features/ai_chat/ai_chat_service.dart';
 import 'package:karl_mobile/features/ai_chat/chat_screen.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../documents/data/documents_repository.dart';
 import '../../../documents/domain/document_visibility.dart';
 
@@ -76,21 +75,10 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: <Widget>[
-          Text(
-            'Вітаємо, $userName',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Ось що відбувається з вашими документами сьогодні',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 12),
+          _AnimatedGreeting(userName: userName),
+          const SizedBox(height: 20),
           FutureBuilder<_DashboardStats>(
             future: _statsFuture,
             builder: (context, snapshot) {
@@ -130,6 +118,51 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
+class _AnimatedGreeting extends StatelessWidget {
+  const _AnimatedGreeting({required this.userName});
+
+  final String userName;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 10 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Вітаємо, $userName',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Ось що відбувається з вашими документами сьогодні',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StatsGrid extends StatelessWidget {
   const _StatsGrid({required this.stats});
 
@@ -137,35 +170,47 @@ class _StatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      childAspectRatio: 1.9,
-      children: <Widget>[
-        _StatTile(
-          label: 'Очікують',
-          value: stats.pending.toString(),
-          valueColor: AppColors.warning,
-        ),
-        _StatTile(
-          label: 'Затверджено',
-          value: stats.approved.toString(),
-          valueColor: AppColors.success,
-        ),
-        _StatTile(
-          label: 'За 7 днів',
-          value: stats.recent.toString(),
-          valueColor: AppColors.info,
-        ),
-        _StatTile(
-          label: 'Всього',
-          value: stats.total.toString(),
-          valueColor: AppColors.primaryLight,
-        ),
-      ],
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
+
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: crossAxisCount == 4 ? 2.2 : 1.9,
+          children: <Widget>[
+            _StatTile(
+              label: 'Очікують',
+              value: stats.pending.toString(),
+              valueColor: colorScheme.tertiary,
+              icon: Icons.pending_actions,
+            ),
+            _StatTile(
+              label: 'Затверджено',
+              value: stats.approved.toString(),
+              valueColor: colorScheme.primary,
+              icon: Icons.check_circle,
+            ),
+            _StatTile(
+              label: 'За 7 днів',
+              value: stats.recent.toString(),
+              valueColor: colorScheme.secondary,
+              icon: Icons.calendar_today,
+            ),
+            _StatTile(
+              label: 'Всього',
+              value: stats.total.toString(),
+              valueColor: colorScheme.onSurface,
+              icon: Icons.folder,
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -190,30 +235,54 @@ class _StatTile extends StatelessWidget {
     required this.label,
     required this.value,
     required this.valueColor,
+    required this.icon,
   });
 
   final String label;
   final String value;
   final Color valueColor;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Semantics(
       label: '$label: $value',
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(label, style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: valueColor,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: valueColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 20, color: valueColor),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: valueColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -313,27 +382,37 @@ class _GoogleDriveCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              'Google Drive',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            Row(
+              children: [
+                Icon(Icons.cloud_done, color: colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  'Google Drive',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Статус підключення',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Row(
               children: <Widget>[
-                const Icon(Icons.cloud_done, color: AppColors.success),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -343,16 +422,18 @@ class _GoogleDriveCard extends StatelessWidget {
                         'Підключено',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       Text(
                         'Файли зберігаються на Google Drive',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.circle, color: AppColors.success, size: 10),
               ],
             ),
           ],
@@ -367,40 +448,45 @@ class _HelpCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: <Widget>[
-            const Icon(
-              Icons.help_outline,
-              size: 36,
-              color: AppColors.primaryLight,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.help_outline,
+                size: 32,
+                color: colorScheme.onSecondaryContainer,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               'Потребуєте підказку?',
               style: Theme.of(
                 context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               'Наш AI асистент допоможе вам розібратися з функціями системи',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+              child: FilledButton.tonalIcon(
                 icon: const Icon(Icons.chat_bubble_outline),
                 onPressed: () async {
                   final user = FirebaseAuth.instance.currentUser;

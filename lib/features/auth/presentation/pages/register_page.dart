@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../data/firebase_auth_service.dart';
 import '../../domain/auth_failure.dart';
 import '../../domain/auth_service.dart';
@@ -87,8 +86,9 @@ class _RegisterPageState extends State<RegisterPage> {
       _fullNameError = _validateFullName(_fullNameController.text);
       _emailError = _validateEmail(_emailController.text);
       _passwordError = _validatePassword(_passwordController.text);
-      _confirmPasswordError =
-          _validateConfirmPassword(_confirmPasswordController.text);
+      _confirmPasswordError = _validateConfirmPassword(
+        _confirmPasswordController.text,
+      );
     });
 
     if (_fullNameError != null ||
@@ -127,8 +127,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.surfaceContainerLowest,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -141,12 +143,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.white,
-                    border: Border.all(color: AppColors.border),
+                    color: colorScheme.surfaceContainerLowest,
+                    border: Border.all(color: colorScheme.outline),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.shadow,
+                        color: colorScheme.shadow,
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -160,7 +162,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -169,15 +171,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
-                          color: AppColors.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 20),
                       _FullNameField(
                         controller: _fullNameController,
                         errorText: _fullNameError,
-                        onChanged: (_) =>
-                            setState(() => _fullNameError = null),
+                        onChanged: (_) => setState(() => _fullNameError = null),
                       ),
                       const SizedBox(height: 20),
                       EmailField(
@@ -191,8 +192,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         labelText: 'Пароль',
                         errorText: _passwordError,
                         textInputAction: TextInputAction.next,
-                        onChanged: (_) =>
-                            setState(() => _passwordError = null),
+                        onChanged: (_) => setState(() => _passwordError = null),
                       ),
                       const SizedBox(height: 20),
                       PasswordField(
@@ -236,7 +236,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             'Вже маєте акаунт? ',
                             style: GoogleFonts.inter(
                               fontSize: 14,
-                              color: AppColors.textSecondary,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                           GestureDetector(
@@ -246,7 +246,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
+                                color: colorScheme.primary,
                                 decoration: TextDecoration.underline,
                               ),
                             ),
@@ -266,6 +266,8 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildHeaderSection(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -273,10 +275,10 @@ class _RegisterPageState extends State<RegisterPage> {
           children: [
             GestureDetector(
               onTap: () => context.goNamed('login'),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 20,
-                color: AppColors.primary,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(width: 8),
@@ -284,8 +286,8 @@ class _RegisterPageState extends State<RegisterPage> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryLight],
+                gradient: LinearGradient(
+                  colors: [colorScheme.primary, colorScheme.primaryContainer],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -297,7 +299,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: GoogleFonts.inter(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.white,
+                    color: colorScheme.onPrimary,
                   ),
                 ),
               ),
@@ -308,7 +310,7 @@ class _RegisterPageState extends State<RegisterPage> {
               style: GoogleFonts.inter(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
           ],
@@ -319,7 +321,7 @@ class _RegisterPageState extends State<RegisterPage> {
           style: GoogleFonts.inter(
             fontSize: 28,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
         ),
         Text(
@@ -327,7 +329,7 @@ class _RegisterPageState extends State<RegisterPage> {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            color: AppColors.textSecondary,
+            color: colorScheme.onSurfaceVariant,
             height: 1.4,
           ),
         ),
@@ -356,6 +358,8 @@ class _FullNameFieldState extends State<_FullNameField> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Focus(
       onFocusChange: (hasFocus) => setState(() => _isFocused = hasFocus),
       child: TextField(
@@ -369,12 +373,14 @@ class _FullNameFieldState extends State<_FullNameField> {
           hintText: 'Іван Петренко',
           prefixIcon: Icon(
             Icons.person_outline_rounded,
-            color: _isFocused ? AppColors.primary : AppColors.textTertiary,
+            color: _isFocused
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
           ),
           errorText: widget.errorText,
           errorMaxLines: 2,
         ),
-        style: GoogleFonts.inter(fontSize: 16, color: AppColors.textPrimary),
+        style: GoogleFonts.inter(fontSize: 16, color: colorScheme.onSurface),
       ),
     );
   }

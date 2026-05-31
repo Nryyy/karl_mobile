@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_colors.dart';
 
 /// Model for displaying platform features.
 class PlatformFeature {
@@ -23,6 +22,8 @@ class PlatformFeaturesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -31,7 +32,7 @@ class PlatformFeaturesSection extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 16),
@@ -58,11 +59,13 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        border: Border.all(color: AppColors.border),
+        color: colorScheme.surfaceContainerLowest,
+        border: Border.all(color: colorScheme.outline),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -71,10 +74,10 @@ class _FeatureCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Icon(feature.icon, color: AppColors.primary, size: 20),
+            child: Icon(feature.icon, color: colorScheme.primary, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -86,7 +89,7 @@ class _FeatureCard extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -95,7 +98,7 @@ class _FeatureCard extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                     height: 1.4,
                   ),
                 ),

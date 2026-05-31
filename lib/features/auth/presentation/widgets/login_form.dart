@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_colors.dart';
 import 'email_field.dart';
 import 'password_field.dart';
 
@@ -84,6 +83,8 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -125,7 +126,7 @@ class _LoginFormState extends State<LoginForm> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
                 ),
               ),
             ),
@@ -159,7 +160,7 @@ class _LoginFormState extends State<LoginForm> {
           const SizedBox(height: 16),
           Row(
             children: [
-              const Expanded(child: Divider(color: AppColors.border)),
+              Expanded(child: Divider(color: colorScheme.outlineVariant)),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
@@ -167,11 +168,11 @@ class _LoginFormState extends State<LoginForm> {
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textTertiary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
-              const Expanded(child: Divider(color: AppColors.border)),
+              Expanded(child: Divider(color: colorScheme.outlineVariant)),
             ],
           ),
           const SizedBox(height: 16),

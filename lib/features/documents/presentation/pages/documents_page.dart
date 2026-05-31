@@ -8,8 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:karl_mobile/generated/app_localizations.dart';
 
 import '../../providers/documents_provider.dart';
-
-import '../../../../core/theme/app_colors.dart';
 import '../../../auth/data/firebase_auth_service.dart';
 import '../../../auth/domain/auth_service.dart';
 import '../../data/documents_repository.dart';
@@ -464,7 +462,7 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
   @override
   Widget build(BuildContext context) {
     final document = widget.document;
-    final statusColor = _statusColor(document.status.name);
+    final statusColor = _statusColor(document.status.name, context);
     final createdAt = _formatDate(document.createdAt).split(' ').first;
 
     return Card(
@@ -574,8 +572,12 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: color.withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: Text(
         label,
@@ -596,21 +598,25 @@ class _MetaPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: AppColors.primary),
+          Icon(icon, size: 16, color: colorScheme.primary),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.labelSmall,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -982,12 +988,13 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final hasFile = _pickedFile != null;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: colorScheme.surfaceContainerLowest,
         elevation: 0,
         title: const Text('Новий документ'),
         centerTitle: false,
@@ -1005,19 +1012,19 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                 decoration: InputDecoration(
                   hintText: 'Введіть назву документа',
                   filled: true,
-                  fillColor: AppColors.white,
+                  fillColor: colorScheme.surfaceContainerLowest,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: colorScheme.outline),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: colorScheme.outline),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
                       width: 2,
                     ),
                   ),
@@ -1034,19 +1041,19 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                 initialValue: _selectedFileType,
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: AppColors.white,
+                  fillColor: colorScheme.surfaceContainerLowest,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: colorScheme.outline),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: colorScheme.outline),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
                       width: 2,
                     ),
                   ),
@@ -1076,12 +1083,12 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.attach_file_rounded,
-                      color: AppColors.primary,
+                      color: colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -1090,7 +1097,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                     'Файл документа',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -1106,13 +1113,13 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                   ),
                   decoration: BoxDecoration(
                     color: hasFile
-                        ? AppColors.accent.withValues(alpha: 0.05)
-                        : AppColors.surfaceLight,
+                        ? colorScheme.tertiary.withValues(alpha: 0.05)
+                        : colorScheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: hasFile
-                          ? AppColors.accent.withValues(alpha: 0.4)
-                          : AppColors.border,
+                          ? colorScheme.tertiary.withValues(alpha: 0.4)
+                          : colorScheme.outline,
                       width: hasFile ? 1.5 : 1,
                       strokeAlign: BorderSide.strokeAlignInside,
                     ),
@@ -1123,12 +1130,14 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppColors.accent.withValues(alpha: 0.1),
+                                color: colorScheme.tertiary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.description_rounded,
-                                color: AppColors.accent,
+                                color: colorScheme.tertiary,
                                 size: 24,
                               ),
                             ),
@@ -1141,7 +1150,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                                     _pickedFile!.name,
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.textPrimary,
+                                      color: colorScheme.onSurface,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -1149,7 +1158,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                                   Text(
                                     _formatFileSize(_pickedFile!.size),
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: AppColors.textSecondary,
+                                      color: colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -1159,10 +1168,10 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                             IconButton(
                               onPressed: () =>
                                   setState(() => _pickedFile = null),
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.close_rounded,
                                 size: 18,
-                                color: AppColors.textSecondary,
+                                color: colorScheme.onSurfaceVariant,
                               ),
                               visualDensity: VisualDensity.compact,
                               tooltip: 'Видалити файл',
@@ -1171,16 +1180,16 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                         )
                       : Column(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.cloud_upload_outlined,
                               size: 40,
-                              color: AppColors.disabled,
+                              color: colorScheme.onSurface.withValues(alpha: 0.38),
                             ),
                             const SizedBox(height: 10),
                             Text(
                               'Натисніть, щоб вибрати файл',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.primary,
+                                color: colorScheme.primary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -1188,7 +1197,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                             Text(
                               'PDF, DOCX, XLSX, PNG, JPG',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: AppColors.textTertiary,
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -1208,12 +1217,12 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.warning.withValues(alpha: 0.1),
+                          color: colorScheme.tertiary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.route_rounded,
-                          color: AppColors.warning,
+                          color: colorScheme.tertiary,
                           size: 20,
                         ),
                       ),
@@ -1222,25 +1231,25 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                         'Маршрут погодження',
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                     ],
                   ),
                   if (_isLoadingUsers)
-                    const SizedBox(
+                    SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.primary,
+                        color: colorScheme.primary,
                       ),
                     )
                   else
                     TextButton.icon(
                       onPressed: _addApprovalStep,
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.primary,
+                        foregroundColor: colorScheme.primary,
                         visualDensity: VisualDensity.compact,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -1263,25 +1272,25 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                     horizontal: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
+                    color: colorScheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: AppColors.border,
+                      color: colorScheme.outline,
                       style: BorderStyle.solid,
                     ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.info_outline_rounded,
                         size: 16,
-                        color: AppColors.textTertiary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Без маршруту погодження',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -1311,18 +1320,18 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.08),
+                color: colorScheme.tertiary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.warning.withValues(alpha: 0.4),
+                  color: colorScheme.tertiary.withValues(alpha: 0.4),
                 ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.cloud_off_rounded,
-                    color: AppColors.warning,
+                    color: colorScheme.tertiary,
                     size: 22,
                   ),
                   const SizedBox(width: 12),
@@ -1335,21 +1344,21 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                                color: colorScheme.onSurface,
                               ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Документ збережено без файлу. Зверніться до адміністратора для підключення Google Drive.',
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textSecondary),
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
                         ),
                         const SizedBox(height: 10),
                         TextButton.icon(
                           onPressed: () =>
                               GoRouter.of(context).go('/documents'),
                           style: TextButton.styleFrom(
-                            foregroundColor: AppColors.warning,
+                            foregroundColor: colorScheme.tertiary,
                             visualDensity: VisualDensity.compact,
                             padding: EdgeInsets.zero,
                           ),
@@ -1375,14 +1384,12 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
             child: FilledButton(
               onPressed: _isSaving ? null : _save,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.disabled,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: _isSaving
-                  ? const Row(
+                  ? Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
@@ -1390,7 +1397,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: colorScheme.onPrimary,
                           ),
                         ),
                         SizedBox(width: 10),
@@ -1399,11 +1406,12 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
+                            color: colorScheme.onPrimary,
                           ),
                         ),
                       ],
                     )
-                  : const Row(
+                  : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.save_outlined, size: 20),
@@ -1413,6 +1421,7 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
+                            color: colorScheme.onPrimary,
                           ),
                         ),
                       ],
@@ -1432,19 +1441,14 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 12,
-            offset: Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1462,24 +1466,25 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color: colorScheme.onSurfaceVariant,
             letterSpacing: 0.2,
           ),
         ),
         if (required)
-          const Text(
+          Text(
             ' *',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: AppColors.error,
+              color: colorScheme.error,
             ),
           ),
       ],
@@ -1513,9 +1518,9 @@ class _ApprovalStepRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -1524,7 +1529,7 @@ class _ApprovalStepRow extends StatelessWidget {
             height: 28,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
               shape: BoxShape.circle,
             ),
             child: Text(
@@ -1581,18 +1586,12 @@ class _UploadFileSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 12,
-            offset: Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1602,12 +1601,12 @@ class _UploadFileSection extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.upload_file_rounded,
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
                   size: 20,
                 ),
               ),
@@ -1616,7 +1615,7 @@ class _UploadFileSection extends StatelessWidget {
                 'Завантажити файл',
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -1626,21 +1625,21 @@ class _UploadFileSection extends StatelessWidget {
             width: double.infinity,
             height: 48,
             child: isUploading
-                ? const Center(
+              ? Center(
                     child: SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.primary,
+                        color: colorScheme.primary,
                       ),
                     ),
                   )
                 : OutlinedButton.icon(
                     onPressed: onUpload,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: colorScheme.primary,
+                      side: BorderSide(color: colorScheme.primary),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -1671,10 +1670,10 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.inbox_outlined,
               size: 72,
-              color: AppColors.disabled,
+              color: Theme.of(context).colorScheme.outline,
             ),
             const SizedBox(height: 16),
             Text(
@@ -1713,7 +1712,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 72, color: AppColors.error),
+            Icon(Icons.error_outline, size: 72, color: Theme.of(context).colorScheme.error),
             const SizedBox(height: 16),
             Text(
               'Не вдалося завантажити документи',
@@ -1761,26 +1760,27 @@ String _formatDate(DateTime? dateTime) {
   return '$day.$month.$year $hour:$minute';
 }
 
-Color _statusColor(String statusName) {
+Color _statusColor(String statusName, BuildContext context) {
   final normalized = statusName.toLowerCase();
+  final colorScheme = Theme.of(context).colorScheme;
 
   if (normalized.contains('approve') ||
       normalized.contains('signed') ||
       normalized.contains('done')) {
-    return AppColors.success;
+    return colorScheme.primary;
   }
 
   if (normalized.contains('reject') ||
       normalized.contains('cancel') ||
       normalized.contains('error')) {
-    return AppColors.error;
+    return colorScheme.error;
   }
 
   if (normalized.contains('draft') ||
       normalized.contains('new') ||
       normalized.contains('review')) {
-    return AppColors.warning;
+    return colorScheme.tertiary;
   }
 
-  return AppColors.primary;
+  return colorScheme.outline;
 }

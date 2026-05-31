@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_colors.dart';
 
 /// Custom email input field with validation and professional styling.
 class EmailField extends StatefulWidget {
@@ -24,6 +23,8 @@ class _EmailFieldState extends State<EmailField> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Focus(
       onFocusChange: (hasFocus) {
         setState(() => _isFocused = hasFocus);
@@ -40,7 +41,7 @@ class _EmailFieldState extends State<EmailField> {
               hintText: 'your.email@example.com',
               prefixIcon: Icon(
                 Icons.email_outlined,
-                color: _isFocused ? AppColors.primary : AppColors.textTertiary,
+                color: _isFocused ? colorScheme.primary : colorScheme.onSurfaceVariant,
               ),
               errorText: widget.errorText,
               errorMaxLines: 2,
@@ -48,7 +49,7 @@ class _EmailFieldState extends State<EmailField> {
             textInputAction: TextInputAction.next,
             style: GoogleFonts.inter(
               fontSize: 16,
-              color: AppColors.textPrimary,
+              color: colorScheme.onSurface,
             ),
           ),
           if (widget.errorText == null) ...[
@@ -57,7 +58,7 @@ class _EmailFieldState extends State<EmailField> {
               'Ми не надсилатимемо спам',
               style: GoogleFonts.inter(
                 fontSize: 12,
-                color: AppColors.textTertiary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ],

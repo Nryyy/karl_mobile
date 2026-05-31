@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../data/documents_repository.dart';
 import '../../domain/document_models.dart';
 import '../widgets/google_drive_preview.dart';
@@ -390,7 +389,8 @@ Future<String?> _showRejectDialog(BuildContext context) async {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
             ),
             onPressed: () => Navigator.of(context).pop(controller.text.trim()),
             child: const Text('Відхилити'),
@@ -489,16 +489,23 @@ class _ApprovalCard extends StatelessWidget {
 class _PendingBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final warningColor = colorScheme.tertiary;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.12),
+        color: warningColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: warningColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: Text(
         'Очікує',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: AppColors.warning,
+          color: warningColor,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -514,21 +521,25 @@ class _MetaPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: AppColors.primary),
+          Icon(icon, size: 16, color: colorScheme.primary),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.labelSmall,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -546,55 +557,47 @@ class _DocumentInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 12,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            document.title.isEmpty ? 'Без назви' : document.title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              document.title.isEmpty ? 'Без назви' : document.title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          _InfoRow(
-            icon: Icons.person_outline,
-            label: 'Автор',
-            value: document.authorName.isEmpty
-                ? 'Невідомий'
-                : document.authorName,
-          ),
-          const SizedBox(height: 6),
-          _InfoRow(
-            icon: Icons.description_outlined,
-            label: 'Тип',
-            value: document.fileType.isEmpty ? '—' : document.fileType,
-          ),
-          const SizedBox(height: 6),
-          _InfoRow(
-            icon: Icons.calendar_today_outlined,
-            label: 'Створено',
-            value: _formatDate(document.createdAt),
-          ),
-          const SizedBox(height: 6),
-          _InfoRow(
-            icon: Icons.flag_outlined,
-            label: 'Статус',
-            value: document.status.name.isEmpty ? '—' : document.status.name,
-          ),
-        ],
+            const SizedBox(height: 12),
+            _InfoRow(
+              icon: Icons.person_outline,
+              label: 'Автор',
+              value: document.authorName.isEmpty
+                  ? 'Невідомий'
+                  : document.authorName,
+            ),
+            const SizedBox(height: 8),
+            _InfoRow(
+              icon: Icons.description_outlined,
+              label: 'Тип',
+              value: document.fileType.isEmpty ? '—' : document.fileType,
+            ),
+            const SizedBox(height: 8),
+            _InfoRow(
+              icon: Icons.calendar_today_outlined,
+              label: 'Створено',
+              value: _formatDate(document.createdAt),
+            ),
+            const SizedBox(height: 8),
+            _InfoRow(
+              icon: Icons.flag_outlined,
+              label: 'Статус',
+              value: document.status.name.isEmpty ? '—' : document.status.name,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -614,14 +617,16 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
+        Icon(icon, size: 16, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: 8),
         Text(
           '$label: ',
           style: theme.textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
+            color: colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -629,7 +634,7 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             value,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: AppColors.textPrimary,
+              color: colorScheme.onSurface,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -647,60 +652,52 @@ class _ApprovalFlowCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final flow = document.approvalFlow;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 12,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.route_rounded,
-                size: 18,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Маршрут погодження',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.route_rounded,
+                  size: 18,
+                  color: colorScheme.primary,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (flow.steps.isEmpty)
-            Text(
-              'Кроки відсутні.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            )
-          else
-            ...flow.steps.asMap().entries.map((entry) {
-              final index = entry.key;
-              final step = entry.value;
-              final isCurrent = index == flow.currentStep;
-              return _ApprovalStepTile(
-                step: step,
-                isCurrent: isCurrent,
-                isLast: index == flow.steps.length - 1,
-              );
-            }),
-        ],
+                const SizedBox(width: 8),
+                Text(
+                  'Маршрут погодження',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (flow.steps.isEmpty)
+              Text(
+                'Кроки відсутні.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              )
+            else
+              ...flow.steps.asMap().entries.map((entry) {
+                final index = entry.key;
+                final step = entry.value;
+                final isCurrent = index == flow.currentStep;
+                return _ApprovalStepTile(
+                  step: step,
+                  isCurrent: isCurrent,
+                  isLast: index == flow.steps.length - 1,
+                );
+              }),
+          ],
+        ),
       ),
     );
   }
@@ -720,6 +717,7 @@ class _ApprovalStepTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final statusName = step.status.name.toLowerCase();
     final isApproved =
         statusName.contains('approve') ||
@@ -731,16 +729,16 @@ class _ApprovalStepTile extends StatelessWidget {
     final Color dotColor;
     final IconData dotIcon;
     if (isApproved) {
-      dotColor = AppColors.success;
+      dotColor = colorScheme.primary;
       dotIcon = Icons.check_circle_rounded;
     } else if (isRejected) {
-      dotColor = AppColors.error;
+      dotColor = colorScheme.error;
       dotIcon = Icons.cancel_rounded;
     } else if (isCurrent) {
-      dotColor = AppColors.warning;
+      dotColor = colorScheme.tertiary;
       dotIcon = Icons.pending_rounded;
     } else {
-      dotColor = AppColors.disabled;
+      dotColor = colorScheme.outline;
       dotIcon = Icons.radio_button_unchecked;
     }
 
@@ -754,7 +752,7 @@ class _ApprovalStepTile extends StatelessWidget {
               Container(
                 width: 2,
                 height: 28,
-                color: AppColors.border,
+                color: colorScheme.outlineVariant,
               ),
           ],
         ),
@@ -770,8 +768,8 @@ class _ApprovalStepTile extends StatelessWidget {
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: isCurrent ? FontWeight.w700 : FontWeight.normal,
                     color: isCurrent
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
+                        ? colorScheme.onSurface
+                        : colorScheme.onSurfaceVariant,
                   ),
                 ),
                 Text(
@@ -784,7 +782,7 @@ class _ApprovalStepTile extends StatelessWidget {
                   Text(
                     step.comment,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -813,6 +811,7 @@ class _SignActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final busy = isSigning || isRejecting;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Row(
       children: [
@@ -822,21 +821,21 @@ class _SignActionBar extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: busy ? null : () => onReject(),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
+                foregroundColor: colorScheme.error,
                 side: BorderSide(
-                  color: busy ? AppColors.disabled : AppColors.error,
+                  color: busy ? colorScheme.outline : colorScheme.error,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               icon: isRejecting
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.error,
+                        color: colorScheme.error,
                       ),
                     )
                   : const Icon(Icons.close_rounded, size: 18),
@@ -854,19 +853,21 @@ class _SignActionBar extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: busy ? null : () => onSign(),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.success,
-                disabledBackgroundColor: AppColors.disabled,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                disabledBackgroundColor: colorScheme.onSurface.withValues(alpha: 0.12),
+                disabledForegroundColor: colorScheme.onSurface.withValues(alpha: 0.38),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               icon: isSigning
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                       ),
                     )
                   : const Icon(Icons.check_rounded, size: 18),
@@ -887,16 +888,18 @@ class _ApprovalsEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.task_alt_outlined,
               size: 72,
-              color: AppColors.disabled,
+              color: colorScheme.outline,
             ),
             const SizedBox(height: 16),
             Text(
@@ -909,7 +912,9 @@ class _ApprovalsEmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Коли вам надішлють документ на підпис, він з\'явиться тут.',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -930,6 +935,8 @@ class _ApprovalsErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(24),
@@ -938,10 +945,10 @@ class _ApprovalsErrorState extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.error_outline,
                 size: 72,
-                color: AppColors.error,
+                color: colorScheme.error,
               ),
               const SizedBox(height: 16),
               Text(
@@ -954,7 +961,9 @@ class _ApprovalsErrorState extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 message,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
