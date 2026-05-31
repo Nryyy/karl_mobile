@@ -6,6 +6,9 @@ class AuthFailure implements Exception {
   /// User-facing failure message.
   final String message;
 
+  /// Creates an unknown authentication failure.
+  static AuthFailure unknown(String message) => AuthFailure(message);
+
   @override
   String toString() => 'AuthFailure: $message';
 }

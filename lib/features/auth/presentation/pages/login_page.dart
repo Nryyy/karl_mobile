@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:karl_mobile/generated/app_localizations.dart';
 
 import '../../../../core/providers/locale_provider.dart';
+import '../../providers/login_provider.dart';
+import '../../domain/auth_failure.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../data/firebase_auth_service.dart';
-import '../../domain/auth_failure.dart';
-import '../../domain/auth_service.dart';
 import '../widgets/login_form.dart';
 import '../widgets/platform_features_section.dart';
 
@@ -15,123 +14,16 @@ import '../widgets/platform_features_section.dart';
 ///
 /// Provides a professional, informative interface for first-time users.
 /// Combines login form with platform features overview.
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  bool _isLoading = false;
-  final AuthService _authService = FirebaseAuthService();
-
-  List<PlatformFeature> get _features => [
-    PlatformFeature(
-      icon: Icons.folder_open_outlined,
-      title:
-          AppLocalizations.of(context)?.feature1Title ?? 'Document management',
-      description:
-          AppLocalizations.of(context)?.feature1Desc ??
-          'Store and organize all documents in one place',
-    ),
-    PlatformFeature(
-      icon: Icons.smart_toy_outlined,
-      title: AppLocalizations.of(context)?.feature2Title ?? 'AI assistant',
-      description:
-          AppLocalizations.of(context)?.feature2Desc ??
-          'Smart document processing and workflow automation',
-    ),
-    PlatformFeature(
-      icon: Icons.people_outline,
-      title: AppLocalizations.of(context)?.feature3Title ?? 'Teamwork',
-      description:
-          AppLocalizations.of(context)?.feature3Desc ??
-          'Collaborate on documents with colleagues in real time',
-    ),
-    PlatformFeature(
-      icon: Icons.security_outlined,
-      title: AppLocalizations.of(context)?.feature4Title ?? 'Data security',
-      description:
-          AppLocalizations.of(context)?.feature4Desc ??
-          'Enterprise-grade protection for your confidential documents',
-    ),
-  ];
-
-  Future<void> _handleEmailPasswordLogin(String email, String password) async {
-    setState(() => _isLoading = true);
-
-    try {
-      final userName = await _authService.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      if (!mounted) {
-        return;
-      }
-      context.goNamed('documents', extra: userName);
-    } on AuthFailure catch (error) {
-      if (!mounted) {
-        return;
-      }
-      _showError(error.message);
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      _showError(
-        AppLocalizations.of(context)?.signInError ??
-            'Unable to sign in. Please try again.',
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<void> _handleGoogleLogin() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final userName = await _authService.signInWithGoogle();
-      if (!mounted) {
-        return;
-      }
-      context.goNamed('documents', extra: userName);
-    } on AuthFailure catch (error) {
-      if (!mounted) {
-        return;
-      }
-      _showError(error.message);
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      _showError(
-        AppLocalizations.of(context)?.googleSignInError ??
-            'Unable to sign in with Google.',
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLoading = ref.watch(isLoadingProvider);
+    final authError = ref.watch(authErrorProvider);
 
     return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -143,107 +35,44 @@ class _LoginPageState extends State<LoginPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Consumer(
-                      builder: (context, ref, _) {
-                        return PopupMenuButton<String>(
-                          tooltip:
-                              AppLocalizations.of(context)?.language ??
-                              'Language',
-                          icon: const Icon(Icons.language),
-                          onSelected: (value) async {
-                            Locale? locale;
-                            if (value == 'system')
-                              locale = null;
-                            else
-                              locale = Locale(value);
-                            await ref
-                                .read(localeProvider.notifier)
-                                .setLocale(locale);
-                          },
-                          itemBuilder: (ctx) => [
-                            const PopupMenuItem(
-                              value: 'system',
-                              child: Text('System'),
-                            ),
-                            const PopupMenuItem(
-                              value: 'en',
-                              child: Text('English'),
-                            ),
-                            const PopupMenuItem(
-                              value: 'uk',
-                              child: Text('Українська'),
-                            ),
-                            const PopupMenuItem(
-                              value: 'pl',
-                              child: Text('Polski'),
-                            ),
-                          ],
-                        );
+                    PopupMenuButton<String>(
+                      tooltip: AppLocalizations.of(context)?.language ?? 'Language',
+                      icon: const Icon(Icons.language),
+                      onSelected: (value) async {
+                        Locale? locale;
+                        if (value == 'system')
+                          locale = null;
+                        else
+                          locale = Locale(value);
+                        await ref.read(localeProvider.notifier).setLocale(locale);
                       },
+                      itemBuilder: (ctx) => [
+                        const PopupMenuItem(value: 'system', child: Text('System')),
+                        const PopupMenuItem(value: 'en', child: Text('English')),
+                        const PopupMenuItem(value: 'uk', child: Text('Українська')),
+                        const PopupMenuItem(value: 'pl', child: Text('Polski')),
+                      ],
                     ),
                   ],
                 ),
                 // Logo and title section
-                _buildHeaderSection(),
+                _buildHeaderSection(context),
                 const SizedBox(height: 32),
 
                 // Login form section
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerLowest,
-                    border: Border.all(color: colorScheme.outline),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colorScheme.shadow,
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        AppLocalizations.of(context)?.loginTitle ?? 'Sign in',
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        AppLocalizations.of(context)?.loginSubtitle ??
-                            'Enter your credentials to access the platform',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      LoginForm(
-                        onEmailPasswordSubmitted: _handleEmailPasswordLogin,
-                        onGooglePressed: _handleGoogleLogin,
-                        isLoading: _isLoading,
-                      ),
-                    ],
-                  ),
-                ),
+                _buildLoginFormSection(context, ref, isLoading, authError),
                 const SizedBox(height: 32),
 
                 // Sign up link
-                _buildSignUpSection(),
+                _buildSignUpSection(context),
                 const SizedBox(height: 24),
 
                 // Platform features section
-                PlatformFeaturesSection(features: _features),
+                PlatformFeaturesSection(features: _features(context)),
                 const SizedBox(height: 24),
 
                 // Footer
-                _buildFooterSection(),
+                _buildFooterSection(context),
               ],
             ),
           ),
@@ -252,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _buildHeaderSection(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -302,7 +131,57 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildSignUpSection() {
+  Widget _buildLoginFormSection(BuildContext context, WidgetRef ref, bool isLoading, AuthFailure? authError) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLowest,
+        border: Border.all(color: colorScheme.outline),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            AppLocalizations.of(context)?.loginTitle ?? 'Sign in',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            AppLocalizations.of(context)?.loginSubtitle ?? 'Enter your credentials to access the platform',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 20),
+          LoginForm(
+            onEmailPasswordSubmitted: (email, password) async {
+              await ref.read(loginProvider.notifier).signInWithEmailAndPassword(email, password);
+            },
+            onGooglePressed: () => ref.read(loginProvider.notifier).signInWithGoogle(),
+            isLoading: isLoading,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignUpSection(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -329,8 +208,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  AppLocalizations.of(context)?.createAccountSubtitle ??
-                      'Create an account in minutes',
+                  AppLocalizations.of(context)?.createAccountSubtitle ?? 'Create an account in minutes',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
@@ -356,7 +234,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildFooterSection() {
+  Widget _buildFooterSection(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -381,20 +259,16 @@ class _LoginPageState extends State<LoginPage> {
         Wrap(
           spacing: 16,
           children: [
-            _buildFooterLink(
-              AppLocalizations.of(context)?.privacy ?? 'Privacy',
-            ),
-            _buildFooterLink(AppLocalizations.of(context)?.terms ?? 'Terms'),
-            _buildFooterLink(
-              AppLocalizations.of(context)?.footerHelp ?? 'Help',
-            ),
+            _buildFooterLink(context, AppLocalizations.of(context)?.privacy ?? 'Privacy'),
+            _buildFooterLink(context, AppLocalizations.of(context)?.terms ?? 'Terms'),
+            _buildFooterLink(context, AppLocalizations.of(context)?.footerHelp ?? 'Help'),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildFooterLink(String text) {
+  Widget _buildFooterLink(BuildContext context, String text) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
@@ -411,4 +285,27 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
+  List<PlatformFeature> _features(BuildContext context) => [
+    PlatformFeature(
+      icon: Icons.folder_open_outlined,
+      title: AppLocalizations.of(context)?.feature1Title ?? 'Document management',
+      description: AppLocalizations.of(context)?.feature1Desc ?? 'Store and organize all documents in one place',
+    ),
+    PlatformFeature(
+      icon: Icons.smart_toy_outlined,
+      title: AppLocalizations.of(context)?.feature2Title ?? 'AI assistant',
+      description: AppLocalizations.of(context)?.feature2Desc ?? 'Smart document processing and workflow automation',
+    ),
+    PlatformFeature(
+      icon: Icons.people_outline,
+      title: AppLocalizations.of(context)?.feature3Title ?? 'Teamwork',
+      description: AppLocalizations.of(context)?.feature3Desc ?? 'Collaborate on documents with colleagues in real time',
+    ),
+    PlatformFeature(
+      icon: Icons.security_outlined,
+      title: AppLocalizations.of(context)?.feature4Title ?? 'Data security',
+      description: AppLocalizations.of(context)?.feature4Desc ?? 'Enterprise-grade protection for your confidential documents',
+    ),
+  ];
 }

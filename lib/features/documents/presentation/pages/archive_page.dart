@@ -1,26 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/documents_repository.dart';
 import '../../domain/document_models.dart';
 import '../pages/documents_page.dart';
+import '../../providers/document_actions_provider.dart';
 
-class ArchivePage extends StatefulWidget {
-  const ArchivePage({super.key, required this.repository});
-
-  final DocumentsRepository repository;
-
-  @override
-  State<ArchivePage> createState() => _ArchivePageState();
-}
-
-class _ArchivePageState extends State<ArchivePage> {
-  late Future<List<DocumentListItem>> _archiveFuture;
+class ArchiveNotifier extends AsyncNotifier<List<DocumentListItem>> {
+  late DocumentsRepository _repository;
 
   @override
-  void initState() {
-    super.initState();
-    _archiveFuture = _loadArchivedDocuments();
+  Future<List<DocumentListItem>> build() async {
+    _repository = ref.read(documentsRepositoryProvider);
+    return _loadArchivedDocuments();
   }
 
   Future<List<DocumentListItem>> _loadArchivedDocuments() async {
@@ -28,37 +21,57 @@ class _ArchivePageState extends State<ArchivePage> {
     if (firebaseUser == null) return const <DocumentListItem>[];
 
     final email = firebaseUser.email ?? '';
-    final profile = await widget.repository.fetchCurrentUser(email);
-    final documents = await widget.repository.fetchDocuments(archived: true);
+    final profile = await _repository.fetchCurrentUser(email);
+    final documents = await _repository.fetchDocuments(archived: true);
 
     return documents
-      .where((document) => document.authorId == profile.id)
+        .where((document) => document.authorId == profile.id)
         .toList(growable: false);
   }
 
-  Future<void> _refresh() async {
-    setState(() => _archiveFuture = _loadArchivedDocuments());
-    await _archiveFuture;
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _loadArchivedDocuments());
   }
+}
+
+final archiveProvider = AsyncNotifierProvider<ArchiveNotifier, List<DocumentListItem>>(ArchiveNotifier.new);
+
+
+class ArchivePage extends ConsumerWidget {
+  const ArchivePage({super.key, required this.repository});
+
+  final DocumentsRepository repository;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Override the repository provider for this page
+    return ProviderScope(
+      overrides: [
+        documentsRepositoryProvider.overrideWithValue(repository),
+      ],
+      child: const _ArchivePageContent(),
+    );
+  }
+}
+
+class _ArchivePageContent extends ConsumerWidget {
+  const _ArchivePageContent();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final archiveAsync = ref.watch(archiveProvider);
+    
     return Scaffold(
       appBar: AppBar(title: const Text('Архів')),
       body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: FutureBuilder<List<DocumentListItem>>(
-          future: _archiveFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              return _ArchiveErrorState(onRetry: _refresh);
-            }
-
-            final documents = snapshot.data ?? const <DocumentListItem>[];
+        onRefresh: () => ref.read(archiveProvider.notifier).refresh(),
+        child: archiveAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => _ArchiveErrorState(
+            onRetry: () => ref.read(archiveProvider.notifier).refresh(),
+          ),
+          data: (documents) {
             if (documents.isEmpty) {
               return const _ArchiveEmptyState();
             }
@@ -73,8 +86,8 @@ class _ArchivePageState extends State<ArchivePage> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: SimpleDocumentCard(
                     document: document,
-                    repository: widget.repository,
-                    onChanged: _refresh,
+                    repository: ref.read(documentsRepositoryProvider),
+                    onChanged: () => ref.read(archiveProvider.notifier).refresh(),
                     allowPermanentDelete: true,
                   ),
                 );

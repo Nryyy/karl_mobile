@@ -76,32 +76,28 @@ Future<void> main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // fallback to light; the ThemeNotifier will update on load
-    return Consumer(
-      builder: (context, ref, _) {
-        final themeMode = ref.watch(themeNotifierProvider);
-        final localeAsync = ref.watch(localeProvider);
-        final locale = localeAsync.asData?.value;
-        return MaterialApp.router(
-          title: AppLocalizations.of(context)?.appTitle ?? 'Karl',
-          routerConfig: appRouter,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: themeMode,
-          locale: locale,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('en'), Locale('uk'), Locale('pl')],
-        );
-      },
+    final themeMode = ref.watch(themeNotifierProvider);
+    final localeAsync = ref.watch(localeProvider);
+    final locale = localeAsync.asData?.value;
+    return MaterialApp.router(
+      title: AppLocalizations.of(context)?.appTitle ?? 'Karl',
+      routerConfig: appRouter,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
+      locale: locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('en'), Locale('uk'), Locale('pl')],
     );
   }
 }
