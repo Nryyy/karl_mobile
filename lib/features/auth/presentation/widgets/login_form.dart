@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'email_field.dart';
-import 'password_field.dart';
+import 'email_form_field.dart';
+import 'password_form_field.dart';
 
-/// Login form widget with validation and state management.
+/// Login form widget with standard Flutter Form validation.
 class LoginForm extends StatefulWidget {
   final Future<void> Function(String email, String password)
   onEmailPasswordSubmitted;
@@ -22,18 +22,10 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
-  late final TextEditingController _emailController;
-  late final TextEditingController _passwordController;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  String? _emailError;
-  String? _passwordError;
-
-  @override
-  void initState() {
-    super.initState();
-    _emailController = TextEditingController();
-    _passwordController = TextEditingController();
-  }
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  var _autovalidateMode = AutovalidateMode.disabled;
 
   @override
   void dispose() {
@@ -42,38 +34,14 @@ class _LoginFormState extends State<LoginForm> {
     super.dispose();
   }
 
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email адреса обов\'язкова';
-    }
-    const emailRegex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
-    if (!RegExp(emailRegex).hasMatch(value)) {
-      return 'Введіть дійсну email адресу';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Пароль обов\'язковий';
-    }
-    if (value.length < 8) {
-      return 'Пароль мусить містити мінімум 8 символів';
-    }
-    return null;
-  }
-
   Future<void> _handleSubmit() async {
-    setState(() {
-      _emailError = _validateEmail(_emailController.text);
-      _passwordError = _validatePassword(_passwordController.text);
-    });
-
-    if (_emailError == null && _passwordError == null) {
+    if (_formKey.currentState!.validate()) {
       await widget.onEmailPasswordSubmitted(
         _emailController.text,
         _passwordController.text,
       );
+    } else {
+      setState(() => _autovalidateMode = AutovalidateMode.onUserInteraction);
     }
   }
 
@@ -87,27 +55,22 @@ class _LoginFormState extends State<LoginForm> {
 
     return Form(
       key: _formKey,
+      autovalidateMode: _autovalidateMode,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Email field
-          EmailField(
+          // Email field with built-in validation
+          EmailFormField(
             controller: _emailController,
-            errorText: _emailError,
-            onChanged: (_) {
-              setState(() => _emailError = null);
-            },
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 20),
 
-          // Password field
-          PasswordField(
+          // Password field with built-in validation
+          PasswordFormField(
             controller: _passwordController,
-            errorText: _passwordError,
             labelText: 'Пароль',
-            onChanged: (_) {
-              setState(() => _passwordError = null);
-            },
+            textInputAction: TextInputAction.done,
           ),
           const SizedBox(height: 12),
 

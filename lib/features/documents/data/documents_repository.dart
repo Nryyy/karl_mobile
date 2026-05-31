@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
+import '../../../core/config/api_config.dart';
+import '../../../core/http/api_client.dart';
 import '../../../core/storage/local_storage.dart';
 import '../domain/document_models.dart';
 
@@ -75,43 +77,26 @@ abstract class DocumentsRepository {
 
 /// HTTP repository that reads documents from the API.
 class HttpDocumentsRepository implements DocumentsRepository {
-  /// Creates an HTTP documents repository.
+  /// Creates an HTTP documents repository using centralized ApiClient.
   HttpDocumentsRepository({
-    http.Client? client,
-    this.baseUrl = _defaultBaseUrl,
+    ApiClient? apiClient,
     Future<String?> Function()? accessTokenProvider,
-  })  : _client = client ?? http.Client(),
-        _ownsClient = client == null,
-        _accessTokenProvider = accessTokenProvider;
+  })  : _apiClient = apiClient ?? ApiClient(accessTokenProvider: accessTokenProvider),
+        _ownsClient = apiClient == null;
 
-  static const String _defaultBaseUrl = 'https://localhost:7229';
-
-  final http.Client _client;
+  final ApiClient _apiClient;
   final bool _ownsClient;
-  final Future<String?> Function()? _accessTokenProvider;
 
-  /// Base URL of the documents API.
-  final String baseUrl;
-
-  /// Closes the underlying client when the repository owns it.
+  /// Disposes the underlying API client when owned by this repository.
   void dispose() {
     if (_ownsClient) {
-      _client.close();
+      _apiClient.dispose();
     }
   }
 
   @override
   Future<UserProfile> fetchCurrentUser(String email) async {
-    final uri = Uri.parse(
-      '$baseUrl/api/Users/me',
-    ).replace(queryParameters: {'email': email});
-    final headers = <String, String>{'accept': 'application/json'};
-    final accessToken = await _accessTokenProvider?.call();
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['authorization'] = 'Bearer $accessToken';
-    }
-
-    final response = await _client.get(uri, headers: headers);
+    final response = await _apiClient.get('/Users/me?email=$email');
 
     if (response.statusCode != 200) {
       developer.log(
@@ -130,14 +115,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<List<UserProfile>> fetchUsers({String? organizationId}) async {
-    final uri = Uri.parse('$baseUrl/api/Users/active');
-    final headers = <String, String>{'accept': 'application/json'};
-    final accessToken = await _accessTokenProvider?.call();
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['authorization'] = 'Bearer $accessToken';
-    }
-
-    final response = await _client.get(uri, headers: headers);
+    final response = await _apiClient.get('/Users/active');
 
     if (response.statusCode != 200) {
       developer.log(
@@ -187,17 +165,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
     String? organizationId,
     List<CreateApprovalStep>? approvalSteps,
   }) async {
-    final uri = Uri.parse('$baseUrl/api/Documents');
-    final headers = <String, String>{
-      'accept': 'application/json',
-      'content-type': 'application/json',
-    };
-    final accessToken = await _accessTokenProvider?.call();
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['authorization'] = 'Bearer $accessToken';
-    }
-
-    final bodyMap = <String, dynamic>{
+    final body = <String, dynamic>{
       'title': title,
       'authorId': authorId,
       'authorName': authorName,
@@ -208,9 +176,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
       if (approvalSteps != null && approvalSteps.isNotEmpty) 'approvalSteps': approvalSteps.map((s) => s.toJson()).toList(),
     };
 
-    final body = jsonEncode(bodyMap);
-
-    final response = await _client.post(uri, headers: headers, body: body);
+    final response = await _apiClient.post('/Documents', body: body);
 
     if (response.statusCode == 401) {
       developer.log(
@@ -254,15 +220,15 @@ class HttpDocumentsRepository implements DocumentsRepository {
     required Uint8List fileBytes,
     required String fileName,
   }) async {
-    final uri = Uri.parse('$baseUrl/api/Documents/$documentId/file');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/api/Documents/$documentId/file');
     final request = http.MultipartRequest('POST', uri)..files.add(http.MultipartFile.fromBytes('file', fileBytes, filename: fileName));
 
-    final accessToken = await _accessTokenProvider?.call();
+    final accessToken = await _apiClient.getAccessToken();
     if (accessToken != null && accessToken.isNotEmpty) {
       request.headers['authorization'] = 'Bearer $accessToken';
     }
 
-    final streamedResponse = await _client.send(request);
+    final streamedResponse = await http.Client().send(request);
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 401) {
@@ -291,14 +257,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<List<DocumentListItem>> fetchDocumentsSentToMe(String userId, {bool? archived}) async {
-    final uri = Uri.parse('$baseUrl/api/Documents/sent-to-me/$userId');
-    final headers = <String, String>{'accept': 'application/json'};
-    final accessToken = await _accessTokenProvider?.call();
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['authorization'] = 'Bearer $accessToken';
-    }
-
-    final response = await _client.get(uri, headers: headers);
+    final response = await _apiClient.get('/Documents/sent-to-me/$userId');
 
     if (response.statusCode == 401) {
       developer.log('Documents sent-to-me API returned 401.', name: 'karl.documents', error: response.body);
@@ -322,16 +281,10 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<void> signDocument({required String documentId, required String userName, required String userEmail}) async {
-    final uri = Uri.parse('$baseUrl/api/Documents/$documentId/sign');
-    final headers = <String, String>{'accept': 'application/json', 'content-type': 'application/json'};
-    final accessToken = await _accessTokenProvider?.call();
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['authorization'] = 'Bearer $accessToken';
-    }
-
-    final body = jsonEncode({'userName': userName, 'userEmail': userEmail});
-
-    final response = await _client.post(uri, headers: headers, body: body);
+    final response = await _apiClient.post(
+      '/Documents/$documentId/sign',
+      body: {'userName': userName, 'userEmail': userEmail},
+    );
 
     if (response.statusCode == 401) {
       throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
@@ -346,16 +299,14 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<void> rejectDocument({required String documentId, required String userName, required String userEmail, String? comment}) async {
-    final uri = Uri.parse('$baseUrl/api/Documents/$documentId/reject');
-    final headers = <String, String>{'accept': 'application/json', 'content-type': 'application/json'};
-    final accessToken = await _accessTokenProvider?.call();
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['authorization'] = 'Bearer $accessToken';
-    }
-
-    final body = jsonEncode({'userName': userName, 'userEmail': userEmail, if (comment != null && comment.isNotEmpty) 'comment': comment});
-
-    final response = await _client.post(uri, headers: headers, body: body);
+    final response = await _apiClient.post(
+      '/Documents/$documentId/reject',
+      body: {
+        'userName': userName,
+        'userEmail': userEmail,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      },
+    );
 
     if (response.statusCode == 401) {
       throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
@@ -372,16 +323,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<void> archiveDocument(String documentId) async {
-    final uri = Uri.parse('$baseUrl/api/Documents/$documentId');
-    final headers = <String, String>{'accept': 'application/json', 'content-type': 'application/json'};
-    final accessToken = await _accessTokenProvider?.call();
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['authorization'] = 'Bearer $accessToken';
-    }
-
-    final body = jsonEncode({'archived': true});
-
-    final response = await _client.put(uri, headers: headers, body: body);
+    final response = await _apiClient.put('/Documents/$documentId', body: {'archived': true});
 
     if (response.statusCode == 401) {
       throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
@@ -398,16 +340,7 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<void> restoreDocument(String documentId) async {
-    final uri = Uri.parse('$baseUrl/api/Documents/$documentId');
-    final headers = <String, String>{'accept': 'application/json', 'content-type': 'application/json'};
-    final accessToken = await _accessTokenProvider?.call();
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['authorization'] = 'Bearer $accessToken';
-    }
-
-    final body = jsonEncode({'archived': false});
-
-    final response = await _client.put(uri, headers: headers, body: body);
+    final response = await _apiClient.put('/Documents/$documentId', body: {'archived': false});
 
     if (response.statusCode == 401) {
       throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
@@ -424,14 +357,8 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<void> deleteDocument(String documentId, {bool permanent = false}) async {
-    final uri = Uri.parse('$baseUrl/api/Documents/$documentId').replace(queryParameters: permaQuery(permanent));
-    final headers = <String, String>{'accept': 'application/json'};
-    final accessToken = await _accessTokenProvider?.call();
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['authorization'] = 'Bearer $accessToken';
-    }
-
-    final response = await _client.delete(uri, headers: headers);
+    final path = permanent ? '/Documents/$documentId?permanent=true' : '/Documents/$documentId';
+    final response = await _apiClient.delete(path);
 
     if (response.statusCode == 401) {
       throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
@@ -464,22 +391,10 @@ class HttpDocumentsRepository implements DocumentsRepository {
     return statusName.contains('архів') || statusName.contains('archive') || statusName.contains('archived') || statusId.contains('архів') || statusId.contains('archive') || statusId.contains('archived');
   }
 
-  Map<String, String>? permaQuery(bool permanent) {
-    if (!permanent) return null;
-    return {'permanent': 'true'};
-  }
-
   @override
   Future<List<DocumentListItem>> fetchDocuments({bool? archived}) async {
-    final uri = Uri.parse('$baseUrl/api/Documents');
-    final headers = <String, String>{'accept': 'application/json'};
-    final accessToken = await _accessTokenProvider?.call();
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['authorization'] = 'Bearer $accessToken';
-    }
-
     try {
-      final response = await _client.get(uri, headers: headers);
+      final response = await _apiClient.get('/Documents');
 
       if (response.statusCode == 401) {
         developer.log('Documents API returned 401.', name: 'karl.documents', error: response.body);

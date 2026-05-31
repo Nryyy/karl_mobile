@@ -91,6 +91,25 @@ class DocumentListItem {
       metadata: DocumentMetadata.fromJson(_readMap(json['metadata'])),
     );
   }
+
+  /// Converts to JSON map.
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'authorId': authorId,
+    'authorName': authorName,
+    'status': status.toJson(),
+    'fileType': fileType,
+    'googleDriveFileId': googleDriveFileId,
+    'webViewLink': webViewLink,
+    'webContentLink': webContentLink,
+    'createdAt': createdAt?.toIso8601String(),
+    'updatedAt': updatedAt?.toIso8601String(),
+    'signatures': signatures.map((s) => s.toJson()).toList(),
+    'comments': comments.map((c) => c.toJson()).toList(),
+    'approvalFlow': approvalFlow.toJson(),
+    'metadata': metadata.toJson(),
+  };
 }
 
 /// Represents a document status.
@@ -112,6 +131,9 @@ class DocumentStatus {
       name: _readString(json['name']),
     );
   }
+
+  /// Converts to JSON map.
+  Map<String, dynamic> toJson() => {'id': id, 'name': name};
 
   @override
   bool operator ==(Object other) => other is DocumentStatus && other.id == id;
@@ -157,6 +179,15 @@ class DocumentSignature {
       signedAt: _readDateTime(json['signedAt']),
     );
   }
+
+  /// Converts to JSON map.
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'userId': userId,
+    'userName': userName,
+    'signatureType': signatureType,
+    'signedAt': signedAt?.toIso8601String(),
+  };
 }
 
 /// Represents a document comment.
@@ -201,6 +232,16 @@ class DocumentComment {
       editedAt: _readDateTime(json['editedAt']),
     );
   }
+
+  /// Converts to JSON map.
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'userId': userId,
+    'userName': userName,
+    'comment': comment,
+    'createdAt': createdAt?.toIso8601String(),
+    'editedAt': editedAt?.toIso8601String(),
+  };
 }
 
 /// Represents the approval flow of a document.
@@ -232,6 +273,13 @@ class ApprovalFlow {
       currentStep: _readInt(json['currentStep']),
     );
   }
+
+  /// Converts to JSON map.
+  Map<String, dynamic> toJson() => {
+    'isActive': isActive,
+    'steps': steps.map((s) => s.toJson()).toList(),
+    'currentStep': currentStep,
+  };
 }
 
 /// Represents a single approval step.
@@ -281,6 +329,17 @@ class ApprovalStep {
       comment: _readString(json['comment']),
     );
   }
+
+  /// Converts to JSON map.
+  Map<String, dynamic> toJson() => {
+    'stepOrder': stepOrder,
+    'approverId': approverId,
+    'approverName': approverName,
+    'approverEmail': approverEmail,
+    'status': status.toJson(),
+    'actionAt': actionAt?.toIso8601String(),
+    'comment': comment,
+  };
 }
 
 /// Represents additional metadata for a document.
@@ -323,6 +382,15 @@ class DocumentMetadata {
       pageCount: _readInt(json['pageCount']),
     );
   }
+
+  /// Converts to JSON map.
+  Map<String, dynamic> toJson() => {
+    'version': version,
+    'tags': tags,
+    'category': category,
+    'fileSize': fileSize,
+    'pageCount': pageCount,
+  };
 }
 
 /// Represents a user profile returned by the users API.
@@ -367,6 +435,16 @@ class UserProfile {
       organizationName: _readString(json['organizationName']),
     );
   }
+
+  /// Converts to JSON map.
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'email': email,
+    'fullName': fullName,
+    'role': role,
+    'organizationId': organizationId,
+    'organizationName': organizationName,
+  };
 
   @override
   bool operator ==(Object other) => other is UserProfile && other.id == id;

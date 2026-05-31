@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../core/config/api_config.dart';
 import '../domain/auth_failure.dart';
 import '../domain/auth_service.dart';
 
@@ -14,14 +15,11 @@ class FirebaseAuthService implements AuthService {
   FirebaseAuthService({
     FirebaseAuth? auth,
     GoogleSignIn? googleSignIn,
-    String backendBaseUrl = 'https://localhost:7229',
-  }) : _authFactory = (() => auth ?? FirebaseAuth.instance),
-       _googleSignInFactory = (() => googleSignIn ?? GoogleSignIn.instance),
-       _backendBaseUrl = backendBaseUrl;
+  })  : _authFactory = (() => auth ?? FirebaseAuth.instance),
+        _googleSignInFactory = (() => googleSignIn ?? GoogleSignIn.instance);
 
   final FirebaseAuth Function() _authFactory;
   final GoogleSignIn Function() _googleSignInFactory;
-  final String _backendBaseUrl;
 
   FirebaseAuth? _auth;
   GoogleSignIn? _googleSignIn;
@@ -136,7 +134,7 @@ class FirebaseAuthService implements AuthService {
     required String idToken,
   }) async {
     try {
-      final uri = Uri.parse('$_backendBaseUrl/api/Users');
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/Users');
       await http.post(
         uri,
         headers: {
@@ -144,7 +142,7 @@ class FirebaseAuthService implements AuthService {
           'Authorization': 'Bearer $idToken',
         },
         body: jsonEncode({'email': email, 'fullName': fullName}),
-      );
+      ).timeout(ApiConfig.requestTimeout);
     } on Exception catch (error) {
       developer.log(
         'Failed to register user in backend.',

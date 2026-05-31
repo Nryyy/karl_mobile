@@ -5,8 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../data/firebase_auth_service.dart';
 import '../../domain/auth_failure.dart';
 import '../../domain/auth_service.dart';
-import '../widgets/email_field.dart';
-import '../widgets/password_field.dart';
+import '../widgets/email_form_field.dart';
+import '../widgets/full_name_form_field.dart';
+import '../widgets/password_form_field.dart';
 
 /// Registration page for new users.
 class RegisterPage extends StatefulWidget {
@@ -17,19 +18,16 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final _formKey = GlobalKey<FormState>();
+  var _autovalidateMode = AutovalidateMode.disabled;
+
   bool _isLoading = false;
   final AuthService _authService = FirebaseAuthService();
 
-  final TextEditingController _fullNameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
-
-  String? _fullNameError;
-  String? _emailError;
-  String? _passwordError;
-  String? _confirmPasswordError;
+  final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
@@ -38,37 +36,6 @@ class _RegisterPageState extends State<RegisterPage> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
-  }
-
-  String? _validateFullName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Ім\'я та прізвище обов\'язкові';
-    }
-    if (value.trim().length < 2) {
-      return 'Введіть повне ім\'я';
-    }
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email адреса обов\'язкова';
-    }
-    const emailRegex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
-    if (!RegExp(emailRegex).hasMatch(value)) {
-      return 'Введіть дійсну email адресу';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Пароль обов\'язковий';
-    }
-    if (value.length < 8) {
-      return 'Пароль мусить містити мінімум 8 символів';
-    }
-    return null;
   }
 
   String? _validateConfirmPassword(String? value) {
@@ -82,19 +49,8 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _handleRegister() async {
-    setState(() {
-      _fullNameError = _validateFullName(_fullNameController.text);
-      _emailError = _validateEmail(_emailController.text);
-      _passwordError = _validatePassword(_passwordController.text);
-      _confirmPasswordError = _validateConfirmPassword(
-        _confirmPasswordController.text,
-      );
-    });
-
-    if (_fullNameError != null ||
-        _emailError != null ||
-        _passwordError != null ||
-        _confirmPasswordError != null) {
+    if (!_formKey.currentState!.validate()) {
+      setState(() => _autovalidateMode = AutovalidateMode.onUserInteraction);
       return;
     }
 
@@ -154,55 +110,57 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Створити акаунт',
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
+                  child: Form(
+                    key: _formKey,
+                    autovalidateMode: _autovalidateMode,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Створити акаунт',
+                          style: GoogleFonts.inter(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Заповніть дані для реєстрації в системі',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: colorScheme.onSurfaceVariant,
+                        const SizedBox(height: 8),
+                        Text(
+                          'Заповніть дані для реєстрації в системі',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      _FullNameField(
-                        controller: _fullNameController,
-                        errorText: _fullNameError,
-                        onChanged: (_) => setState(() => _fullNameError = null),
-                      ),
-                      const SizedBox(height: 20),
-                      EmailField(
-                        controller: _emailController,
-                        errorText: _emailError,
-                        onChanged: (_) => setState(() => _emailError = null),
-                      ),
-                      const SizedBox(height: 20),
-                      PasswordField(
-                        controller: _passwordController,
-                        labelText: 'Пароль',
-                        errorText: _passwordError,
-                        textInputAction: TextInputAction.next,
-                        onChanged: (_) => setState(() => _passwordError = null),
-                      ),
-                      const SizedBox(height: 20),
-                      PasswordField(
-                        controller: _confirmPasswordController,
-                        labelText: 'Підтвердити пароль',
-                        errorText: _confirmPasswordError,
-                        textInputAction: TextInputAction.done,
-                        onChanged: (_) =>
-                            setState(() => _confirmPasswordError = null),
-                      ),
+                        const SizedBox(height: 20),
+                        // Full name with validation
+                        FullNameFormField(
+                          controller: _fullNameController,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 20),
+                        // Email with validation
+                        EmailFormField(
+                          controller: _emailController,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 20),
+                        // Password with validation
+                        PasswordFormField(
+                          controller: _passwordController,
+                          labelText: 'Пароль',
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 20),
+                        // Confirm password with custom validator
+                        PasswordFormField(
+                          controller: _confirmPasswordController,
+                          labelText: 'Підтвердити пароль',
+                          hintText: 'Повторіть пароль',
+                          textInputAction: TextInputAction.done,
+                          validator: _validateConfirmPassword,
+                        ),
                       const SizedBox(height: 28),
                       ElevatedButton(
                         onPressed: _isLoading ? null : _handleRegister,
@@ -256,12 +214,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -334,54 +292,6 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _FullNameField extends StatefulWidget {
-  final TextEditingController controller;
-  final String? errorText;
-  final Function(String)? onChanged;
-
-  const _FullNameField({
-    required this.controller,
-    this.errorText,
-    this.onChanged,
-  });
-
-  @override
-  State<_FullNameField> createState() => _FullNameFieldState();
-}
-
-class _FullNameFieldState extends State<_FullNameField> {
-  bool _isFocused = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Focus(
-      onFocusChange: (hasFocus) => setState(() => _isFocused = hasFocus),
-      child: TextField(
-        controller: widget.controller,
-        onChanged: widget.onChanged,
-        keyboardType: TextInputType.name,
-        textCapitalization: TextCapitalization.words,
-        textInputAction: TextInputAction.next,
-        decoration: InputDecoration(
-          labelText: 'Ім\'я та прізвище',
-          hintText: 'Іван Петренко',
-          prefixIcon: Icon(
-            Icons.person_outline_rounded,
-            color: _isFocused
-                ? colorScheme.primary
-                : colorScheme.onSurfaceVariant,
-          ),
-          errorText: widget.errorText,
-          errorMaxLines: 2,
-        ),
-        style: GoogleFonts.inter(fontSize: 16, color: colorScheme.onSurface),
-      ),
     );
   }
 }
