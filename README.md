@@ -4,16 +4,13 @@ A modern mobile application for document management with AI integration, approva
 
 ## Screenshots
 
-> Add UI screenshots to the `screenshots/` folder and update paths below
-
 | Login | Documents | AI Chat | Approvals |
-|-------|-----------|---------|-----------|
-| ![Login](screenshots/login.png) | ![Documents](screenshots/documents.png) | ![AI Chat](screenshots/ai_chat.png) | ![Approvals](screenshots/approvals.png) |
+|:-----:|:---------:|:-------:|:---------:|
+| <img src="https://github.com/user-attachments/assets/3d56f47d-1f80-4f4a-af5e-938cf68dd9f0" width="180"/> | <img src="https://github.com/user-attachments/assets/c56adb74-df91-4c88-84e0-c9c01f08a880" width="180"/> | <img src="https://github.com/user-attachments/assets/ee666d23-6cd4-46fb-897b-9c56161428ba" width="180"/> | <img src="https://github.com/user-attachments/assets/6cc53135-3b4b-4dc5-a23a-89d0bb3947a0" width="180"/> |
 
 | QR Validation | Archive | Settings | Dark Theme |
-|---------------|---------|----------|------------|
-| ![QR](screenshots/qr_scan.png) | ![Archive](screenshots/archive.png) | ![Settings](screenshots/settings.png) | ![Dark](screenshots/dark_theme.png) |
-
+|:-------------:|:-------:|:--------:|:----------:|
+| <img src="https://github.com/user-attachments/assets/b34c6575-4a3f-4bee-aa9c-8e6575c53bab" width="180"/> | <img src="https://github.com/user-attachments/assets/51664739-b053-46ae-aab7-8cbc57c1aebc" width="180"/> | <img src="https://github.com/user-attachments/assets/5e8edfb0-469a-4c73-bbbd-ac95aad2eda5" width="180"/> | <img src="https://github.com/user-attachments/assets/eb3bcde6-a804-4bd7-bd2e-f69aaa1f918d" width="180"/> |
 ## Features
 
 ### 📄 Document Management
