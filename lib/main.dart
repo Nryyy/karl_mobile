@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -24,6 +25,17 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    
+    // Initialize Firestore
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+    
+    // Test Firestore connection
+    await FirebaseFirestore.instance.enableNetwork();
+    developer.log('Firestore initialized successfully', name: 'karl.firestore');
+    
   } on FirebaseException catch (error, stackTrace) {
     firebaseInitialized = false;
     initErrorMessage = error.toString();

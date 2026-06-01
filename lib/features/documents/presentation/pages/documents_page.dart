@@ -17,6 +17,8 @@ import '../widgets/google_drive_preview.dart';
 import '../../../../core/services/image_picker_service.dart';
 import '../../../../core/services/firebase_storage_service.dart';
 import '../../../../widgets/image_display_widget.dart';
+import '../../../../widgets/qr_code_widget.dart';
+import '../../../../widgets/firestore_diagnostic_widget.dart';
 
 /// Main post-login page showing the document list.
 class DocumentsPage extends ConsumerStatefulWidget {
@@ -167,6 +169,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
               children: [
+                const FirestoreDiagnosticWidget(),
                 _DocumentsSimpleHeader(
                   searchController: _searchController,
                   selectedStatusFilter: _selectedStatusFilter,
@@ -960,6 +963,11 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
           _UploadFileSection(
             isUploading: _isUploading,
             onUpload: _handleUploadFile,
+          ),
+          const SizedBox(height: 16),
+          QRCodeWidget(
+            document: item,
+            currentUserName: FirebaseAuth.instance.currentUser?.displayName ?? 'User',
           ),
         ],
       ),

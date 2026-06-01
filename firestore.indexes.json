@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "qr_validations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "documentId", "order": "ASCENDING" },
+        { "fieldPath": "generatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "qr_validations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "generatedBy", "order": "ASCENDING" },
+        { "fieldPath": "generatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "qr_validations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "qrCode", "order": "ASCENDING" },
+        { "fieldPath": "isValid", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
