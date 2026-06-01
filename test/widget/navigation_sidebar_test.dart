@@ -16,8 +16,8 @@ void main() {
       ),
     );
 
-    // Admin panel label should be present
-    expect(find.text('Адмін панель'), findsOneWidget);
+    // Admin panel label should be present (fallback text since no localization)
+    expect(find.text('Admin panel'), findsOneWidget);
   });
 
   testWidgets('hides admin panel when isAdmin is false', (WidgetTester tester) async {
@@ -33,6 +33,6 @@ void main() {
       ),
     );
 
-    expect(find.text('Адмін панель'), findsNothing);
+    expect(find.text('Admin panel'), findsNothing);
   });
 }

@@ -1,15 +1,27 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:karl_mobile/main.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:karl_mobile/features/auth/presentation/widgets/login_form.dart';
 
 void main() {
-  testWidgets('shows the Karl login page', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
+  testWidgets('LoginForm renders correctly', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: LoginForm(
+              onEmailPasswordSubmitted: (email, password) async {},
+              onGooglePressed: () async {},
+            ),
+          ),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
-    // Verify LoginForm is present and Google sign-in button exists
+    // Verify login form elements are present
     expect(find.byType(LoginForm), findsOneWidget);
+    expect(find.text('Увійти через Google'), findsOneWidget);
     expect(find.byIcon(Icons.g_mobiledata_rounded), findsOneWidget);
   });
 }

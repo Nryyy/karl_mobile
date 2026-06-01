@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:karl_mobile/core/storage/local_storage.dart';
@@ -80,7 +82,7 @@ void main() {
         ];
 
         // Convert to JSON as the repository would
-        final json = '[${documents.map((d) => d.toJson()).toList().map((e) => e.toString()).join(',')}]';
+        final json = jsonEncode(documents.map((d) => d.toJson()).toList());
         await LocalStorage.saveCachedDocumentsJson(json);
 
         final loaded = await LocalStorage.loadCachedDocuments();

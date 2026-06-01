@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,6 +14,9 @@ import '../../../auth/domain/auth_service.dart';
 import '../../data/documents_repository.dart';
 import '../../domain/document_models.dart';
 import '../widgets/google_drive_preview.dart';
+import '../../../../core/services/image_picker_service.dart';
+import '../../../../core/services/firebase_storage_service.dart';
+import '../../../../widgets/image_display_widget.dart';
 
 /// Main post-login page showing the document list.
 class DocumentsPage extends ConsumerStatefulWidget {
@@ -31,10 +35,14 @@ class DocumentsPage extends ConsumerStatefulWidget {
 
 class _DocumentsPageState extends ConsumerState<DocumentsPage> {
   final AuthService _authService = FirebaseAuthService();
+  final ImagePickerService _imagePickerService = ImagePickerService();
+  final FirebaseStorageService _storageService = FirebaseStorageService();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedStatusFilter = 'all';
   bool _isSigningOut = false;
+  List<File> _selectedImages = [];
+  bool _isUploadingImage = false;
 
   @override
   void initState() {
@@ -122,10 +130,22 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
           const SizedBox(width: 8),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => GoRouter.of(context).go('/documents/new'),
-        icon: const Icon(Icons.add),
-        label: Text(AppLocalizations.of(context)?.upload ?? 'New document'),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: "camera",
+            onPressed: _showImagePickerBottomSheet,
+            child: const Icon(Icons.camera_alt),
+          ),
+          const SizedBox(height: 8),
+          FloatingActionButton.extended(
+            heroTag: "new_document",
+            onPressed: () => GoRouter.of(context).go('/documents/new'),
+            icon: const Icon(Icons.add),
+            label: Text(AppLocalizations.of(context)?.upload ?? 'New document'),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _refreshDocuments,
@@ -153,6 +173,81 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                   onSelectStatusFilter: _selectStatusFilter,
                 ),
                 const SizedBox(height: 12),
+                if (_selectedImages.isNotEmpty) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Обрані фото (${_selectedImages.length})',
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                if (_isUploadingImage)
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 8),
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                  ),
+                                TextButton.icon(
+                                  onPressed: _isUploadingImage ? null : _uploadImagesToFirebase,
+                                  icon: const Icon(Icons.cloud_upload, size: 16),
+                                  label: Text('Завантажити в Firebase'),
+                                ),
+                                IconButton(
+                                  onPressed: () => setState(() => _selectedImages.clear()),
+                                  icon: const Icon(Icons.clear_all, size: 20),
+                                  tooltip: 'Очистити всі',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        ImageGridWidget(
+                          images: _selectedImages,
+                          crossAxisCount: 3,
+                          showDeleteButton: true,
+                          onDelete: (index) => _removeImage(index),
+                          onTap: (index) {
+                            // Show image preview
+                            showDialog(
+                              context: context,
+                              builder: (context) => Dialog(
+                                child: Container(
+                                  constraints: BoxConstraints(
+                                    maxWidth: MediaQuery.of(context).size.width * 0.9,
+                                    maxHeight: MediaQuery.of(context).size.height * 0.8,
+                                  ),
+                                  child: ImageDisplayWidget(
+                                    imageFile: _selectedImages[index],
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 if (filteredDocuments.isEmpty)
                   _EmptyState(
                     isSearchActive: _searchQuery.isNotEmpty || _selectedStatusFilter != 'all',
@@ -226,6 +321,130 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
   bool _matchesStatus(String statusName, List<String> keywords) {
     final normalized = statusName.toLowerCase();
     return keywords.any(normalized.contains);
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final image = await _imagePickerService.pickImageFromCamera();
+      if (image != null) {
+        setState(() {
+          _selectedImages.add(image);
+        });
+        _showMessage('Фото з камери додано');
+      }
+    } catch (e) {
+      _showMessage('Помилка при виборі фото з камери: $e');
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final image = await _imagePickerService.pickImageFromGallery();
+      if (image != null) {
+        setState(() {
+          _selectedImages.add(image);
+        });
+        _showMessage('Фото з галереї додано');
+      }
+    } catch (e) {
+      _showMessage('Помилка при виборі фото з галереї: $e');
+    }
+  }
+
+  Future<void> _pickMultipleImagesFromGallery() async {
+    try {
+      final images = await _imagePickerService.pickMultipleImagesFromGallery();
+      if (images.isNotEmpty) {
+        setState(() {
+          _selectedImages.addAll(images);
+        });
+        _showMessage('Додано ${images.length} фото з галереї');
+      }
+    } catch (e) {
+      _showMessage('Помилка при виборі фото з галереї: $e');
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
+  Future<void> _uploadImagesToFirebase() async {
+    if (_selectedImages.isEmpty) {
+      _showMessage('Немає фото для завантаження');
+      return;
+    }
+
+    setState(() {
+      _isUploadingImage = true;
+    });
+
+    try {
+      final List<String> uploadedUrls = [];
+      
+      for (int i = 0; i < _selectedImages.length; i++) {
+        final image = _selectedImages[i];
+        final url = await _storageService.uploadImage(
+          imageFile: image,
+          folder: 'document_images',
+          customFileName: 'doc_image_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
+        );
+        uploadedUrls.add(url);
+      }
+
+      setState(() {
+        _selectedImages.clear();
+      });
+
+      _showMessage('Успішно завантажено ${uploadedUrls.length} фото в Firebase Storage');
+    } catch (e) {
+      _showMessage('Помилка при завантаженні фото: $e');
+    } finally {
+      setState(() {
+        _isUploadingImage = false;
+      });
+    }
+  }
+
+  void _showImagePickerBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Зробити фото'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImageFromCamera();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Вибрати фото з галереї'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImageFromGallery();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Вибрати декілька фото'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickMultipleImagesFromGallery();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
