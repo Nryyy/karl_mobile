@@ -12,7 +12,9 @@ class AuthNotifier extends StateNotifier<UserProfile?> {
   Future<void> _init() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    final repo = HttpDocumentsRepository(accessTokenProvider: () => user.getIdToken());
+    final repo = HttpDocumentsRepository(
+      accessTokenProvider: () => user.getIdToken(),
+    );
     try {
       final profile = await repo.fetchCurrentUser(user.email ?? '');
       state = profile;
@@ -29,4 +31,6 @@ class AuthNotifier extends StateNotifier<UserProfile?> {
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, UserProfile?>((ref) => AuthNotifier());
+final authProvider = StateNotifierProvider<AuthNotifier, UserProfile?>(
+  (ref) => AuthNotifier(),
+);

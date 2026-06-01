@@ -73,7 +73,9 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)?.aiChatTitle ?? 'AI Chat')),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)?.aiChatTitle ?? 'AI Chat'),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -123,14 +125,19 @@ class _ChatScreenState extends State<ChatScreen> {
                             elevation: 0.5,
                             borderRadius: BorderRadius.circular(12),
                             color: bg,
-                                child: InkWell(
+                            child: InkWell(
                               onLongPress: () {
                                 Clipboard.setData(
                                   ClipboardData(text: m.content),
                                 );
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(AppLocalizations.of(context)?.copied ?? 'Copied')),
-                                    );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      AppLocalizations.of(context)?.copied ??
+                                          'Copied',
+                                    ),
+                                  ),
+                                );
                               },
                               borderRadius: BorderRadius.circular(12),
                               child: Padding(
@@ -173,7 +180,12 @@ class _ChatScreenState extends State<ChatScreen> {
                                               context,
                                             ).showSnackBar(
                                               SnackBar(
-                                                content: Text(AppLocalizations.of(context)?.copied ?? 'Copied'),
+                                                content: Text(
+                                                  AppLocalizations.of(
+                                                        context,
+                                                      )?.copied ??
+                                                      'Copied',
+                                                ),
                                               ),
                                             );
                                           },
@@ -220,7 +232,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
                       decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)?.typeMessageHint ?? 'Type a message...',
+                        hintText:
+                            AppLocalizations.of(context)?.typeMessageHint ??
+                            'Type a message...',
                       ),
                     ),
                   ),

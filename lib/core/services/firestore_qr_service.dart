@@ -1,9 +1,7 @@
 import 'dart:developer' as developer;
-import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 /// QR validation data model for document verification
 class QRValidationData {
@@ -50,8 +48,8 @@ class QRValidationData {
       qrCode: json['qrCode'] as String,
       generatedBy: json['generatedBy'] as String,
       generatedAt: DateTime.parse(json['generatedAt'] as String),
-      validatedAt: json['validatedAt'] != null 
-          ? DateTime.parse(json['validatedAt'] as String) 
+      validatedAt: json['validatedAt'] != null
+          ? DateTime.parse(json['validatedAt'] as String)
           : null,
       validatedBy: json['validatedBy'] as String?,
       isValid: json['isValid'] as bool? ?? false,
@@ -66,7 +64,7 @@ class FirestoreQRService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
 
   /// Collection reference for QR validations
-  CollectionReference get _qrCollection => 
+  CollectionReference get _qrCollection =>
       _firestore.collection('qr_validations');
 
   /// Generate a unique QR code for document verification
@@ -97,17 +95,23 @@ class FirestoreQRService {
       );
 
       final docRef = await _qrCollection.add(validationData.toJson());
-      
+
       developer.log('QR validation created: ${docRef.id}', name: 'karl.qr');
       return docRef.id;
     } catch (e) {
-      developer.log('Failed to create QR validation: $e', name: 'karl.qr', error: e);
+      developer.log(
+        'Failed to create QR validation: $e',
+        name: 'karl.qr',
+        error: e,
+      );
       throw Exception('Failed to create QR validation: $e');
     }
   }
 
   /// Get QR validation by document ID (READ)
-  Future<QRValidationData?> getQRValidationByDocumentId(String documentId) async {
+  Future<QRValidationData?> getQRValidationByDocumentId(
+    String documentId,
+  ) async {
     try {
       final query = await _qrCollection
           .where('documentId', isEqualTo: documentId)
@@ -122,7 +126,11 @@ class FirestoreQRService {
       final doc = query.docs.first;
       return QRValidationData.fromJson(doc.data() as Map<String, dynamic>);
     } catch (e) {
-      developer.log('Failed to get QR validation: $e', name: 'karl.qr', error: e);
+      developer.log(
+        'Failed to get QR validation: $e',
+        name: 'karl.qr',
+        error: e,
+      );
       throw Exception('Failed to get QR validation: $e');
     }
   }
@@ -159,46 +167,12 @@ class FirestoreQRService {
 
       developer.log('QR code validated: ${doc.id}', name: 'karl.qr');
     } catch (e) {
-      developer.log('Failed to validate QR code: $e', name: 'karl.qr', error: e);
+      developer.log(
+        'Failed to validate QR code: $e',
+        name: 'karl.qr',
+        error: e,
+      );
       throw Exception('Failed to validate QR code: $e');
-    }
-  }
-
-  /// Delete QR validation record (DELETE)
-  Future<void> deleteQRValidation(String validationId) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) {
-        throw Exception('User not authenticated');
-      }
-
-      await _qrCollection.doc(validationId).delete();
-      developer.log('QR validation deleted: $validationId', name: 'karl.qr');
-    } catch (e) {
-      developer.log('Failed to delete QR validation: $e', name: 'karl.qr', error: e);
-      throw Exception('Failed to delete QR validation: $e');
-    }
-  }
-
-  /// Get all QR validations for current user (READ with filtering)
-  Future<List<QRValidationData>> getUserQRValidations() async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final query = await _qrCollection
-          .where('generatedBy', isEqualTo: user.uid)
-          .orderBy('generatedAt', descending: true)
-          .get();
-
-      return query.docs
-          .map((doc) => QRValidationData.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      developer.log('Failed to get user QR validations: $e', name: 'karl.qr', error: e);
-      throw Exception('Failed to get user QR validations: $e');
     }
   }
 
@@ -208,9 +182,15 @@ class FirestoreQRService {
         .where('documentId', isEqualTo: documentId)
         .orderBy('generatedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => QRValidationData.fromJson(doc.data() as Map<String, dynamic>))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => QRValidationData.fromJson(
+                  doc.data() as Map<String, dynamic>,
+                ),
+              )
+              .toList(),
+        );
   }
 
   /// Real-time stream for all user QR validations
@@ -224,8 +204,14 @@ class FirestoreQRService {
         .where('generatedBy', isEqualTo: user.uid)
         .orderBy('generatedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => QRValidationData.fromJson(doc.data() as Map<String, dynamic>))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => QRValidationData.fromJson(
+                  doc.data() as Map<String, dynamic>,
+                ),
+              )
+              .toList(),
+        );
   }
 }

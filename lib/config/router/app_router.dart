@@ -42,7 +42,6 @@ final GoRouter appRouter = GoRouter(
       return '/dashboard';
     }
 
-    // Redirect logged-in users away from password reset
     if (isOnPasswordReset) {
       return '/dashboard';
     }
@@ -118,11 +117,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/approvals',
           name: 'approvals',
-          builder: (context, state) => ApprovalsPage(
-            repository: HttpDocumentsRepository(
-              accessTokenProvider: _firebaseAccessToken,
-            ),
-          ),
+          builder: (context, state) => const ApprovalsPage(),
         ),
         GoRoute(
           path: '/approvals/:id',
@@ -140,7 +135,9 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => SectionPage(
             title: AppLocalizations.of(context)?.templates ?? 'Templates',
             icon: Icons.article_outlined,
-            description: AppLocalizations.of(context)?.templatesDescription ?? 'Here you can store templates for your documents.',
+            description:
+                AppLocalizations.of(context)?.templatesDescription ??
+                'Here you can store templates for your documents.',
           ),
         ),
         GoRoute(
@@ -181,7 +178,9 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => SectionPage(
             title: AppLocalizations.of(context)?.help ?? 'Help',
             icon: Icons.help_outline,
-            description: AppLocalizations.of(context)?.helpDescription ?? 'Support, FAQ and useful resources.',
+            description:
+                AppLocalizations.of(context)?.helpDescription ??
+                'Support, FAQ and useful resources.',
           ),
         ),
         GoRoute(
@@ -190,7 +189,9 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => SectionPage(
             title: AppLocalizations.of(context)?.adminPanel ?? 'Admin panel',
             icon: Icons.admin_panel_settings_outlined,
-            description: AppLocalizations.of(context)?.adminDescription ?? 'Administration tools for the system.',
+            description:
+                AppLocalizations.of(context)?.adminDescription ??
+                'Administration tools for the system.',
           ),
         ),
       ],

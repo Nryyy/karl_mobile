@@ -48,10 +48,7 @@ class EmailFormField extends StatelessWidget {
           color: colorScheme.onSurfaceVariant,
         ),
       ),
-      style: GoogleFonts.inter(
-        fontSize: 16,
-        color: colorScheme.onSurface,
-      ),
+      style: GoogleFonts.inter(fontSize: 16, color: colorScheme.onSurface),
     );
   }
 }

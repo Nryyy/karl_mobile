@@ -19,11 +19,9 @@ class ApprovalDetailWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final signingAsync = ref.watch(documentSigningProvider);
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(document.title),
-      ),
+      appBar: AppBar(title: Text(document.title)),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -48,65 +46,99 @@ class ApprovalDetailWidget extends ConsumerWidget {
               children: [
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: signingAsync.isLoading ? null : () async {
-                      try {
-                        await ref.read(documentSigningProvider.notifier).signDocument(
-                          documentId: document.id,
-                          userName: currentUser.fullName,
-                          userEmail: currentUser.email,
-                        );
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(AppLocalizations.of(context)?.documentSigned ?? 'Document signed')),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('${AppLocalizations.of(context)?.unknownError ?? 'Error'}: $e')),
-                          );
-                        }
-                      }
-                    },
+                    onPressed: signingAsync.isLoading
+                        ? null
+                        : () async {
+                            try {
+                              await ref
+                                  .read(documentSigningProvider.notifier)
+                                  .signDocument(
+                                    documentId: document.id,
+                                    userName: currentUser.fullName,
+                                    userEmail: currentUser.email,
+                                  );
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      AppLocalizations.of(
+                                            context,
+                                          )?.documentSigned ??
+                                          'Document signed',
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '${AppLocalizations.of(context)?.unknownError ?? 'Error'}: $e',
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          },
                     icon: const Icon(Icons.check),
-                    label: Text(AppLocalizations.of(context)?.signDocument ?? 'Sign'),
+                    label: Text(
+                      AppLocalizations.of(context)?.signDocument ?? 'Sign',
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: signingAsync.isLoading ? null : () async {
-                      final result = await showDialog<String>(
-                        context: context,
-                        builder: (context) => const RejectDialog(),
-                      );
-                      
-                      if (result != null) {
-                        try {
-                          await ref.read(documentSigningProvider.notifier).rejectDocument(
-                            documentId: document.id,
-                            userName: currentUser.fullName,
-                            userEmail: currentUser.email,
-                            comment: result,
-                          );
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(AppLocalizations.of(context)?.documentRejected ?? 'Document rejected')),
+                    onPressed: signingAsync.isLoading
+                        ? null
+                        : () async {
+                            final result = await showDialog<String>(
+                              context: context,
+                              builder: (context) => const RejectDialog(),
                             );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${AppLocalizations.of(context)?.unknownError ?? 'Error'}: $e')),
-                            );
-                          }
-                        }
-                      }
-                    },
+
+                            if (result != null) {
+                              try {
+                                await ref
+                                    .read(documentSigningProvider.notifier)
+                                    .rejectDocument(
+                                      documentId: document.id,
+                                      userName: currentUser.fullName,
+                                      userEmail: currentUser.email,
+                                      comment: result,
+                                    );
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(
+                                              context,
+                                            )?.documentRejected ??
+                                            'Document rejected',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        '${AppLocalizations.of(context)?.unknownError ?? 'Error'}: $e',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          },
                     icon: const Icon(Icons.close),
-                    label: Text(AppLocalizations.of(context)?.rejectDocument ?? 'Reject'),
+                    label: Text(
+                      AppLocalizations.of(context)?.rejectDocument ?? 'Reject',
+                    ),
                   ),
                 ),
               ],
@@ -129,13 +161,17 @@ class RejectDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
-    
+
     return AlertDialog(
-      title: Text(AppLocalizations.of(context)?.rejectDocumentTitle ?? 'Reject document'),
+      title: Text(
+        AppLocalizations.of(context)?.rejectDocumentTitle ?? 'Reject document',
+      ),
       content: TextField(
         controller: controller,
         decoration: InputDecoration(
-          labelText: AppLocalizations.of(context)?.commentLabel ?? 'Comment (optional)',
+          labelText:
+              AppLocalizations.of(context)?.commentLabel ??
+              'Comment (optional)',
           border: const OutlineInputBorder(),
         ),
         maxLines: 3,

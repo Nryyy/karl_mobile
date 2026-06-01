@@ -41,7 +41,9 @@ class _EmailFieldState extends State<EmailField> {
               hintText: 'your.email@example.com',
               prefixIcon: Icon(
                 Icons.email_outlined,
-                color: _isFocused ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                color: _isFocused
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
               ),
               errorText: widget.errorText,
               errorMaxLines: 2,

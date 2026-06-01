@@ -1,6 +1,3 @@
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,7 +27,6 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
   bool _isGenerating = false;
   bool _isSharing = false;
   QRValidationData? _qrValidationData;
-  String? _qrImage;
 
   @override
   void initState() {
@@ -40,14 +36,16 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
 
   Future<void> _loadExistingQR() async {
     try {
-      final existingQR = await _qrService.getQRValidationByDocumentId(widget.document.id);
+      final existingQR = await _qrService.getQRValidationByDocumentId(
+        widget.document.id,
+      );
       if (mounted) {
         setState(() {
           _qrValidationData = existingQR;
         });
       }
     } catch (e) {
-      // Handle error silently for now
+      // silently ignore errors during load
     }
   }
 
@@ -55,21 +53,21 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
     setState(() => _isGenerating = true);
 
     try {
-      final validationId = await _qrService.createQRValidation(
+      await _qrService.createQRValidation(
         documentId: widget.document.id,
         documentTitle: widget.document.title,
         generatedBy: widget.currentUserName,
       );
 
-      final qrData = await _qrService.getQRValidationByDocumentId(widget.document.id);
+      final qrData = await _qrService.getQRValidationByDocumentId(
+        widget.document.id,
+      );
       if (mounted) {
         setState(() {
           _qrValidationData = qrData;
           _isGenerating = false;
         });
       }
-
-      _generateQRImage();
     } catch (e) {
       if (mounted) {
         setState(() => _isGenerating = false);
@@ -83,21 +81,14 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
     }
   }
 
-  void _generateQRImage() {
-    // QR image will be generated directly in the widget using QrImageView
-    setState(() {});
-  }
-
   Future<void> _shareQRCode() async {
-    if (_qrImage == null) return;
-
     setState(() => _isSharing = true);
 
     try {
-      // In a real app, you would use share_plus package
-      // For now, we'll just copy to clipboard
-      await Clipboard.setData(ClipboardData(text: _qrValidationData?.qrCode ?? ''));
-      
+      await Clipboard.setData(
+        ClipboardData(text: _qrValidationData?.qrCode ?? ''),
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -110,7 +101,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Помилка ділення: $e'),
+            content: Text('Помилка: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -153,7 +144,10 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
                 const Spacer(),
                 if (_qrValidationData != null && _qrValidationData!.isValid)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -162,11 +156,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 16,
-                        ),
+                        Icon(Icons.check_circle, color: Colors.green, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           'Валідовано',
@@ -182,7 +172,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             if (_qrValidationData == null) ...[
               Text(
                 'Генеруйте QR код для валідації документа. Цей код може бути використаний для перевірки автентичності документа.',
@@ -205,7 +195,9 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.qr_code_2),
-                  label: Text(_isGenerating ? 'Генерація...' : 'Згенерувати QR код'),
+                  label: Text(
+                    _isGenerating ? 'Генерація...' : 'Згенерувати QR код',
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     foregroundColor: colorScheme.onPrimary,
@@ -224,7 +216,9 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
                       decoration: BoxDecoration(
                         color: colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: colorScheme.outline.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: _qrValidationData != null
                           ? Center(
@@ -310,7 +304,9 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
                               ? const SizedBox(
                                   width: 12,
                                   height: 12,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Icon(Icons.share, size: 16),
                           label: Text(
@@ -372,7 +368,7 @@ class QRValidationStatusWidget extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: latestValidation.isValid 
+            color: latestValidation.isValid
                 ? Colors.green.withValues(alpha: 0.1)
                 : Colors.orange.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
@@ -390,13 +386,15 @@ class QRValidationStatusWidget extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  latestValidation.isValid 
+                  latestValidation.isValid
                       ? 'Документ валідовано ${_formatTime(latestValidation.validatedAt!)}'
                       : 'Очікує валідації',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: latestValidation.isValid ? Colors.green : Colors.orange,
+                    color: latestValidation.isValid
+                        ? Colors.green
+                        : Colors.orange,
                   ),
                 ),
               ),

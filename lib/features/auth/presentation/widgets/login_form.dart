@@ -157,7 +157,9 @@ class _LoginFormState extends State<LoginForm> {
           const SizedBox(height: 16),
           Center(
             child: TextButton(
-              onPressed: widget.isLoading ? null : () => GoRouter.of(context).go('/password-reset'),
+              onPressed: widget.isLoading
+                  ? null
+                  : () => GoRouter.of(context).go('/password-reset'),
               child: Text(
                 'Забули пароль?',
                 style: GoogleFonts.inter(

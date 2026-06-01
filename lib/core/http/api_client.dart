@@ -11,8 +11,8 @@ class ApiClient {
   ApiClient({
     http.Client? client,
     Future<String?> Function()? accessTokenProvider,
-  })  : _client = client ?? http.Client(),
-        _accessTokenProvider = accessTokenProvider;
+  }) : _client = client ?? http.Client(),
+       _accessTokenProvider = accessTokenProvider;
 
   final http.Client _client;
   final Future<String?> Function()? _accessTokenProvider;
@@ -25,9 +25,11 @@ class ApiClient {
     return _executeWithRetry(() async {
       final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.apiVersion}$path');
       final headers = await _buildHeaders();
-      
+
       developer.log('GET $uri', name: 'api.client');
-      return await _client.get(uri, headers: headers).timeout(ApiConfig.requestTimeout);
+      return await _client
+          .get(uri, headers: headers)
+          .timeout(ApiConfig.requestTimeout);
     });
   }
 
@@ -39,13 +41,15 @@ class ApiClient {
       if (body != null) {
         headers['content-type'] = 'application/json';
       }
-      
+
       developer.log('POST $uri', name: 'api.client');
-      return await _client.post(
-        uri,
-        headers: headers,
-        body: body != null ? jsonEncode(body) : null,
-      ).timeout(ApiConfig.requestTimeout);
+      return await _client
+          .post(
+            uri,
+            headers: headers,
+            body: body != null ? jsonEncode(body) : null,
+          )
+          .timeout(ApiConfig.requestTimeout);
     });
   }
 
@@ -57,13 +61,15 @@ class ApiClient {
       if (body != null) {
         headers['content-type'] = 'application/json';
       }
-      
+
       developer.log('PUT $uri', name: 'api.client');
-      return await _client.put(
-        uri,
-        headers: headers,
-        body: body != null ? jsonEncode(body) : null,
-      ).timeout(ApiConfig.requestTimeout);
+      return await _client
+          .put(
+            uri,
+            headers: headers,
+            body: body != null ? jsonEncode(body) : null,
+          )
+          .timeout(ApiConfig.requestTimeout);
     });
   }
 
@@ -72,9 +78,11 @@ class ApiClient {
     return _executeWithRetry(() async {
       final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.apiVersion}$path');
       final headers = await _buildHeaders();
-      
+
       developer.log('DELETE $uri', name: 'api.client');
-      return await _client.delete(uri, headers: headers).timeout(ApiConfig.requestTimeout);
+      return await _client
+          .delete(uri, headers: headers)
+          .timeout(ApiConfig.requestTimeout);
     });
   }
 
@@ -83,24 +91,19 @@ class ApiClient {
     Future<http.Response> Function() request,
   ) async {
     int attempts = 0;
-    
+
     while (attempts < ApiConfig.maxRetries) {
       attempts++;
-      
+
       try {
         final response = await request();
-        
-        // Don't retry on 4xx errors (client errors)
+
         if (response.statusCode >= 400 && response.statusCode < 500) {
           return response;
         }
-        
-        // Success or non-retryable error
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return response;
         }
-        
-        // Retry on 5xx server errors
         if (attempts < ApiConfig.maxRetries) {
           developer.log(
             'Retry $attempts/${ApiConfig.maxRetries} after ${response.statusCode}',
@@ -120,21 +123,19 @@ class ApiClient {
         await Future.delayed(ApiConfig.retryDelay * attempts);
       }
     }
-    
+
     throw Exception('Max retries exceeded');
   }
 
   /// Builds request headers with authorization.
   Future<Map<String, String>> _buildHeaders() async {
-    final headers = <String, String>{
-      'accept': 'application/json',
-    };
-    
+    final headers = <String, String>{'accept': 'application/json'};
+
     final accessToken = await _accessTokenProvider?.call();
     if (accessToken != null && accessToken.isNotEmpty) {
       headers['authorization'] = 'Bearer $accessToken';
     }
-    
+
     return headers;
   }
 

@@ -32,7 +32,9 @@ class DocumentsNotifier extends AsyncNotifier<List<DocumentListItem>> {
       final filtered = merged
           .where((d) {
             final name = d.status.name.toLowerCase();
-            return !(name.contains('архів') || name.contains('archive') || name.contains('archived'));
+            return !(name.contains('архів') ||
+                name.contains('archive') ||
+                name.contains('archived'));
           })
           .toList(growable: false);
 
@@ -48,7 +50,10 @@ class DocumentsNotifier extends AsyncNotifier<List<DocumentListItem>> {
   }
 }
 
-final documentsProvider = AsyncNotifierProvider<DocumentsNotifier, List<DocumentListItem>>(DocumentsNotifier.new);
+final documentsProvider =
+    AsyncNotifierProvider<DocumentsNotifier, List<DocumentListItem>>(
+      DocumentsNotifier.new,
+    );
 
 // Separate provider for sent-to-me documents
 class SentToMeDocumentsNotifier extends AsyncNotifier<List<DocumentListItem>> {
@@ -63,15 +68,43 @@ class SentToMeDocumentsNotifier extends AsyncNotifier<List<DocumentListItem>> {
 
     final repository = ref.read(documentsRepositoryProvider);
     final currentUser = await ref.read(currentUserProvider.future);
-    
-    final documents = await repository.fetchDocumentsSentToMe(currentUser.id, archived: false);
-    
-    return documents.where((doc) {
-      return doc.approvalFlow.isActive && 
-             doc.approvalFlow.steps.isNotEmpty &&
-             doc.approvalFlow.currentStep < doc.approvalFlow.steps.length &&
-             doc.approvalFlow.steps[doc.approvalFlow.currentStep].approverId == currentUser.id;
-    }).toList(growable: false);
+
+    final documents = await repository.fetchDocumentsSentToMe(
+      currentUser.id,
+      archived: false,
+    );
+
+    // Filter documents where current user has a pending approval step
+    return documents
+        .where((doc) => _isPendingForUser(doc, currentUser.id))
+        .toList(growable: false);
+  }
+
+  /// Returns true when the approval flow is active and there is a pending
+  /// step assigned to this user that is the current active step.
+  bool _isPendingForUser(DocumentListItem doc, String userId) {
+    final flow = doc.approvalFlow;
+    if (!flow.isActive) return false;
+    if (flow.steps.isEmpty) return false;
+    if (userId.isEmpty) return false;
+
+    // Find the step assigned to the current user
+    final myStep = flow.steps.where((s) => s.approverId == userId).firstOrNull;
+    if (myStep == null) return false;
+
+    // Step must be pending (not yet acted on)
+    final statusId = myStep.status.id.toLowerCase();
+    final statusName = myStep.status.name.toLowerCase();
+    final isPending =
+        statusId == 'pending' ||
+        statusName.contains('pending') ||
+        statusName.contains('очіку');
+    if (!isPending) return false;
+
+    // It must be the current active step
+    // currentStep from the API is 1-based stepOrder, so compare directly
+    return myStep.stepOrder == flow.currentStep ||
+        myStep.stepOrder == flow.currentStep + 1;
   }
 
   Future<void> refresh() async {
@@ -80,10 +113,15 @@ class SentToMeDocumentsNotifier extends AsyncNotifier<List<DocumentListItem>> {
   }
 }
 
-final sentToMeDocumentsProvider = AsyncNotifierProvider<SentToMeDocumentsNotifier, List<DocumentListItem>>(SentToMeDocumentsNotifier.new);
+final sentToMeDocumentsProvider =
+    AsyncNotifierProvider<SentToMeDocumentsNotifier, List<DocumentListItem>>(
+      SentToMeDocumentsNotifier.new,
+    );
 
 // Separate provider for users list
 class UsersNotifier extends AsyncNotifier<List<UserProfile>> {
+  String? _organizationId;
+
   @override
   Future<List<UserProfile>> build() async {
     return _loadUsers();
@@ -91,13 +129,16 @@ class UsersNotifier extends AsyncNotifier<List<UserProfile>> {
 
   Future<List<UserProfile>> _loadUsers() async {
     final repository = ref.read(documentsRepositoryProvider);
-    return repository.fetchUsers();
+    return repository.fetchUsers(organizationId: _organizationId);
   }
 
-  Future<void> refresh() async {
+  Future<void> refresh({String? organizationId}) async {
+    _organizationId = organizationId;
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _loadUsers());
   }
 }
 
-final usersProvider = AsyncNotifierProvider<UsersNotifier, List<UserProfile>>(UsersNotifier.new);
+final usersProvider = AsyncNotifierProvider<UsersNotifier, List<UserProfile>>(
+  UsersNotifier.new,
+);

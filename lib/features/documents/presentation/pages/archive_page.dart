@@ -36,8 +36,10 @@ class ArchiveNotifier extends AsyncNotifier<List<DocumentListItem>> {
   }
 }
 
-final archiveProvider = AsyncNotifierProvider<ArchiveNotifier, List<DocumentListItem>>(ArchiveNotifier.new);
-
+final archiveProvider =
+    AsyncNotifierProvider<ArchiveNotifier, List<DocumentListItem>>(
+      ArchiveNotifier.new,
+    );
 
 class ArchivePage extends ConsumerWidget {
   const ArchivePage({super.key, required this.repository});
@@ -48,9 +50,7 @@ class ArchivePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Override the repository provider for this page
     return ProviderScope(
-      overrides: [
-        documentsRepositoryProvider.overrideWithValue(repository),
-      ],
+      overrides: [documentsRepositoryProvider.overrideWithValue(repository)],
       child: const _ArchivePageContent(),
     );
   }
@@ -62,9 +62,11 @@ class _ArchivePageContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final archiveAsync = ref.watch(archiveProvider);
-    
+
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)?.archive ?? 'Archive')),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)?.archive ?? 'Archive'),
+      ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(archiveProvider.notifier).refresh(),
         child: archiveAsync.when(
@@ -87,8 +89,8 @@ class _ArchivePageContent extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: SimpleDocumentCard(
                     document: document,
-                    repository: ref.read(documentsRepositoryProvider),
-                    onChanged: () => ref.read(archiveProvider.notifier).refresh(),
+                    onChanged: () =>
+                        ref.read(archiveProvider.notifier).refresh(),
                     allowPermanentDelete: true,
                   ),
                 );
@@ -125,7 +127,8 @@ class _ArchiveEmptyState extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  AppLocalizations.of(context)?.archiveEmptyTitle ?? 'Archive is empty',
+                  AppLocalizations.of(context)?.archiveEmptyTitle ??
+                      'Archive is empty',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -133,7 +136,8 @@ class _ArchiveEmptyState extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppLocalizations.of(context)?.archiveEmptySubtitle ?? 'Archived documents will appear here',
+                  AppLocalizations.of(context)?.archiveEmptySubtitle ??
+                      'Archived documents will appear here',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -167,11 +171,7 @@ class _ArchiveErrorState extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 72,
-                  color: colorScheme.error,
-                ),
+                Icon(Icons.error_outline, size: 72, color: colorScheme.error),
                 const SizedBox(height: 16),
                 Text(
                   'Не вдалося завантажити архів',
@@ -184,7 +184,9 @@ class _ArchiveErrorState extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh_outlined),
-                  label: Text(AppLocalizations.of(context)?.tryAgain ?? 'Try again'),
+                  label: Text(
+                    AppLocalizations.of(context)?.tryAgain ?? 'Try again',
+                  ),
                 ),
               ],
             ),

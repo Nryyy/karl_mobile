@@ -21,11 +21,12 @@ class AccountPage extends StatelessWidget {
     final avatarText = userName.isNotEmpty ? userName[0].toUpperCase() : '?';
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)?.account ?? 'Account')),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)?.account ?? 'Account'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          // User Profile Card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -74,7 +75,6 @@ class AccountPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Account Section
           _SectionHeader(
             icon: Icons.account_circle_outlined,
             title: AppLocalizations.of(context)?.account ?? 'Account',
@@ -86,8 +86,11 @@ class AccountPage extends StatelessWidget {
                 _AccountTile(
                   icon: Icons.cloud_done_outlined,
                   iconColor: colorScheme.primary,
-                  title: AppLocalizations.of(context)?.googleDrive ?? 'Google Drive',
-                  subtitle: AppLocalizations.of(context)?.connected ?? 'Connected',
+                  title:
+                      AppLocalizations.of(context)?.googleDrive ??
+                      'Google Drive',
+                  subtitle:
+                      AppLocalizations.of(context)?.connected ?? 'Connected',
                   trailing: Container(
                     width: 8,
                     height: 8,
@@ -101,7 +104,9 @@ class AccountPage extends StatelessWidget {
                 _AccountTile(
                   icon: Icons.settings_outlined,
                   title: AppLocalizations.of(context)?.settings ?? 'Settings',
-                  subtitle: AppLocalizations.of(context)?.settingsSubtitle ?? 'Theme, language, preferences',
+                  subtitle:
+                      AppLocalizations.of(context)?.settingsSubtitle ??
+                      'Theme, language, preferences',
                   onTap: () => context.go('/settings'),
                 ),
               ],
@@ -109,7 +114,6 @@ class AccountPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Support Section
           _SectionHeader(
             icon: Icons.support_outlined,
             title: AppLocalizations.of(context)?.help ?? 'Support',
@@ -121,14 +125,19 @@ class AccountPage extends StatelessWidget {
                 _AccountTile(
                   icon: Icons.help_outline,
                   title: AppLocalizations.of(context)?.help ?? 'Help',
-                  subtitle: AppLocalizations.of(context)?.helpDescription ?? 'Support, FAQ and useful resources.',
+                  subtitle:
+                      AppLocalizations.of(context)?.helpDescription ??
+                      'Support, FAQ and useful resources.',
                   onTap: () => context.go('/help'),
                 ),
                 const Divider(height: 1, indent: 56),
                 _AccountTile(
                   icon: Icons.admin_panel_settings_outlined,
-                  title: AppLocalizations.of(context)?.adminPanel ?? 'Admin panel',
-                  subtitle: AppLocalizations.of(context)?.adminDescription ?? 'Administration tools for the system.',
+                  title:
+                      AppLocalizations.of(context)?.adminPanel ?? 'Admin panel',
+                  subtitle:
+                      AppLocalizations.of(context)?.adminDescription ??
+                      'Administration tools for the system.',
                   onTap: () => context.go('/admin'),
                 ),
               ],
@@ -136,7 +145,6 @@ class AccountPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Sign Out Button
           FilledButton.tonalIcon(
             onPressed: () => _showSignOutDialog(context),
             icon: const Icon(Icons.logout),
@@ -231,7 +239,9 @@ class _AccountTile extends StatelessWidget {
       leading: Icon(icon, color: iconColor ?? colorScheme.onSurfaceVariant),
       title: Text(title),
       subtitle: subtitle != null ? Text(subtitle!) : null,
-      trailing: trailing ?? Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+      trailing:
+          trailing ??
+          Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
       onTap: onTap,
     );
   }

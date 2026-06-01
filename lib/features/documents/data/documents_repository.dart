@@ -81,8 +81,9 @@ class HttpDocumentsRepository implements DocumentsRepository {
   HttpDocumentsRepository({
     ApiClient? apiClient,
     Future<String?> Function()? accessTokenProvider,
-  })  : _apiClient = apiClient ?? ApiClient(accessTokenProvider: accessTokenProvider),
-        _ownsClient = apiClient == null;
+  }) : _apiClient =
+           apiClient ?? ApiClient(accessTokenProvider: accessTokenProvider),
+       _ownsClient = apiClient == null;
 
   final ApiClient _apiClient;
   final bool _ownsClient;
@@ -105,30 +106,39 @@ class HttpDocumentsRepository implements DocumentsRepository {
           name: 'karl.users',
           error: response.body,
         );
-        
+
         // Try to load from cache
         final cached = await LocalStorage.loadCachedCurrentUser();
         if (cached != null) {
-          developer.log('Using cached current user for email=$email', name: 'karl.users');
+          developer.log(
+            'Using cached current user for email=$email',
+            name: 'karl.users',
+          );
           return cached;
         }
-        
+
         throw DocumentsRepositoryException(
           'Не вдалося отримати профіль користувача (${response.statusCode}).',
         );
       }
 
       final decoded = jsonDecode(response.body);
-      final userProfile = UserProfile.fromJson(Map<String, dynamic>.from(decoded as Map));
-      
+      final userProfile = UserProfile.fromJson(
+        Map<String, dynamic>.from(decoded as Map),
+      );
+
       // Cache the successful response
       await LocalStorage.saveCachedCurrentUserJson(response.body);
-      
+
       return userProfile;
     } catch (e) {
       if (e is DocumentsRepositoryException) rethrow;
-      
-      developer.log('Users/me API request failed, attempting cache.', name: 'karl.users', error: e);
+
+      developer.log(
+        'Users/me API request failed, attempting cache.',
+        name: 'karl.users',
+        error: e,
+      );
       final cached = await LocalStorage.loadCachedCurrentUser();
       if (cached != null) {
         return cached;
@@ -148,16 +158,18 @@ class HttpDocumentsRepository implements DocumentsRepository {
           name: 'karl.users',
           error: response.body,
         );
-        
+
         // Try to load from cache
         final cached = await LocalStorage.loadCachedUsers();
         if (cached.isNotEmpty) {
           developer.log('Using cached users', name: 'karl.users');
-          return organizationId == null || organizationId.isEmpty 
-              ? cached 
-              : cached.where((user) => user.organizationId == organizationId).toList(growable: false);
+          return organizationId == null || organizationId.isEmpty
+              ? cached
+              : cached
+                    .where((user) => user.organizationId == organizationId)
+                    .toList(growable: false);
         }
-        
+
         throw DocumentsRepositoryException(
           'Не вдалося отримати список користувачів (${response.statusCode}).',
         );
@@ -171,7 +183,8 @@ class HttpDocumentsRepository implements DocumentsRepository {
       }
       final users = decoded
           .map(
-            (value) => UserProfile.fromJson(Map<String, dynamic>.from(value as Map)),
+            (value) =>
+                UserProfile.fromJson(Map<String, dynamic>.from(value as Map)),
           )
           .toList(growable: false);
 
@@ -182,16 +195,24 @@ class HttpDocumentsRepository implements DocumentsRepository {
         return users;
       }
 
-      return users.where((user) => user.organizationId == organizationId).toList(growable: false);
+      return users
+          .where((user) => user.organizationId == organizationId)
+          .toList(growable: false);
     } catch (e) {
       if (e is DocumentsRepositoryException) rethrow;
-      
-      developer.log('Users API request failed, attempting cache.', name: 'karl.users', error: e);
+
+      developer.log(
+        'Users API request failed, attempting cache.',
+        name: 'karl.users',
+        error: e,
+      );
       final cached = await LocalStorage.loadCachedUsers();
       if (cached.isNotEmpty) {
-        return organizationId == null || organizationId.isEmpty 
-            ? cached 
-            : cached.where((user) => user.organizationId == organizationId).toList(growable: false);
+        return organizationId == null || organizationId.isEmpty
+            ? cached
+            : cached
+                  .where((user) => user.organizationId == organizationId)
+                  .toList(growable: false);
       }
       rethrow;
     }
@@ -201,7 +222,10 @@ class HttpDocumentsRepository implements DocumentsRepository {
   Future<List<DocumentStatus>> fetchDocumentStatuses() async {
     final documents = await fetchDocuments(archived: false);
     final seen = <String>{};
-    return documents.map((d) => d.status).where((s) => s.id.isNotEmpty && seen.add(s.id)).toList(growable: false);
+    return documents
+        .map((d) => d.status)
+        .where((s) => s.id.isNotEmpty && seen.add(s.id))
+        .toList(growable: false);
   }
 
   @override
@@ -222,8 +246,10 @@ class HttpDocumentsRepository implements DocumentsRepository {
       if (statusId != null && statusId.isNotEmpty) 'statusId': statusId,
       if (statusName != null && statusName.isNotEmpty) 'statusName': statusName,
       if (fileType != null && fileType.isNotEmpty) 'fileType': fileType,
-      if (organizationId != null && organizationId.isNotEmpty) 'organizationId': organizationId,
-      if (approvalSteps != null && approvalSteps.isNotEmpty) 'approvalSteps': approvalSteps.map((s) => s.toJson()).toList(),
+      if (organizationId != null && organizationId.isNotEmpty)
+        'organizationId': organizationId,
+      if (approvalSteps != null && approvalSteps.isNotEmpty)
+        'approvalSteps': approvalSteps.map((s) => s.toJson()).toList(),
     };
 
     final response = await _apiClient.post('/Documents', body: body);
@@ -245,7 +271,9 @@ class HttpDocumentsRepository implements DocumentsRepository {
         name: 'karl.documents',
         error: response.body,
       );
-      throw DocumentsRepositoryException('Не вдалося створити документ (${response.statusCode}).');
+      throw DocumentsRepositoryException(
+        'Не вдалося створити документ (${response.statusCode}).',
+      );
     }
 
     final location = response.headers['location'] ?? '';
@@ -261,7 +289,9 @@ class HttpDocumentsRepository implements DocumentsRepository {
       }
     } catch (_) {}
 
-    throw DocumentsRepositoryException('Не вдалося отримати ідентифікатор нового документа.');
+    throw DocumentsRepositoryException(
+      'Не вдалося отримати ідентифікатор нового документа.',
+    );
   }
 
   @override
@@ -270,8 +300,13 @@ class HttpDocumentsRepository implements DocumentsRepository {
     required Uint8List fileBytes,
     required String fileName,
   }) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}/api/Documents/$documentId/file');
-    final request = http.MultipartRequest('POST', uri)..files.add(http.MultipartFile.fromBytes('file', fileBytes, filename: fileName));
+    final uri = Uri.parse(
+      '${ApiConfig.baseUrl}/api/Documents/$documentId/file',
+    );
+    final request = http.MultipartRequest('POST', uri)
+      ..files.add(
+        http.MultipartFile.fromBytes('file', fileBytes, filename: fileName),
+      );
 
     final accessToken = await _apiClient.getAccessToken();
     if (accessToken != null && accessToken.isNotEmpty) {
@@ -287,7 +322,9 @@ class HttpDocumentsRepository implements DocumentsRepository {
         name: 'karl.documents',
         error: response.body,
       );
-      throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
     }
 
     if (response.statusCode != 200) {
@@ -297,52 +334,90 @@ class HttpDocumentsRepository implements DocumentsRepository {
         error: response.body,
       );
       final detail = _extractDetail(response.body);
-      final isGoogleDrive = detail.toLowerCase().contains('google drive') || detail.toLowerCase().contains('google account');
-      throw DocumentsRepositoryException(isGoogleDrive ? 'Google Drive не підключено. Зверніться до адміністратора для підключення облікового запису Google.' : 'Не вдалося завантажити файл (${response.statusCode}).');
+      final isGoogleDrive =
+          detail.toLowerCase().contains('google drive') ||
+          detail.toLowerCase().contains('google account');
+      throw DocumentsRepositoryException(
+        isGoogleDrive
+            ? 'Google Drive не підключено. Зверніться до адміністратора для підключення облікового запису Google.'
+            : 'Не вдалося завантажити файл (${response.statusCode}).',
+      );
     }
 
     final decoded = jsonDecode(response.body);
-    return UploadDocumentFileResponse.fromJson(Map<String, dynamic>.from(decoded as Map));
+    return UploadDocumentFileResponse.fromJson(
+      Map<String, dynamic>.from(decoded as Map),
+    );
   }
 
   @override
-  Future<List<DocumentListItem>> fetchDocumentsSentToMe(String userId, {bool? archived}) async {
+  Future<List<DocumentListItem>> fetchDocumentsSentToMe(
+    String userId, {
+    bool? archived,
+  }) async {
     try {
       final response = await _apiClient.get('/Documents/sent-to-me/$userId');
 
       if (response.statusCode == 401) {
-        developer.log('Documents sent-to-me API returned 401.', name: 'karl.documents', error: response.body);
-        throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
+        developer.log(
+          'Documents sent-to-me API returned 401.',
+          name: 'karl.documents',
+          error: response.body,
+        );
+        throw DocumentsRepositoryException(
+          'Сесія авторизації недійсна. Увійдіть ще раз.',
+        );
       }
 
       if (response.statusCode != 200) {
-        developer.log('Documents sent-to-me API returned ${response.statusCode}.', name: 'karl.documents', error: response.body);
-        
+        developer.log(
+          'Documents sent-to-me API returned ${response.statusCode}.',
+          name: 'karl.documents',
+          error: response.body,
+        );
+
         // Try to load from cache
         final cached = await LocalStorage.loadCachedSentToMeDocuments();
         if (cached.isNotEmpty) {
-          developer.log('Using cached sent-to-me documents', name: 'karl.documents');
+          developer.log(
+            'Using cached sent-to-me documents',
+            name: 'karl.documents',
+          );
           return _filterArchivedDocuments(cached, archived: archived);
         }
-        
-        throw DocumentsRepositoryException('Не вдалося завантажити документи на погодження (${response.statusCode}).');
+
+        throw DocumentsRepositoryException(
+          'Не вдалося завантажити документи на погодження (${response.statusCode}).',
+        );
       }
 
       final decoded = jsonDecode(response.body);
       if (decoded is! List) {
-        throw DocumentsRepositoryException('Неочікуваний формат відповіді API документів.');
+        throw DocumentsRepositoryException(
+          'Неочікуваний формат відповіді API документів.',
+        );
       }
 
-      final documents = decoded.map((value) => DocumentListItem.fromJson(Map<String, dynamic>.from(value as Map))).toList(growable: false);
-      
+      final documents = decoded
+          .map(
+            (value) => DocumentListItem.fromJson(
+              Map<String, dynamic>.from(value as Map),
+            ),
+          )
+          .toList(growable: false);
+
       // Cache the successful response
       await LocalStorage.saveCachedSentToMeDocumentsJson(response.body);
 
       return _filterArchivedDocuments(documents, archived: archived);
     } catch (e) {
       if (e is DocumentsRepositoryException) rethrow;
-      
-      developer.log('Documents sent-to-me API request failed, attempting cache.', name: 'karl.documents', error: e);
+
+      developer.log(
+        'Documents sent-to-me API request failed, attempting cache.',
+        name: 'karl.documents',
+        error: e,
+      );
       final cached = await LocalStorage.loadCachedSentToMeDocuments();
       if (cached.isNotEmpty) {
         return _filterArchivedDocuments(cached, archived: archived);
@@ -352,25 +427,44 @@ class HttpDocumentsRepository implements DocumentsRepository {
   }
 
   @override
-  Future<void> signDocument({required String documentId, required String userName, required String userEmail}) async {
+  Future<void> signDocument({
+    required String documentId,
+    required String userName,
+    required String userEmail,
+  }) async {
     final response = await _apiClient.post(
       '/Documents/$documentId/sign',
       body: {'userName': userName, 'userEmail': userEmail},
     );
 
     if (response.statusCode == 401) {
-      throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
     }
 
     if (response.statusCode != 200) {
-      developer.log('Documents sign API returned ${response.statusCode}.', name: 'karl.documents', error: response.body);
+      developer.log(
+        'Documents sign API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
       final detail = _extractDetail(response.body);
-      throw DocumentsRepositoryException(detail.isNotEmpty ? detail : 'Не вдалося підписати документ (${response.statusCode}).');
+      throw DocumentsRepositoryException(
+        detail.isNotEmpty
+            ? detail
+            : 'Не вдалося підписати документ (${response.statusCode}).',
+      );
     }
   }
 
   @override
-  Future<void> rejectDocument({required String documentId, required String userName, required String userEmail, String? comment}) async {
+  Future<void> rejectDocument({
+    required String documentId,
+    required String userName,
+    required String userEmail,
+    String? comment,
+  }) async {
     final response = await _apiClient.post(
       '/Documents/$documentId/reject',
       body: {
@@ -381,13 +475,23 @@ class HttpDocumentsRepository implements DocumentsRepository {
     );
 
     if (response.statusCode == 401) {
-      throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
     }
 
     if (response.statusCode != 200) {
-      developer.log('Documents reject API returned ${response.statusCode}.', name: 'karl.documents', error: response.body);
+      developer.log(
+        'Documents reject API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
       final detail = _extractDetail(response.body);
-      throw DocumentsRepositoryException(detail.isNotEmpty ? detail : 'Не вдалося відхилити документ (${response.statusCode}).');
+      throw DocumentsRepositoryException(
+        detail.isNotEmpty
+            ? detail
+            : 'Не вдалося відхилити документ (${response.statusCode}).',
+      );
     }
 
     _archivedDocumentIds.remove(documentId);
@@ -395,16 +499,29 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<void> archiveDocument(String documentId) async {
-    final response = await _apiClient.put('/Documents/$documentId', body: {'archived': true});
+    final response = await _apiClient.put(
+      '/Documents/$documentId',
+      body: {'archived': true},
+    );
 
     if (response.statusCode == 401) {
-      throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
     }
 
     if (response.statusCode != 200 && response.statusCode != 204) {
-      developer.log('Documents archive update API returned ${response.statusCode}.', name: 'karl.documents', error: response.body);
+      developer.log(
+        'Documents archive update API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
       final detail = _extractDetail(response.body);
-      throw DocumentsRepositoryException(detail.isNotEmpty ? detail : 'Не вдалося архівувати документ (${response.statusCode}).');
+      throw DocumentsRepositoryException(
+        detail.isNotEmpty
+            ? detail
+            : 'Не вдалося архівувати документ (${response.statusCode}).',
+      );
     }
 
     _archivedDocumentIds.add(documentId);
@@ -412,45 +529,78 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
   @override
   Future<void> restoreDocument(String documentId) async {
-    final response = await _apiClient.put('/Documents/$documentId', body: {'archived': false});
+    final response = await _apiClient.put(
+      '/Documents/$documentId',
+      body: {'archived': false},
+    );
 
     if (response.statusCode == 401) {
-      throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
     }
 
     if (response.statusCode != 200 && response.statusCode != 204) {
-      developer.log('Documents restore update API returned ${response.statusCode}.', name: 'karl.documents', error: response.body);
+      developer.log(
+        'Documents restore update API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
       final detail = _extractDetail(response.body);
-      throw DocumentsRepositoryException(detail.isNotEmpty ? detail : 'Не вдалося відновити документ (${response.statusCode}).');
+      throw DocumentsRepositoryException(
+        detail.isNotEmpty
+            ? detail
+            : 'Не вдалося відновити документ (${response.statusCode}).',
+      );
     }
 
     _archivedDocumentIds.remove(documentId);
   }
 
   @override
-  Future<void> deleteDocument(String documentId, {bool permanent = false}) async {
-    final path = permanent ? '/Documents/$documentId?permanent=true' : '/Documents/$documentId';
+  Future<void> deleteDocument(
+    String documentId, {
+    bool permanent = false,
+  }) async {
+    final path = permanent
+        ? '/Documents/$documentId?permanent=true'
+        : '/Documents/$documentId';
     final response = await _apiClient.delete(path);
 
     if (response.statusCode == 401) {
-      throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
     }
 
     if (response.statusCode != 204 && response.statusCode != 200) {
-      developer.log('Documents delete API returned ${response.statusCode}.', name: 'karl.documents', error: response.body);
+      developer.log(
+        'Documents delete API returned ${response.statusCode}.',
+        name: 'karl.documents',
+        error: response.body,
+      );
       final detail = _extractDetail(response.body);
-      throw DocumentsRepositoryException(detail.isNotEmpty ? detail : 'Не вдалося видалити документ (${response.statusCode}).');
+      throw DocumentsRepositoryException(
+        detail.isNotEmpty
+            ? detail
+            : 'Не вдалося видалити документ (${response.statusCode}).',
+      );
     }
 
     _archivedDocumentIds.remove(documentId);
   }
 
-  List<DocumentListItem> _filterArchivedDocuments(List<DocumentListItem> documents, {bool? archived}) {
+  List<DocumentListItem> _filterArchivedDocuments(
+    List<DocumentListItem> documents, {
+    bool? archived,
+  }) {
     if (archived == null) {
       return documents;
     }
 
-    return documents.where((document) => _isArchivedDocument(document) == archived).toList(growable: false);
+    return documents
+        .where((document) => _isArchivedDocument(document) == archived)
+        .toList(growable: false);
   }
 
   bool _isArchivedDocument(DocumentListItem document) {
@@ -460,7 +610,12 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
     final statusName = document.status.name.toLowerCase();
     final statusId = document.status.id.toLowerCase();
-    return statusName.contains('архів') || statusName.contains('archive') || statusName.contains('archived') || statusId.contains('архів') || statusId.contains('archive') || statusId.contains('archived');
+    return statusName.contains('архів') ||
+        statusName.contains('archive') ||
+        statusName.contains('archived') ||
+        statusId.contains('архів') ||
+        statusId.contains('archive') ||
+        statusId.contains('archived');
   }
 
   @override
@@ -469,15 +624,28 @@ class HttpDocumentsRepository implements DocumentsRepository {
       final response = await _apiClient.get('/Documents');
 
       if (response.statusCode == 401) {
-        developer.log('Documents API returned 401.', name: 'karl.documents', error: response.body);
-        throw DocumentsRepositoryException('Сесія авторизації недійсна. Увійдіть ще раз.');
+        developer.log(
+          'Documents API returned 401.',
+          name: 'karl.documents',
+          error: response.body,
+        );
+        throw DocumentsRepositoryException(
+          'Сесія авторизації недійсна. Увійдіть ще раз.',
+        );
       }
 
       if (response.statusCode != 200) {
-        developer.log('Documents API returned ${response.statusCode}.', name: 'karl.documents', error: response.body);
+        developer.log(
+          'Documents API returned ${response.statusCode}.',
+          name: 'karl.documents',
+          error: response.body,
+        );
         final cached = await LocalStorage.loadCachedDocuments();
-        if (cached.isNotEmpty) return _filterArchivedDocuments(cached, archived: archived);
-        throw DocumentsRepositoryException('Не вдалося завантажити документи (${response.statusCode}).');
+        if (cached.isNotEmpty)
+          return _filterArchivedDocuments(cached, archived: archived);
+        throw DocumentsRepositoryException(
+          'Не вдалося завантажити документи (${response.statusCode}).',
+        );
       }
 
       // Save successful response to cache
@@ -485,16 +653,29 @@ class HttpDocumentsRepository implements DocumentsRepository {
 
       final decoded = jsonDecode(response.body);
       if (decoded is! List) {
-        throw DocumentsRepositoryException('Неочікуваний формат відповіді API документів.');
+        throw DocumentsRepositoryException(
+          'Неочікуваний формат відповіді API документів.',
+        );
       }
 
-      final documents = decoded.map((value) => DocumentListItem.fromJson(Map<String, dynamic>.from(value as Map))).toList(growable: false);
+      final documents = decoded
+          .map(
+            (value) => DocumentListItem.fromJson(
+              Map<String, dynamic>.from(value as Map),
+            ),
+          )
+          .toList(growable: false);
 
       return _filterArchivedDocuments(documents, archived: archived);
     } catch (e) {
-      developer.log('Documents API request failed, attempting cache.', name: 'karl.documents', error: e);
+      developer.log(
+        'Documents API request failed, attempting cache.',
+        name: 'karl.documents',
+        error: e,
+      );
       final cached = await LocalStorage.loadCachedDocuments();
-      if (cached.isNotEmpty) return _filterArchivedDocuments(cached, archived: archived);
+      if (cached.isNotEmpty)
+        return _filterArchivedDocuments(cached, archived: archived);
       rethrow;
     }
   }
@@ -504,7 +685,9 @@ String _extractDetail(String body) {
   try {
     final decoded = jsonDecode(body);
     if (decoded is Map) {
-      return decoded['detail']?.toString() ?? decoded['title']?.toString() ?? '';
+      return decoded['detail']?.toString() ??
+          decoded['title']?.toString() ??
+          '';
     }
   } catch (_) {}
   return body;

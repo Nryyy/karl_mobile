@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:karl_mobile/generated/app_localizations.dart';
 
 import '../../providers/documents_provider.dart';
+import '../../providers/document_actions_provider.dart';
 import '../../../auth/data/firebase_auth_service.dart';
 import '../../../auth/domain/auth_service.dart';
 import '../../data/documents_repository.dart';
@@ -16,9 +17,9 @@ import '../../domain/document_models.dart';
 import '../widgets/google_drive_preview.dart';
 import '../../../../core/services/image_picker_service.dart';
 import '../../../../core/services/firebase_storage_service.dart';
+import '../../../../core/utils/document_utils.dart';
 import '../../../../widgets/image_display_widget.dart';
 import '../../../../widgets/qr_code_widget.dart';
-import '../../../../widgets/firestore_diagnostic_widget.dart';
 
 /// Main post-login page showing the document list.
 class DocumentsPage extends ConsumerStatefulWidget {
@@ -84,7 +85,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
   Future<void> _refreshDocuments() async {
     await ref.read(documentsProvider.notifier).refresh();
   }
-  
+
   Future<void> _handleSignOut() async {
     setState(() => _isSigningOut = true);
 
@@ -94,14 +95,18 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
       context.goNamed('login');
     } catch (_) {
       if (!mounted) return;
-      _showMessage(AppLocalizations.of(context)?.signOut ?? 'Could not sign out.');
+      _showMessage(
+        AppLocalizations.of(context)?.signOut ?? 'Could not sign out.',
+      );
     } finally {
       if (mounted) setState(() => _isSigningOut = false);
     }
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -151,121 +156,158 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
       ),
       body: RefreshIndicator(
         onRefresh: _refreshDocuments,
-        child: ref.watch(documentsProvider).when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, st) => ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(24),
-            children: [
-              _ErrorState(message: err is DocumentsRepositoryException ? err.toString() : (AppLocalizations.of(context)?.firebaseInitError ?? 'Failed to load documents.'), onRetry: _refreshDocuments),
-            ],
-          ),
-          data: (documents) {
-            final filteredDocuments = documents
-                .where((document) => _matchesSearch(document) && _matchesStatusFilter(document))
-                .toList(growable: false);
+        child: ref
+            .watch(documentsProvider)
+            .when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, st) => ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(24),
+                children: [
+                  _ErrorState(
+                    message: err is DocumentsRepositoryException
+                        ? err.toString()
+                        : (AppLocalizations.of(context)?.firebaseInitError ??
+                              'Failed to load documents.'),
+                    onRetry: _refreshDocuments,
+                  ),
+                ],
+              ),
+              data: (documents) {
+                final filteredDocuments = documents
+                    .where(
+                      (document) =>
+                          _matchesSearch(document) &&
+                          _matchesStatusFilter(document),
+                    )
+                    .toList(growable: false);
 
-            return ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-              children: [
-                const FirestoreDiagnosticWidget(),
-                _DocumentsSimpleHeader(
-                  searchController: _searchController,
-                  selectedStatusFilter: _selectedStatusFilter,
-                  onSelectStatusFilter: _selectStatusFilter,
-                ),
-                const SizedBox(height: 12),
-                if (_selectedImages.isNotEmpty) ...[
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+                  children: [
+                    _DocumentsSimpleHeader(
+                      searchController: _searchController,
+                      selectedStatusFilter: _selectedStatusFilter,
+                      onSelectStatusFilter: _selectStatusFilter,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(height: 12),
+                    if (_selectedImages.isNotEmpty) ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Обрані фото (${_selectedImages.length})',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                if (_isUploadingImage)
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 8),
-                                    child: SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                  ),
-                                TextButton.icon(
-                                  onPressed: _isUploadingImage ? null : _uploadImagesToFirebase,
-                                  icon: const Icon(Icons.cloud_upload, size: 16),
-                                  label: Text('Завантажити в Firebase'),
+                                Text(
+                                  'Обрані фото (${_selectedImages.length})',
+                                  style: Theme.of(context).textTheme.titleSmall
+                                      ?.copyWith(fontWeight: FontWeight.w600),
                                 ),
-                                IconButton(
-                                  onPressed: () => setState(() => _selectedImages.clear()),
-                                  icon: const Icon(Icons.clear_all, size: 20),
-                                  tooltip: 'Очистити всі',
+                                Row(
+                                  children: [
+                                    if (_isUploadingImage)
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 8),
+                                        child: SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    TextButton.icon(
+                                      onPressed: _isUploadingImage
+                                          ? null
+                                          : _uploadImagesToFirebase,
+                                      icon: const Icon(
+                                        Icons.cloud_upload,
+                                        size: 16,
+                                      ),
+                                      label: Text('Завантажити в Firebase'),
+                                    ),
+                                    IconButton(
+                                      onPressed: () => setState(
+                                        () => _selectedImages.clear(),
+                                      ),
+                                      icon: const Icon(
+                                        Icons.clear_all,
+                                        size: 20,
+                                      ),
+                                      tooltip: 'Очистити всі',
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 12),
+                            ImageGridWidget(
+                              images: _selectedImages,
+                              crossAxisCount: 3,
+                              showDeleteButton: true,
+                              onDelete: (index) => _removeImage(index),
+                              onTap: (index) {
+                                // Show image preview
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => Dialog(
+                                    child: Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                            0.9,
+                                        maxHeight:
+                                            MediaQuery.of(context).size.height *
+                                            0.8,
+                                      ),
+                                      child: ImageDisplayWidget(
+                                        imageFile: _selectedImages[index],
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        ImageGridWidget(
-                          images: _selectedImages,
-                          crossAxisCount: 3,
-                          showDeleteButton: true,
-                          onDelete: (index) => _removeImage(index),
-                          onTap: (index) {
-                            // Show image preview
-                            showDialog(
-                              context: context,
-                              builder: (context) => Dialog(
-                                child: Container(
-                                  constraints: BoxConstraints(
-                                    maxWidth: MediaQuery.of(context).size.width * 0.9,
-                                    maxHeight: MediaQuery.of(context).size.height * 0.8,
-                                  ),
-                                  child: ImageDisplayWidget(
-                                    imageFile: _selectedImages[index],
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
+                      ),
+                    ],
+                    if (filteredDocuments.isEmpty)
+                      _EmptyState(
+                        isSearchActive:
+                            _searchQuery.isNotEmpty ||
+                            _selectedStatusFilter != 'all',
+                      )
+                    else
+                      ...filteredDocuments.map(
+                        (document) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: SimpleDocumentCard(
+                            document: document,
+                            onChanged: _refreshDocuments,
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                ],
-                if (filteredDocuments.isEmpty)
-                  _EmptyState(
-                    isSearchActive: _searchQuery.isNotEmpty || _selectedStatusFilter != 'all',
-                  )
-                else
-                  ...filteredDocuments.map(
-                    (document) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: SimpleDocumentCard(document: document, repository: widget.repository, onChanged: _refreshDocuments),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
+                      ),
+                  ],
+                );
+              },
+            ),
       ),
     );
   }
@@ -291,25 +333,25 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
   bool _matchesStatusFilter(DocumentListItem document) {
     switch (_selectedStatusFilter) {
       case 'waiting':
-        return _matchesStatus(document.status.name, <String>[
+        return matchesStatus(document.status.name, <String>[
           'очіку',
           'pending',
         ]);
       case 'process':
-        return _matchesStatus(document.status.name, <String>[
+        return matchesStatus(document.status.name, <String>[
           'проц',
           'progress',
           'review',
         ]);
       case 'approved':
-        return _matchesStatus(document.status.name, <String>[
+        return matchesStatus(document.status.name, <String>[
           'затвер',
           'approve',
           'signed',
           'done',
         ]);
       case 'rejected':
-        return _matchesStatus(document.status.name, <String>[
+        return matchesStatus(document.status.name, <String>[
           'відхил',
           'reject',
           'cancel',
@@ -319,11 +361,6 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
       default:
         return true;
     }
-  }
-
-  bool _matchesStatus(String statusName, List<String> keywords) {
-    final normalized = statusName.toLowerCase();
-    return keywords.any(normalized.contains);
   }
 
   Future<void> _pickImageFromCamera() async {
@@ -386,13 +423,14 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
 
     try {
       final List<String> uploadedUrls = [];
-      
+
       for (int i = 0; i < _selectedImages.length; i++) {
         final image = _selectedImages[i];
         final url = await _storageService.uploadImage(
           imageFile: image,
           folder: 'document_images',
-          customFileName: 'doc_image_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
+          customFileName:
+              'doc_image_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
         );
         uploadedUrls.add(url);
       }
@@ -401,7 +439,9 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
         _selectedImages.clear();
       });
 
-      _showMessage('Успішно завантажено ${uploadedUrls.length} фото в Firebase Storage');
+      _showMessage(
+        'Успішно завантажено ${uploadedUrls.length} фото в Firebase Storage',
+      );
     } catch (e) {
       _showMessage('Помилка при завантаженні фото: $e');
     } finally {
@@ -469,10 +509,14 @@ class _DocumentsSimpleHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(AppLocalizations.of(context)?.myDocuments ?? 'My Documents', style: theme.textTheme.titleLarge),
+        Text(
+          AppLocalizations.of(context)?.myDocuments ?? 'My Documents',
+          style: theme.textTheme.titleLarge,
+        ),
         const SizedBox(height: 6),
         Text(
-          AppLocalizations.of(context)?.searchHint ?? 'Search, filters and list of documents',
+          AppLocalizations.of(context)?.searchHint ??
+              'Search, filters and list of documents',
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 12),
@@ -480,7 +524,9 @@ class _DocumentsSimpleHeader extends StatelessWidget {
           controller: searchController,
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.search),
-            hintText: AppLocalizations.of(context)?.searchHint ?? 'Search documents...',
+            hintText:
+                AppLocalizations.of(context)?.searchHint ??
+                'Search documents...',
           ),
         ),
         const SizedBox(height: 12),
@@ -499,7 +545,9 @@ class _DocumentsSimpleHeader extends StatelessWidget {
               onSelected: () => onSelectStatusFilter('waiting'),
             ),
             _FilterChip(
-              label: AppLocalizations.of(context)?.statusInProgress ?? 'In progress',
+              label:
+                  AppLocalizations.of(context)?.statusInProgress ??
+                  'In progress',
               selected: selectedStatusFilter == 'process',
               onSelected: () => onSelectStatusFilter('process'),
             ),
@@ -541,24 +589,22 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-class SimpleDocumentCard extends StatefulWidget {
+class SimpleDocumentCard extends ConsumerStatefulWidget {
   const SimpleDocumentCard({
     required this.document,
-    this.repository,
     this.onChanged,
     this.allowPermanentDelete = false,
   });
 
   final DocumentListItem document;
-  final DocumentsRepository? repository;
   final VoidCallback? onChanged;
   final bool allowPermanentDelete;
 
   @override
-  State<SimpleDocumentCard> createState() => _SimpleDocumentCardState();
+  ConsumerState<SimpleDocumentCard> createState() => _SimpleDocumentCardState();
 }
 
-class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
+class _SimpleDocumentCardState extends ConsumerState<SimpleDocumentCard> {
   bool _isProcessing = false;
 
   bool get _isArchived {
@@ -567,7 +613,9 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
     }
 
     final name = widget.document.status.name.toLowerCase();
-    return name.contains('архів') || name.contains('archive') || name.contains('archived');
+    return name.contains('архів') ||
+        name.contains('archive') ||
+        name.contains('archived');
   }
 
   void _refreshParent() {
@@ -575,19 +623,30 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
   }
 
   Future<void> _archive() async {
-    if (widget.repository == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.repositoryNotAvailable ?? 'Repository not available.')));
-      return;
-    }
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)?.archiveDocumentTitle ?? 'Archive document?'),
-        content: Text(AppLocalizations.of(context)?.archiveDocumentContent ?? 'The document will be moved to the archive.'),
+        title: Text(
+          AppLocalizations.of(context)?.archiveDocumentTitle ??
+              'Archive document?',
+        ),
+        content: Text(
+          AppLocalizations.of(context)?.archiveDocumentContent ??
+              'The document will be moved to the archive.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(AppLocalizations.of(context)?.archiveCancel ?? 'Cancel')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(AppLocalizations.of(context)?.archiveConfirm ?? 'Archive')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              AppLocalizations.of(context)?.archiveCancel ?? 'Cancel',
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              AppLocalizations.of(context)?.archiveConfirm ?? 'Archive',
+            ),
+          ),
         ],
       ),
     );
@@ -596,23 +655,34 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
 
     setState(() => _isProcessing = true);
     try {
-      await widget.repository!.archiveDocument(widget.document.id);
+      await ref
+          .read(documentActionsProvider.notifier)
+          .archiveDocument(widget.document.id);
       if (!mounted) return;
       final messenger = ScaffoldMessenger.of(context);
       messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.archiveDone ?? 'Document archived.'),
+            content: Text(
+              AppLocalizations.of(context)?.archiveDone ?? 'Document archived.',
+            ),
             action: SnackBarAction(
               label: 'Відмінити',
               onPressed: () async {
                 try {
-                  await widget.repository!.restoreDocument(widget.document.id);
+                  await ref
+                      .read(documentActionsProvider.notifier)
+                      .restoreDocument(widget.document.id);
                   if (!mounted) return;
                   _refreshParent();
                   messenger.showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)?.archiveCancelled ?? 'Archive cancelled.')),
+                    SnackBar(
+                      content: Text(
+                        AppLocalizations.of(context)?.archiveCancelled ??
+                            'Archive cancelled.',
+                      ),
+                    ),
                   );
                 } on DocumentsRepositoryException catch (e) {
                   if (!mounted) return;
@@ -620,7 +690,12 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                 } catch (_) {
                   if (!mounted) return;
                   messenger.showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)?.restoreFailed ?? 'Failed to restore document.')),
+                    SnackBar(
+                      content: Text(
+                        AppLocalizations.of(context)?.restoreFailed ??
+                            'Failed to restore document.',
+                      ),
+                    ),
                   );
                 }
               },
@@ -630,34 +705,59 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
       _refreshParent();
     } on DocumentsRepositoryException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.archiveFailed ?? 'Failed to archive document.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)?.archiveFailed ??
+                'Failed to archive document.',
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
 
   Future<void> _delete() async {
-    if (widget.repository == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.repositoryNotAvailable ?? 'Repository not available.')));
-      return;
-    }
-
     if (!_isArchived) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.deleteOnlyFromArchive ?? 'Deletion allowed only from the archive.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)?.deleteOnlyFromArchive ??
+                'Deletion allowed only from the archive.',
+          ),
+        ),
+      );
       return;
     }
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)?.deleteDocumentTitle ?? 'Delete document?'),
-        content: Text(AppLocalizations.of(context)?.deleteDocumentContent ?? 'This action cannot be undone. Are you sure?'),
+        title: Text(
+          AppLocalizations.of(context)?.deleteDocumentTitle ??
+              'Delete document?',
+        ),
+        content: Text(
+          AppLocalizations.of(context)?.deleteDocumentContent ??
+              'This action cannot be undone. Are you sure?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(AppLocalizations.of(context)?.deleteConfirm ?? 'Delete')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              AppLocalizations.of(context)?.deleteConfirm ?? 'Delete',
+            ),
+          ),
         ],
       ),
     );
@@ -666,16 +766,33 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
 
     setState(() => _isProcessing = true);
     try {
-      await widget.repository!.deleteDocument(widget.document.id, permanent: true);
+      await ref
+          .read(documentActionsProvider.notifier)
+          .deleteDocument(widget.document.id, permanent: true);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.deleteDone ?? 'Document deleted.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)?.deleteDone ?? 'Document deleted.',
+          ),
+        ),
+      );
       widget.onChanged?.call();
     } on DocumentsRepositoryException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.deleteFailed ?? 'Failed to delete document.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)?.deleteFailed ??
+                'Failed to delete document.',
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -710,7 +827,10 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                           child: Material(
                             type: MaterialType.transparency,
                             child: Text(
-                              document.title.isEmpty ? (AppLocalizations.of(context)?.untitled ?? 'Untitled') : document.title,
+                              document.title.isEmpty
+                                  ? (AppLocalizations.of(context)?.untitled ??
+                                        'Untitled')
+                                  : document.title,
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
@@ -719,8 +839,9 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                         const SizedBox(height: 4),
                         Text(
                           document.authorName.isEmpty
-                            ? (AppLocalizations.of(context)?.unknownAuthor ?? 'Unknown author')
-                            : document.authorName,
+                              ? (AppLocalizations.of(context)?.unknownAuthor ??
+                                    'Unknown author')
+                              : document.authorName,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
@@ -729,7 +850,8 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                   const SizedBox(width: 12),
                   _StatusBadge(
                     label: document.status.name.isEmpty
-                        ? (AppLocalizations.of(context)?.notSpecified ?? 'Not specified')
+                        ? (AppLocalizations.of(context)?.notSpecified ??
+                              'Not specified')
                         : document.status.name,
                     color: statusColor,
                   ),
@@ -742,15 +864,20 @@ class _SimpleDocumentCardState extends State<SimpleDocumentCard> {
                     },
                     itemBuilder: (context) => <PopupMenuEntry<String>>[
                       if (!_isArchived)
-                            PopupMenuItem<String>(
-                              value: 'archive',
-                              child: Text(AppLocalizations.of(context)?.archive ?? 'Archive'),
-                            ),
-                          if (_isArchived)
-                            PopupMenuItem<String>(
-                              value: 'delete',
-                              child: Text(AppLocalizations.of(context)?.deleteConfirm ?? 'Delete'),
-                            ),
+                        PopupMenuItem<String>(
+                          value: 'archive',
+                          child: Text(
+                            AppLocalizations.of(context)?.archive ?? 'Archive',
+                          ),
+                        ),
+                      if (_isArchived)
+                        PopupMenuItem<String>(
+                          value: 'delete',
+                          child: Text(
+                            AppLocalizations.of(context)?.deleteConfirm ??
+                                'Delete',
+                          ),
+                        ),
                     ],
                     icon: const Icon(Icons.more_vert),
                   ),
@@ -796,10 +923,7 @@ class _StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Text(
         label,
@@ -871,7 +995,9 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
 
     final file = result.files.first;
     if (file.bytes == null) {
-      _showMessage(AppLocalizations.of(context)?.unknownError ?? 'Unable to read file.');
+      _showMessage(
+        AppLocalizations.of(context)?.unknownError ?? 'Unable to read file.',
+      );
       return;
     }
 
@@ -894,10 +1020,9 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
         fileName: file.name,
       );
       if (!mounted) return;
-      final uploadedLabel = AppLocalizations.of(context)?.fileUploaded ?? 'File uploaded';
-      _showMessage(
-        '$uploadedLabel. ${_formatFileSize(response.fileSize)}',
-      );
+      final uploadedLabel =
+          AppLocalizations.of(context)?.fileUploaded ?? 'File uploaded';
+      _showMessage('$uploadedLabel. ${_formatFileSize(response.fileSize)}');
     } on DocumentsRepositoryException catch (e) {
       if (!mounted) return;
       _showMessage(e.message);
@@ -920,15 +1045,28 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
   Widget build(BuildContext context) {
     if (widget.document == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(AppLocalizations.of(context)?.document ?? 'Document')),
-        body: Center(child: Text(AppLocalizations.of(context)?.documentNotFound ?? 'Document not found.')),
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)?.document ?? 'Document'),
+        ),
+        body: Center(
+          child: Text(
+            AppLocalizations.of(context)?.documentNotFound ??
+                'Document not found.',
+          ),
+        ),
       );
     }
 
     final item = widget.document!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(item.title.isEmpty ? (AppLocalizations.of(context)?.document ?? 'Document') : item.title)),
+      appBar: AppBar(
+        title: Text(
+          item.title.isEmpty
+              ? (AppLocalizations.of(context)?.document ?? 'Document')
+              : item.title,
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -936,14 +1074,16 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
             tag: 'document-title-${item.id}',
             child: Material(
               type: MaterialType.transparency,
-                child: Text(
-                item.title.isEmpty ? (AppLocalizations.of(context)?.untitled ?? 'Untitled') : item.title,
+              child: Text(
+                item.title.isEmpty
+                    ? (AppLocalizations.of(context)?.untitled ?? 'Untitled')
+                    : item.title,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
           ),
           const SizedBox(height: 12),
-          SimpleDocumentCard(document: item, repository: null),
+          SimpleDocumentCard(document: item),
           if (item.webViewLink.isNotEmpty) ...[
             const SizedBox(height: 20),
             Text(
@@ -967,7 +1107,8 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
           const SizedBox(height: 16),
           QRCodeWidget(
             document: item,
-            currentUserName: FirebaseAuth.instance.currentUser?.displayName ?? 'User',
+            currentUserName:
+                FirebaseAuth.instance.currentUser?.displayName ?? 'User',
           ),
         ],
       ),
@@ -975,14 +1116,14 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
   }
 }
 
-class DocumentEditorPage extends StatefulWidget {
+class DocumentEditorPage extends ConsumerStatefulWidget {
   const DocumentEditorPage({super.key});
 
   @override
-  State<DocumentEditorPage> createState() => _DocumentEditorPageState();
+  ConsumerState<DocumentEditorPage> createState() => _DocumentEditorPageState();
 }
 
-class _DocumentEditorPageState extends State<DocumentEditorPage> {
+class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
   final TextEditingController _titleController = TextEditingController();
 
   PlatformFile? _pickedFile;
@@ -1006,16 +1147,11 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
     'jpg',
   ];
 
-  late final HttpDocumentsRepository _repository;
-
   @override
   void initState() {
     super.initState();
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      _repository = HttpDocumentsRepository(
-        accessTokenProvider: () => user.getIdToken(),
-      );
       _loadInitialData(user.uid, user.email ?? '');
     }
   }
@@ -1023,7 +1159,6 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
   @override
   void dispose() {
     _titleController.dispose();
-    _repository.dispose();
     for (final step in _approvalSteps) {
       step.dispose();
     }
@@ -1033,41 +1168,42 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
   Future<void> _loadInitialData(String uid, String email) async {
     setState(() => _isLoadingUsers = true);
     try {
-      final profileFuture = _repository
-          .fetchCurrentUser(email)
-          .then<UserProfile?>((p) => p)
-          .catchError((Object e) {
-            developer.log(
-              'Failed to load current user profile',
-              name: 'karl.editor',
-              error: e,
-            );
-            return null;
-          });
+      // Load current user profile
+      UserProfile? profile;
+      try {
+        profile = await ref.read(currentUserProvider.future);
+      } catch (e) {
+        developer.log(
+          'Failed to load current user profile',
+          name: 'karl.editor',
+          error: e,
+        );
+        profile = null;
+      }
 
-      final profile = await profileFuture;
-      final users = await _repository
-          .fetchUsers(organizationId: profile?.organizationId)
-          .catchError((Object e) {
-            developer.log(
-              'Failed to load users',
-              name: 'karl.editor',
-              error: e,
-            );
-            return <UserProfile>[];
-          });
+      if (profile != null) {
+        _organizationId = profile.organizationId;
+        _backendAuthorId = profile.id;
 
-      if (!mounted) return;
-      setState(() {
-        if (profile != null) {
-          _organizationId = profile.organizationId;
-          _backendAuthorId = profile.id;
-        }
-        final currentBackendId = profile?.id ?? uid;
-        _allUsers = users
-            .where((u) => u.id != currentBackendId)
-            .toList(growable: false);
-      });
+        // Load users using provider
+        await ref
+            .read(usersProvider.notifier)
+            .refresh(organizationId: profile.organizationId);
+
+        final usersAsync = ref.read(usersProvider.future);
+        final users = await usersAsync.catchError((Object e) {
+          developer.log('Failed to load users', name: 'karl.editor', error: e);
+          return <UserProfile>[];
+        });
+
+        if (!mounted) return;
+        final currentBackendId = profile.id;
+        setState(() {
+          _allUsers = users
+              .where((u) => u.id != currentBackendId)
+              .toList(growable: false);
+        });
+      }
     } finally {
       if (mounted) setState(() => _isLoadingUsers = false);
     }
@@ -1159,24 +1295,28 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
       final statusId = isEditable ? 'draft' : 'pending';
       final statusName = isEditable ? 'Draft' : 'Pending';
 
-      final documentId = await _repository.createDocument(
-        title: title,
-        authorId: _backendAuthorId ?? user.uid,
-        authorName: authorName,
-        statusId: statusId,
-        statusName: statusName,
-        fileType: effectiveFileType,
-        organizationId: _organizationId,
-        approvalSteps: steps.isEmpty ? null : steps,
-      );
+      final documentId = await ref
+          .read(documentActionsProvider.notifier)
+          .createDocument(
+            title: title,
+            authorId: _backendAuthorId ?? user.uid,
+            authorName: authorName,
+            statusId: statusId,
+            statusName: statusName,
+            fileType: effectiveFileType,
+            organizationId: _organizationId,
+            approvalSteps: steps.isEmpty ? null : steps,
+          );
 
       if (_pickedFile != null && _pickedFile!.bytes != null) {
         try {
-          await _repository.uploadDocumentFile(
-            documentId: documentId,
-            fileBytes: _pickedFile!.bytes!,
-            fileName: _pickedFile!.name,
-          );
+          await ref
+              .read(documentActionsProvider.notifier)
+              .uploadDocumentFile(
+                documentId: documentId,
+                fileBytes: _pickedFile!.bytes!,
+                fileName: _pickedFile!.name,
+              );
           if (!mounted) return;
           _showMessage('Документ створено та файл завантажено.');
           GoRouter.of(context).go('/documents');
@@ -1224,7 +1364,9 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
       appBar: AppBar(
         backgroundColor: colorScheme.surfaceContainerLowest,
         elevation: 0,
-        title: Text(AppLocalizations.of(context)?.newDocument ?? 'New document'),
+        title: Text(
+          AppLocalizations.of(context)?.newDocument ?? 'New document',
+        ),
         centerTitle: false,
       ),
       body: ListView(
@@ -1290,7 +1432,10 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                     vertical: 12,
                   ),
                 ),
-                hint: Text(AppLocalizations.of(context)?.chooseFileType ?? 'Choose file type'),
+                hint: Text(
+                  AppLocalizations.of(context)?.chooseFileType ??
+                      'Choose file type',
+                ),
                 items: _fileTypes
                     .map(
                       (t) => DropdownMenuItem(
@@ -1411,7 +1556,9 @@ class _DocumentEditorPageState extends State<DocumentEditorPage> {
                             Icon(
                               Icons.cloud_upload_outlined,
                               size: 40,
-                              color: colorScheme.onSurface.withValues(alpha: 0.38),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.38,
+                              ),
                             ),
                             const SizedBox(height: 10),
                             Text(
@@ -1676,7 +1823,9 @@ class _SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1748,7 +1897,9 @@ class _ApprovalStepRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+        ),
       ),
       child: Row(
         children: [
@@ -1773,7 +1924,10 @@ class _ApprovalStepRow extends StatelessWidget {
           Expanded(
             child: DropdownButtonFormField<UserProfile>(
               initialValue: selectedUser,
-              hint: Text(AppLocalizations.of(context)?.chooseApprover ?? 'Choose approver'),
+              hint: Text(
+                AppLocalizations.of(context)?.chooseApprover ??
+                    'Choose approver',
+              ),
               isExpanded: true,
               decoration: const InputDecoration(
                 border: InputBorder.none,
@@ -1853,7 +2007,7 @@ class _UploadFileSection extends StatelessWidget {
             width: double.infinity,
             height: 48,
             child: isUploading
-              ? Center(
+                ? Center(
                     child: SizedBox(
                       width: 24,
                       height: 24,
@@ -1874,7 +2028,8 @@ class _UploadFileSection extends StatelessWidget {
                     ),
                     icon: const Icon(Icons.attach_file_rounded, size: 18),
                     label: Text(
-                      AppLocalizations.of(context)?.selectAndUpload ?? 'Select and upload file',
+                      AppLocalizations.of(context)?.selectAndUpload ??
+                          'Select and upload file',
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ),
@@ -1905,7 +2060,11 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              isSearchActive ? (AppLocalizations.of(context)?.nothingFound ?? 'Nothing found') : (AppLocalizations.of(context)?.noDocuments ?? 'No documents found'),
+              isSearchActive
+                  ? (AppLocalizations.of(context)?.nothingFound ??
+                        'Nothing found')
+                  : (AppLocalizations.of(context)?.noDocuments ??
+                        'No documents found'),
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -1914,8 +2073,10 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               isSearchActive
-                  ? (AppLocalizations.of(context)?.tryDifferentQuery ?? 'Try a different query or clear filters.')
-                  : (AppLocalizations.of(context)?.noDocumentsDescription ?? 'API did not return any documents yet.'),
+                  ? (AppLocalizations.of(context)?.tryDifferentQuery ??
+                        'Try a different query or clear filters.')
+                  : (AppLocalizations.of(context)?.noDocumentsDescription ??
+                        'API did not return any documents yet.'),
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -1940,10 +2101,15 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 72, color: Theme.of(context).colorScheme.error),
+            Icon(
+              Icons.error_outline,
+              size: 72,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)?.failedToLoadDocuments ?? 'Failed to load documents.',
+              AppLocalizations.of(context)?.failedToLoadDocuments ??
+                  'Failed to load documents.',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -1959,7 +2125,9 @@ class _ErrorState extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_outlined),
-              label: Text(AppLocalizations.of(context)?.tryAgain ?? 'Try again'),
+              label: Text(
+                AppLocalizations.of(context)?.tryAgain ?? 'Try again',
+              ),
             ),
           ],
         ),

@@ -30,10 +30,16 @@ class ApprovalListWidget extends ConsumerWidget {
             margin: const EdgeInsets.only(bottom: 12),
             child: ListTile(
               leading: CircleAvatar(
-                child: Text(document.title.isNotEmpty ? document.title[0].toUpperCase() : '?'),
+                child: Text(
+                  document.title.isNotEmpty
+                      ? document.title[0].toUpperCase()
+                      : '?',
+                ),
               ),
               title: Text(document.title),
-              subtitle: Text('${AppLocalizations.of(context)?.fromLabel ?? 'From'} ${document.authorName}'),
+              subtitle: Text(
+                '${AppLocalizations.of(context)?.fromLabel ?? 'From'} ${document.authorName}',
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 // Navigate to approval detail
@@ -69,9 +75,7 @@ class ApprovalDetailWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(document.title),
-      ),
+      appBar: AppBar(title: Text(document.title)),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -100,12 +104,19 @@ class ApprovalDetailWidget extends ConsumerWidget {
                       // Handle sign action
                       if (!context.mounted) return;
                       Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context)?.documentSigned ?? 'Document signed')),
-                        );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(context)?.documentSigned ??
+                                'Document signed',
+                          ),
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.check),
-                    label: Text(AppLocalizations.of(context)?.signDocument ?? 'Sign'),
+                    label: Text(
+                      AppLocalizations.of(context)?.signDocument ?? 'Sign',
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -116,16 +127,23 @@ class ApprovalDetailWidget extends ConsumerWidget {
                         context: context,
                         builder: (context) => const RejectDialog(),
                       );
-                      
+
                       if (result != null && context.mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(AppLocalizations.of(context)?.documentRejected ?? 'Document rejected')),
+                          SnackBar(
+                            content: Text(
+                              AppLocalizations.of(context)?.documentRejected ??
+                                  'Document rejected',
+                            ),
+                          ),
                         );
                       }
                     },
                     icon: const Icon(Icons.close),
-                    label: Text(AppLocalizations.of(context)?.rejectDocument ?? 'Reject'),
+                    label: Text(
+                      AppLocalizations.of(context)?.rejectDocument ?? 'Reject',
+                    ),
                   ),
                 ),
               ],
@@ -144,9 +162,11 @@ class RejectDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
-    
+
     return AlertDialog(
-      title: Text(AppLocalizations.of(context)?.rejectDocumentTitle ?? 'Reject document'),
+      title: Text(
+        AppLocalizations.of(context)?.rejectDocumentTitle ?? 'Reject document',
+      ),
       content: TextField(
         controller: controller,
         decoration: const InputDecoration(

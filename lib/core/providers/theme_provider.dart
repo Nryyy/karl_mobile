@@ -28,10 +28,12 @@ class ThemeNotifier extends StateNotifier<ThemeMode> {
     final stringVal = mode == ThemeMode.light
         ? 'light'
         : mode == ThemeMode.dark
-            ? 'dark'
-            : 'system';
+        ? 'dark'
+        : 'system';
     await LocalStorage.saveThemeMode(stringVal);
   }
 }
 
-final themeNotifierProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>((ref) => ThemeNotifier());
+final themeNotifierProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>(
+  (ref) => ThemeNotifier(),
+);

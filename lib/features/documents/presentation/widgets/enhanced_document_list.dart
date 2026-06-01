@@ -5,11 +5,7 @@ import '../../domain/document_models.dart';
 
 /// Simple document card with Hero animation
 class DocumentCard extends StatelessWidget {
-  const DocumentCard({
-    super.key,
-    required this.document,
-    required this.onTap,
-  });
+  const DocumentCard({super.key, required this.document, required this.onTap});
 
   final DocumentListItem document;
   final VoidCallback onTap;
@@ -44,7 +40,7 @@ class DocumentCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              
+
               // Document info
               Expanded(
                 child: Column(
@@ -56,33 +52,40 @@ class DocumentCard extends StatelessWidget {
                       child: Material(
                         type: MaterialType.transparency,
                         child: Text(
-                          document.title.isEmpty ? (AppLocalizations.of(context)?.untitled ?? 'Untitled') : document.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          document.title.isEmpty
+                              ? (AppLocalizations.of(context)?.untitled ??
+                                    'Untitled')
+                              : document.title,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    
+
                     Text(
                       '${AppLocalizations.of(context)?.authorPrefix ?? 'Author:'} ${document.authorName.isEmpty ? (AppLocalizations.of(context)?.unknownAuthor ?? 'Unknown author') : document.authorName}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 4),
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(context).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _getStatusColor(context).withValues(alpha: 0.3),
+                          color: _getStatusColor(
+                            context,
+                          ).withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -97,7 +100,7 @@ class DocumentCard extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const Icon(Icons.chevron_right),
             ],
           ),
@@ -184,23 +187,35 @@ class EnhancedDocumentList extends ConsumerWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: _buildStatCard('Всього', '${documents.length}', Icons.description),
+                  child: _buildStatCard(
+                    'Всього',
+                    '${documents.length}',
+                    Icons.description,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildStatCard('Очікують', '${_getPendingCount()}', Icons.pending),
+                  child: _buildStatCard(
+                    'Очікують',
+                    '${_getPendingCount()}',
+                    Icons.pending,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildStatCard('Підписано', '${_getSignedCount()}', Icons.check_circle),
+                  child: _buildStatCard(
+                    'Підписано',
+                    '${_getSignedCount()}',
+                    Icons.check_circle,
+                  ),
                 ),
               ],
             ),
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Document list
         Expanded(
           child: documents.isEmpty
@@ -263,7 +278,10 @@ class EnhancedDocumentList extends ConsumerWidget {
                 ),
                 Text(
                   value,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -351,7 +369,10 @@ class DocumentLoadingWidget extends StatelessWidget {
         children: [
           const CircularProgressIndicator(),
           const SizedBox(height: 16),
-          Text(AppLocalizations.of(context)?.loadingDocuments ?? 'Loading documents...'),
+          Text(
+            AppLocalizations.of(context)?.loadingDocuments ??
+                'Loading documents...',
+          ),
         ],
       ),
     );
@@ -406,7 +427,9 @@ class DocumentErrorWidget extends StatelessWidget {
                   FilledButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh),
-                    label: Text(AppLocalizations.of(context)?.tryAgain ?? 'Try again'),
+                    label: Text(
+                      AppLocalizations.of(context)?.tryAgain ?? 'Try again',
+                    ),
                   ),
                 ],
               ),

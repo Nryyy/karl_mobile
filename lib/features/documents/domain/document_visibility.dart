@@ -1,4 +1,5 @@
 import 'document_models.dart';
+import '../../../core/utils/document_utils.dart';
 
 /// Returns documents that belong to the current user or were sent to them.
 List<DocumentListItem> mergeVisibleDocuments({
@@ -60,7 +61,7 @@ bool isPendingApprovalForUser(DocumentListItem document, String currentUserId) {
 
 /// Returns true when the document has an approved or completed status.
 bool isApprovedDocument(DocumentListItem document) {
-  return _matchesStatus(document.status.name, const <String>[
+  return matchesStatus(document.status.name, const <String>[
     'затвер',
     'approve',
     'signed',
@@ -75,9 +76,4 @@ bool isRecentDocument(DocumentListItem document, {int days = 7}) {
 
   final threshold = DateTime.now().toUtc().subtract(Duration(days: days));
   return createdAt.toUtc().isAfter(threshold);
-}
-
-bool _matchesStatus(String statusName, List<String> keywords) {
-  final normalized = statusName.toLowerCase();
-  return keywords.any(normalized.contains);
 }

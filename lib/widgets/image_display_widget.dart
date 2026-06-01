@@ -35,10 +35,9 @@ class ImageDisplayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget imageWidget;
-    
+
     if (imageFile != null) {
       if (kIsWeb) {
-        // For web, read file as bytes
         imageWidget = FutureBuilder<Uint8List>(
           future: imageFile!.readAsBytes(),
           builder: (context, snapshot) {
@@ -48,7 +47,8 @@ class ImageDisplayWidget extends StatelessWidget {
                 width: width,
                 height: height,
                 fit: fit,
-                errorBuilder: (context, error, stackTrace) => _buildErrorWidget(),
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildErrorWidget(),
               );
             }
             return _buildLoadingWidget();
@@ -103,10 +103,7 @@ class ImageDisplayWidget extends StatelessWidget {
     if (onTap != null || showDeleteButton) {
       container = Stack(
         children: [
-          GestureDetector(
-            onTap: onTap,
-            child: container,
-          ),
+          GestureDetector(onTap: onTap, child: container),
           if (showDeleteButton && onDelete != null)
             Positioned(
               top: 8,
@@ -119,11 +116,7 @@ class ImageDisplayWidget extends StatelessWidget {
                     color: Colors.black54,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 20),
                 ),
               ),
             ),
@@ -145,18 +138,11 @@ class ImageDisplayWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.image,
-            size: 48,
-            color: Colors.grey.shade400,
-          ),
+          Icon(Icons.image, size: 48, color: Colors.grey.shade400),
           const SizedBox(height: 8),
           Text(
             'No image',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
           ),
         ],
       ),
@@ -171,9 +157,7 @@ class ImageDisplayWidget extends StatelessWidget {
         color: Colors.grey.shade100,
         borderRadius: borderRadius,
       ),
-      child: const Center(
-        child: CircularProgressIndicator(),
-      ),
+      child: const Center(child: CircularProgressIndicator()),
     );
   }
 
@@ -188,18 +172,11 @@ class ImageDisplayWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 48,
-            color: Colors.red.shade400,
-          ),
+          Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
           const SizedBox(height: 8),
           Text(
             'Failed to load',
-            style: TextStyle(
-              color: Colors.red.shade600,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.red.shade600, fontSize: 14),
           ),
         ],
       ),
@@ -251,10 +228,7 @@ class ImageGridWidget extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'No images selected',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               ),
             ],
           ),
@@ -276,8 +250,8 @@ class ImageGridWidget extends StatelessWidget {
         return ImageDisplayWidget(
           imageFile: images[index],
           onTap: onTap != null ? () => onTap!(index) : null,
-          onDelete: showDeleteButton && onDelete != null 
-              ? () => onDelete!(index) 
+          onDelete: showDeleteButton && onDelete != null
+              ? () => onDelete!(index)
               : null,
           showDeleteButton: showDeleteButton,
           borderRadius: BorderRadius.circular(8),

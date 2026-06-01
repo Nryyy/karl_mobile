@@ -23,7 +23,6 @@ class SettingsPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Appearance Section
           _SectionHeader(
             icon: Icons.palette_outlined,
             title: AppLocalizations.of(context)?.appearance ?? 'Appearance',
@@ -36,28 +35,33 @@ class SettingsPage extends ConsumerWidget {
                   label: AppLocalizations.of(context)?.themeSystem ?? 'System',
                   icon: Icons.brightness_auto,
                   isSelected: themeMode == ThemeMode.system,
-                  onTap: () => ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system),
+                  onTap: () => ref
+                      .read(themeNotifierProvider.notifier)
+                      .setThemeMode(ThemeMode.system),
                 ),
                 const Divider(height: 1, indent: 56),
                 _ThemeTile(
                   label: AppLocalizations.of(context)?.themeLight ?? 'Light',
                   icon: Icons.light_mode,
                   isSelected: themeMode == ThemeMode.light,
-                  onTap: () => ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light),
+                  onTap: () => ref
+                      .read(themeNotifierProvider.notifier)
+                      .setThemeMode(ThemeMode.light),
                 ),
                 const Divider(height: 1, indent: 56),
                 _ThemeTile(
                   label: AppLocalizations.of(context)?.themeDark ?? 'Dark',
                   icon: Icons.dark_mode,
                   isSelected: themeMode == ThemeMode.dark,
-                  onTap: () => ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark),
+                  onTap: () => ref
+                      .read(themeNotifierProvider.notifier)
+                      .setThemeMode(ThemeMode.dark),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
 
-          // Language Section
           _SectionHeader(
             icon: Icons.language,
             title: AppLocalizations.of(context)?.language ?? 'Language',
@@ -67,28 +71,35 @@ class SettingsPage extends ConsumerWidget {
             child: Column(
               children: [
                 _LocaleTile(
-                  label: AppLocalizations.of(context)?.languageSystemDefault ?? 'System default',
+                  label:
+                      AppLocalizations.of(context)?.languageSystemDefault ??
+                      'System default',
                   code: 'system',
                   currentLocale: currentLocale,
                   onChanged: (v) => _setLocale(ref, v),
                 ),
                 const Divider(height: 1, indent: 56),
                 _LocaleTile(
-                  label: AppLocalizations.of(context)?.languageEnglish ?? 'English',
+                  label:
+                      AppLocalizations.of(context)?.languageEnglish ??
+                      'English',
                   code: 'en',
                   currentLocale: currentLocale,
                   onChanged: (v) => _setLocale(ref, v),
                 ),
                 const Divider(height: 1, indent: 56),
                 _LocaleTile(
-                  label: AppLocalizations.of(context)?.languageUkrainian ?? 'Українська',
+                  label:
+                      AppLocalizations.of(context)?.languageUkrainian ??
+                      'Українська',
                   code: 'uk',
                   currentLocale: currentLocale,
                   onChanged: (v) => _setLocale(ref, v),
                 ),
                 const Divider(height: 1, indent: 56),
                 _LocaleTile(
-                  label: AppLocalizations.of(context)?.languagePolish ?? 'Polski',
+                  label:
+                      AppLocalizations.of(context)?.languagePolish ?? 'Polski',
                   code: 'pl',
                   currentLocale: currentLocale,
                   onChanged: (v) => _setLocale(ref, v),
@@ -98,18 +109,20 @@ class SettingsPage extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          // About Section
           _SectionHeader(
             icon: Icons.info_outline,
             title: AppLocalizations.of(context)?.aboutApp ?? 'About',
           ),
           const SizedBox(height: 8),
           Card(
-              child: ListTile(
+            child: ListTile(
               leading: Icon(Icons.app_shortcut, color: colorScheme.primary),
               title: Text(AppLocalizations.of(context)?.appTitle ?? 'Karl'),
               subtitle: Text('v1.0.0'),
-              trailing: Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+              trailing: Icon(
+                Icons.chevron_right,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -204,7 +217,8 @@ class _LocaleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isSelected = (currentLocale == null && code == 'system') ||
+    final isSelected =
+        (currentLocale == null && code == 'system') ||
         (currentLocale?.languageCode == code);
 
     return ListTile(
@@ -215,7 +229,9 @@ class _LocaleTile extends StatelessWidget {
             code == 'system' ? 'A' : code.toUpperCase(),
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+              color: isSelected
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
             ),
           ),
         ),

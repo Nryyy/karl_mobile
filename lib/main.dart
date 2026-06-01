@@ -25,17 +25,15 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    
-    // Initialize Firestore
+
     FirebaseFirestore.instance.settings = const Settings(
       persistenceEnabled: true,
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
-    
-    // Test Firestore connection
+
+    // enable network for Firestore
     await FirebaseFirestore.instance.enableNetwork();
     developer.log('Firestore initialized successfully', name: 'karl.firestore');
-    
   } on FirebaseException catch (error, stackTrace) {
     firebaseInitialized = false;
     initErrorMessage = error.toString();
@@ -48,53 +46,67 @@ Future<void> main() async {
   }
 
   if (!firebaseInitialized) {
-    runApp(MaterialApp(
-      title: 'Karl - Initialization Error',
-      navigatorKey: navigatorKey,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('en'), Locale('uk'), Locale('pl')],
-      home: Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Builder(builder: (context) {
-                final loc = AppLocalizations.of(context);
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.error_outline, size: 72, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(
-                      loc?.firebaseInitError ?? 'Firebase initialization error',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      initErrorMessage ?? loc?.unknownError ?? 'Unknown error. Check logs.',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Keep minimal: advise user to restart the app after fixing
-                      },
-                      child: Text(loc?.closeApp ?? 'Close app'),
-                    ),
-                  ],
-                );
-              }),
+    runApp(
+      MaterialApp(
+        title: 'Karl - Initialization Error',
+        navigatorKey: navigatorKey,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('uk'), Locale('pl')],
+        home: Scaffold(
+          body: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Builder(
+                  builder: (context) {
+                    final loc = AppLocalizations.of(context);
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 72,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          loc?.firebaseInitError ??
+                              'Firebase initialization error',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          initErrorMessage ??
+                              loc?.unknownError ??
+                              'Unknown error. Check logs.',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Keep minimal: advise user to restart the app after fixing
+                          },
+                          child: Text(loc?.closeApp ?? 'Close app'),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
     return;
   }
 
@@ -105,7 +117,6 @@ class MyApp extends ConsumerWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // fallback to light; the ThemeNotifier will update on load
     final themeMode = ref.watch(themeNotifierProvider);
     final localeAsync = ref.watch(localeProvider);
     final locale = localeAsync.asData?.value;

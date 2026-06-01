@@ -12,11 +12,9 @@ import '../domain/auth_service.dart';
 
 /// Firebase-backed authentication service.
 class FirebaseAuthService implements AuthService {
-  FirebaseAuthService({
-    FirebaseAuth? auth,
-    GoogleSignIn? googleSignIn,
-  })  : _authFactory = (() => auth ?? FirebaseAuth.instance),
-        _googleSignInFactory = (() => googleSignIn ?? GoogleSignIn.instance);
+  FirebaseAuthService({FirebaseAuth? auth, GoogleSignIn? googleSignIn})
+    : _authFactory = (() => auth ?? FirebaseAuth.instance),
+      _googleSignInFactory = (() => googleSignIn ?? GoogleSignIn.instance);
 
   final FirebaseAuth Function() _authFactory;
   final GoogleSignIn Function() _googleSignInFactory;
@@ -117,7 +115,9 @@ class FirebaseAuthService implements AuthService {
         );
       }
 
-      final name = fullName.trim().isNotEmpty ? fullName.trim() : email.split('@').first;
+      final name = fullName.trim().isNotEmpty
+          ? fullName.trim()
+          : email.split('@').first;
       return name;
     } on FirebaseAuthException catch (error) {
       throw AuthFailure(_messageForSignUpError(error));
@@ -135,14 +135,16 @@ class FirebaseAuthService implements AuthService {
   }) async {
     try {
       final uri = Uri.parse('${ApiConfig.baseUrl}/api/Users');
-      await http.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        body: jsonEncode({'email': email, 'fullName': fullName}),
-      ).timeout(ApiConfig.requestTimeout);
+      await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $idToken',
+            },
+            body: jsonEncode({'email': email, 'fullName': fullName}),
+          )
+          .timeout(ApiConfig.requestTimeout);
     } on Exception catch (error) {
       developer.log(
         'Failed to register user in backend.',
@@ -172,7 +174,9 @@ class FirebaseAuthService implements AuthService {
     } on FirebaseAuthException catch (error) {
       throw AuthFailure(_messageForPasswordResetError(error));
     } on Exception {
-      throw const AuthFailure('Не вдалося надіслати лист для скидання пароля. Спробуйте ще раз.');
+      throw const AuthFailure(
+        'Не вдалося надіслати лист для скидання пароля. Спробуйте ще раз.',
+      );
     }
   }
 
@@ -200,7 +204,8 @@ class FirebaseAuthService implements AuthService {
     return switch (error.code) {
       'email-already-in-use' => 'Обліковий запис з таким email вже існує.',
       'invalid-email' => 'Некоректний формат email.',
-      'weak-password' => 'Пароль занадто простий. Використайте мінімум 6 символів.',
+      'weak-password' =>
+        'Пароль занадто простий. Використайте мінімум 6 символів.',
       'operation-not-allowed' => 'Реєстрація через email вимкнена.',
       _ => 'Не вдалося зареєструватися. Спробуйте ще раз.',
     };

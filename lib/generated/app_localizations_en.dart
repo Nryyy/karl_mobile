@@ -96,7 +96,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get templates => 'Templates';
 
   @override
-  String get templatesDescription => 'Here you can store templates for your documents.';
+  String get templatesDescription =>
+      'Here you can store templates for your documents.';
 
   @override
   String get helpDescription => 'Support, FAQ and useful resources.';
@@ -138,7 +139,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get approvalsEmptyTitle => 'No documents for approval';
 
   @override
-  String get approvalsEmptySubtitle => 'When someone sends you a document to sign, it will appear here.';
+  String get approvalsEmptySubtitle =>
+      'When someone sends you a document to sign, it will appear here.';
 
   @override
   String get archiveEmptyTitle => 'Archive is empty';
@@ -165,19 +167,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feature2_title => 'AI assistant';
 
   @override
-  String get feature2_desc => 'Smart document processing and workflow automation';
+  String get feature2_desc =>
+      'Smart document processing and workflow automation';
 
   @override
   String get feature3_title => 'Teamwork';
 
   @override
-  String get feature3_desc => 'Collaborate on documents with colleagues in real time';
+  String get feature3_desc =>
+      'Collaborate on documents with colleagues in real time';
 
   @override
   String get feature4_title => 'Data security';
 
   @override
-  String get feature4_desc => 'Enterprise-grade protection for your confidential documents';
+  String get feature4_desc =>
+      'Enterprise-grade protection for your confidential documents';
 
   @override
   String get newUser => 'New user?';
@@ -240,7 +245,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rejectDocumentTitle => 'Reject document';
 
   @override
-  String get rejectPrompt => 'Please provide a reason for rejection (optional):';
+  String get rejectPrompt =>
+      'Please provide a reason for rejection (optional):';
 
   @override
   String get cancel => 'Cancel';
@@ -255,7 +261,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewDocument => 'View document';
 
   @override
-  String get signConfirm => 'Do you confirm approval of this document? This action cannot be undone.';
+  String get signConfirm =>
+      'Do you confirm approval of this document? This action cannot be undone.';
 
   @override
   String get rejectHint => 'Reason for rejection...';
@@ -285,7 +292,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archiveDocumentTitle => 'Archive document?';
 
   @override
-  String get archiveDocumentContent => 'The document will be moved to the archive.';
+  String get archiveDocumentContent =>
+      'The document will be moved to the archive.';
 
   @override
   String get archiveCancel => 'Cancel';
@@ -312,7 +320,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteDocumentTitle => 'Delete document?';
 
   @override
-  String get deleteDocumentContent => 'This action cannot be undone. Are you sure?';
+  String get deleteDocumentContent =>
+      'This action cannot be undone. Are you sure?';
 
   @override
   String get deleteConfirm => 'Delete';
@@ -399,7 +408,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get greetingPrefix => 'Welcome,';
 
   @override
-  String get greetingSubtitle => 'Here\'s what\'s happening with your documents today';
+  String get greetingSubtitle =>
+      'Here\'s what\'s happening with your documents today';
 
   @override
   String get statsWaiting => 'Waiting';
@@ -429,7 +439,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get helpTitle => 'Need a hint?';
 
   @override
-  String get helpSubtitle => 'Our AI assistant can help you understand system features';
+  String get helpSubtitle =>
+      'Our AI assistant can help you understand system features';
 
   @override
   String get tryDifferentQuery => 'Try a different query or clear filters.';

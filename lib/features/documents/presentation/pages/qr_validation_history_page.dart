@@ -9,10 +9,12 @@ class QRValidationHistoryPage extends ConsumerStatefulWidget {
   const QRValidationHistoryPage({super.key});
 
   @override
-  ConsumerState<QRValidationHistoryPage> createState() => _QRValidationHistoryPageState();
+  ConsumerState<QRValidationHistoryPage> createState() =>
+      _QRValidationHistoryPageState();
 }
 
-class _QRValidationHistoryPageState extends ConsumerState<QRValidationHistoryPage> {
+class _QRValidationHistoryPageState
+    extends ConsumerState<QRValidationHistoryPage> {
   final FirestoreQRService _qrService = FirestoreQRService();
 
   @override
@@ -27,19 +29,14 @@ class _QRValidationHistoryPageState extends ConsumerState<QRValidationHistoryPag
         elevation: 0,
         title: Text(
           'Історія QR валідацій',
-          style: GoogleFonts.inter(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600),
         ),
       ),
       body: StreamBuilder<List<QRValidationData>>(
         stream: _qrService.getUserQRValidationStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
@@ -47,11 +44,7 @@ class _QRValidationHistoryPageState extends ConsumerState<QRValidationHistoryPag
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: colorScheme.error,
-                  ),
+                  Icon(Icons.error_outline, size: 48, color: colorScheme.error),
                   const SizedBox(height: 16),
                   Text(
                     'Помилка завантаження',
@@ -137,22 +130,31 @@ class _QRValidationHistoryPageState extends ConsumerState<QRValidationHistoryPag
       builder: (context) => AlertDialog(
         title: Text(
           validation.documentTitle,
-          style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDetailRow('ID документа:', validation.documentId),
-            _buildDetailRow('Створено:', _formatDateTime(validation.generatedAt)),
+            _buildDetailRow(
+              'Створено:',
+              _formatDateTime(validation.generatedAt),
+            ),
             if (validation.validatedAt != null) ...[
-              _buildDetailRow('Валідовано:', _formatDateTime(validation.validatedAt!)),
-              _buildDetailRow('Валідатор:', validation.validatedBy ?? 'Невідомо'),
+              _buildDetailRow(
+                'Валідовано:',
+                _formatDateTime(validation.validatedAt!),
+              ),
+              _buildDetailRow(
+                'Валідатор:',
+                validation.validatedBy ?? 'Невідомо',
+              ),
             ],
-            _buildDetailRow('Статус:', validation.isValid ? 'Валідовано' : 'Очікує'),
+            _buildDetailRow(
+              'Статус:',
+              validation.isValid ? 'Валідовано' : 'Очікує',
+            ),
             if (validation.validationNotes != null)
               _buildDetailRow('Примітки:', validation.validationNotes!),
             const SizedBox(height: 16),
@@ -176,9 +178,7 @@ class _QRValidationHistoryPageState extends ConsumerState<QRValidationHistoryPag
                   const SizedBox(height: 4),
                   SelectableText(
                     validation.qrCode,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                    ),
+                    style: GoogleFonts.inter(fontSize: 14),
                   ),
                 ],
               ),
@@ -235,10 +235,7 @@ class _QRValidationCard extends StatelessWidget {
   final QRValidationData validation;
   final VoidCallback onTap;
 
-  const _QRValidationCard({
-    required this.validation,
-    required this.onTap,
-  });
+  const _QRValidationCard({required this.validation, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -260,7 +257,7 @@ class _QRValidationCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: validation.isValid 
+                      color: validation.isValid
                           ? Colors.green.withValues(alpha: 0.1)
                           : Colors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -310,15 +307,13 @@ class _QRValidationCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.verified,
-                        color: Colors.green,
-                        size: 16,
-                      ),
+                      Icon(Icons.verified, color: Colors.green, size: 16),
                       const SizedBox(width: 6),
                       Text(
                         'Валідовано ${_formatRelativeTime(validation.validatedAt!)}',

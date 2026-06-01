@@ -70,7 +70,9 @@ class _DashboardPageState extends State<DashboardPage> {
             child: FilledButton.icon(
               onPressed: () => GoRouter.of(context).go('/documents/new'),
               icon: const Icon(Icons.add_circle_outline, size: 18),
-              label: Text(AppLocalizations.of(context)?.newDocument ?? 'New document'),
+              label: Text(
+                AppLocalizations.of(context)?.newDocument ?? 'New document',
+              ),
             ),
           ),
         ],
@@ -154,7 +156,8 @@ class _AnimatedGreeting extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            loc?.greetingSubtitle ?? "Here's what's happening with your documents today",
+            loc?.greetingSubtitle ??
+                "Here's what's happening with your documents today",
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
@@ -199,7 +202,8 @@ class _StatsGrid extends StatelessWidget {
               icon: Icons.check_circle,
             ),
             _StatTile(
-              label: AppLocalizations.of(context)?.statsLast7Days ?? 'Last 7 days',
+              label:
+                  AppLocalizations.of(context)?.statsLast7Days ?? 'Last 7 days',
               value: stats.recent.toString(),
               valueColor: colorScheme.secondary,
               icon: Icons.calendar_today,
@@ -279,10 +283,11 @@ class _StatTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       value,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: valueColor,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: valueColor,
+                          ),
                     ),
                   ],
                 ),
@@ -325,7 +330,9 @@ class _QuickActionsCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onCreateDocument,
                     icon: const Icon(Icons.upload_file_outlined),
-                    label: Text(AppLocalizations.of(context)?.upload ?? 'Upload'),
+                    label: Text(
+                      AppLocalizations.of(context)?.upload ?? 'Upload',
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -333,7 +340,9 @@ class _QuickActionsCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onOpenTemplates,
                     icon: const Icon(Icons.article_outlined),
-                    label: Text(AppLocalizations.of(context)?.templates ?? 'Templates'),
+                    label: Text(
+                      AppLocalizations.of(context)?.templates ?? 'Templates',
+                    ),
                   ),
                 ),
               ],
@@ -364,12 +373,14 @@ class _ActivityCard extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              AppLocalizations.of(context)?.activitySubtitle ?? 'Latest notifications',
+              AppLocalizations.of(context)?.activitySubtitle ??
+                  'Latest notifications',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)?.noNotifications ?? 'No notifications',
+              AppLocalizations.of(context)?.noNotifications ??
+                  'No notifications',
               style: Theme.of(context).textTheme.bodyLarge,
             ),
           ],
@@ -398,9 +409,9 @@ class _GoogleDriveCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context)?.googleDrive ?? 'Google Drive',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -428,7 +439,8 @@ class _GoogleDriveCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        AppLocalizations.of(context)?.googleDriveDescription ?? 'Files are stored on Google Drive',
+                        AppLocalizations.of(context)?.googleDriveDescription ??
+                            'Files are stored on Google Drive',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -479,7 +491,8 @@ class _HelpCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              AppLocalizations.of(context)?.helpSubtitle ?? 'Our AI assistant can help you understand system features',
+              AppLocalizations.of(context)?.helpSubtitle ??
+                  'Our AI assistant can help you understand system features',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
@@ -495,7 +508,6 @@ class _HelpCard extends StatelessWidget {
                   String? token;
                   if (user != null) token = await user.getIdToken();
 
-                  // Use the real backend provided (local HTTPS)
                   final service = AiChatService(
                     baseUrl: 'https://localhost:7229',
                   );
@@ -507,7 +519,9 @@ class _HelpCard extends StatelessWidget {
                     ),
                   );
                 },
-                label: Text(AppLocalizations.of(context)?.aiChatTitle ?? 'AI Chat'),
+                label: Text(
+                  AppLocalizations.of(context)?.aiChatTitle ?? 'AI Chat',
+                ),
               ),
             ),
           ],

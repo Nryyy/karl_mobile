@@ -161,65 +161,65 @@ class _RegisterPageState extends State<RegisterPage> {
                           textInputAction: TextInputAction.done,
                           validator: _validateConfirmPassword,
                         ),
-                      const SizedBox(height: 28),
-                      ElevatedButton(
-                        onPressed: _isLoading ? null : _handleRegister,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: _isLoading
-                              ? SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation(
-                                      Theme.of(context).primaryColor,
+                        const SizedBox(height: 28),
+                        ElevatedButton(
+                          onPressed: _isLoading ? null : _handleRegister,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: _isLoading
+                                ? SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor: AlwaysStoppedAnimation(
+                                        Theme.of(context).primaryColor,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    'Зареєструватися',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                )
-                              : Text(
-                                  'Зареєструватися',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Вже маєте акаунт? ',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
                           ),
-                          GestureDetector(
-                            onTap: () => context.goNamed('login'),
-                            child: Text(
-                              'Увійти',
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Вже маєте акаунт? ',
                               style: GoogleFonts.inter(
                                 fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.primary,
-                                decoration: TextDecoration.underline,
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            GestureDetector(
+                              onTap: () => context.goNamed('login'),
+                              child: Text(
+                                'Увійти',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.primary,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 

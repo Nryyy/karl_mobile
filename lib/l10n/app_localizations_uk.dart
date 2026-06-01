@@ -96,7 +96,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get templates => 'Шаблони';
 
   @override
-  String get templatesDescription => 'Тут зберігаються шаблони ваших документів.';
+  String get templatesDescription =>
+      'Тут зберігаються шаблони ваших документів.';
 
   @override
   String get helpDescription => 'Підтримка, FAQ та корисні матеріали.';
@@ -138,7 +139,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get approvalsEmptyTitle => 'Немає документів для погодження';
 
   @override
-  String get approvalsEmptySubtitle => 'Коли вам надішлють документ на підпис, він з\'явиться тут.';
+  String get approvalsEmptySubtitle =>
+      'Коли вам надішлють документ на підпис, він з\'явиться тут.';
 
   @override
   String get archiveEmptyTitle => 'Архів порожній';
@@ -147,7 +149,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get archiveEmptySubtitle => 'Архівовані документи з’являться тут';
 
   @override
-  String get loginSubtitle => 'Введіть ваші облікові дані для доступу до платформи';
+  String get loginSubtitle =>
+      'Введіть ваші облікові дані для доступу до платформи';
 
   @override
   String get appTagline => 'Інтелектуальна платформа для документообігу';
@@ -159,25 +162,29 @@ class AppLocalizationsUk extends AppLocalizations {
   String get feature1_title => 'Управління документами';
 
   @override
-  String get feature1_desc => 'Зберігайте та організуйте всі документи в одному місці';
+  String get feature1_desc =>
+      'Зберігайте та організуйте всі документи в одному місці';
 
   @override
   String get feature2_title => 'AI-асистент';
 
   @override
-  String get feature2_desc => 'Розумна обробка документів та автоматизація робочих процесів';
+  String get feature2_desc =>
+      'Розумна обробка документів та автоматизація робочих процесів';
 
   @override
   String get feature3_title => 'Командна робота';
 
   @override
-  String get feature3_desc => 'Спільна робота над документами з колегами в реальному часі';
+  String get feature3_desc =>
+      'Спільна робота над документами з колегами в реальному часі';
 
   @override
   String get feature4_title => 'Безпека даних';
 
   @override
-  String get feature4_desc => 'Захист на рівні підприємства для ваших конфіденційних документів';
+  String get feature4_desc =>
+      'Захист на рівні підприємства для ваших конфіденційних документів';
 
   @override
   String get newUser => 'Новий користувач?';
@@ -255,7 +262,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get viewDocument => 'Перегляд документа';
 
   @override
-  String get signConfirm => 'Ви підтверджуєте погодження цього документа? Дію скасувати неможливо.';
+  String get signConfirm =>
+      'Ви підтверджуєте погодження цього документа? Дію скасувати неможливо.';
 
   @override
   String get rejectHint => 'Причина відхилення...';
@@ -312,7 +320,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get deleteDocumentTitle => 'Видалити документ?';
 
   @override
-  String get deleteDocumentContent => 'Цю операцію не можна скасувати. Ви впевнені?';
+  String get deleteDocumentContent =>
+      'Цю операцію не можна скасувати. Ви впевнені?';
 
   @override
   String get deleteConfirm => 'Видалити';
@@ -363,7 +372,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nothingFound => 'Нічого не знайдено';
 
   @override
-  String get noDocumentsDescription => 'API поки не повернув жодного документа.';
+  String get noDocumentsDescription =>
+      'API поки не повернув жодного документа.';
 
   @override
   String get failedToLoadDocuments => 'Не вдалося завантажити документи.';
@@ -378,7 +388,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get forgotPasswordTitle => 'Скинути пароль';
 
   @override
-  String get forgotPasswordDescription => 'Введіть вашу email адресу і ми надішлемо вам посилання для скидання пароля.';
+  String get forgotPasswordDescription =>
+      'Введіть вашу email адресу і ми надішлемо вам посилання для скидання пароля.';
 
   @override
   String get sendResetLink => 'Надіслати посилання для скидання';
@@ -390,7 +401,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get resetEmailSent => 'Лист для скидання пароля надіслано';
 
   @override
-  String get resetEmailSentDescription => 'Ми надіслали посилання для скидання пароля на\n';
+  String get resetEmailSentDescription =>
+      'Ми надіслали посилання для скидання пароля на\n';
 
   @override
   String get connected => 'Підключено';
@@ -420,7 +432,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get greetingPrefix => 'Вітаємо,';
 
   @override
-  String get greetingSubtitle => 'Ось що відбувається з вашими документами сьогодні';
+  String get greetingSubtitle =>
+      'Ось що відбувається з вашими документами сьогодні';
 
   @override
   String get statsWaiting => 'Очікують';
@@ -450,7 +463,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get helpTitle => 'Потребуєте підказку?';
 
   @override
-  String get helpSubtitle => 'Наш AI асистент допоможе вам розібратися з функціями системи';
+  String get helpSubtitle =>
+      'Наш AI асистент допоможе вам розібратися з функціями системи';
 
   @override
   String get tryDifferentQuery => 'Спробуйте інший запит або очистіть фільтри.';

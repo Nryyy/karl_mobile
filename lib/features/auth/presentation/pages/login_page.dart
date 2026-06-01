@@ -32,7 +32,8 @@ class LoginPage extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     PopupMenuButton<String>(
-                      tooltip: AppLocalizations.of(context)?.language ?? 'Language',
+                      tooltip:
+                          AppLocalizations.of(context)?.language ?? 'Language',
                       icon: const Icon(Icons.language),
                       onSelected: (value) async {
                         Locale? locale;
@@ -41,13 +42,41 @@ class LoginPage extends ConsumerWidget {
                         } else {
                           locale = Locale(value);
                         }
-                        await ref.read(localeProvider.notifier).setLocale(locale);
+                        await ref
+                            .read(localeProvider.notifier)
+                            .setLocale(locale);
                       },
                       itemBuilder: (ctx) => [
-                        PopupMenuItem(value: 'system', child: Text(AppLocalizations.of(context)?.languageSystemDefault ?? 'System')),
-                        PopupMenuItem(value: 'en', child: Text(AppLocalizations.of(context)?.languageEnglish ?? 'English')),
-                        PopupMenuItem(value: 'uk', child: Text(AppLocalizations.of(context)?.languageUkrainian ?? 'Українська')),
-                        PopupMenuItem(value: 'pl', child: Text(AppLocalizations.of(context)?.languagePolish ?? 'Polski')),
+                        PopupMenuItem(
+                          value: 'system',
+                          child: Text(
+                            AppLocalizations.of(
+                                  context,
+                                )?.languageSystemDefault ??
+                                'System',
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'en',
+                          child: Text(
+                            AppLocalizations.of(context)?.languageEnglish ??
+                                'English',
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'uk',
+                          child: Text(
+                            AppLocalizations.of(context)?.languageUkrainian ??
+                                'Українська',
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'pl',
+                          child: Text(
+                            AppLocalizations.of(context)?.languagePolish ??
+                                'Polski',
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -117,7 +146,8 @@ class LoginPage extends ConsumerWidget {
           ),
         ),
         Text(
-          AppLocalizations.of(context)?.appTagline ?? 'Intelligent document circulation platform',
+          AppLocalizations.of(context)?.appTagline ??
+              'Intelligent document circulation platform',
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w400,
@@ -129,7 +159,12 @@ class LoginPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildLoginFormSection(BuildContext context, WidgetRef ref, bool isLoading, AuthFailure? authError) {
+  Widget _buildLoginFormSection(
+    BuildContext context,
+    WidgetRef ref,
+    bool isLoading,
+    AuthFailure? authError,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -159,7 +194,8 @@ class LoginPage extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            AppLocalizations.of(context)?.loginSubtitle ?? 'Enter your credentials to access the platform',
+            AppLocalizations.of(context)?.loginSubtitle ??
+                'Enter your credentials to access the platform',
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
@@ -169,9 +205,12 @@ class LoginPage extends ConsumerWidget {
           const SizedBox(height: 20),
           LoginForm(
             onEmailPasswordSubmitted: (email, password) async {
-              await ref.read(loginProvider.notifier).signInWithEmailAndPassword(email, password);
+              await ref
+                  .read(loginProvider.notifier)
+                  .signInWithEmailAndPassword(email, password);
             },
-            onGooglePressed: () => ref.read(loginProvider.notifier).signInWithGoogle(),
+            onGooglePressed: () =>
+                ref.read(loginProvider.notifier).signInWithGoogle(),
             isLoading: isLoading,
           ),
         ],
@@ -206,7 +245,8 @@ class LoginPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  AppLocalizations.of(context)?.createAccountSubtitle ?? 'Create an account in minutes',
+                  AppLocalizations.of(context)?.createAccountSubtitle ??
+                      'Create an account in minutes',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
@@ -257,9 +297,18 @@ class LoginPage extends ConsumerWidget {
         Wrap(
           spacing: 16,
           children: [
-            _buildFooterLink(context, AppLocalizations.of(context)?.privacy ?? 'Privacy'),
-            _buildFooterLink(context, AppLocalizations.of(context)?.terms ?? 'Terms'),
-            _buildFooterLink(context, AppLocalizations.of(context)?.footerHelp ?? 'Help'),
+            _buildFooterLink(
+              context,
+              AppLocalizations.of(context)?.privacy ?? 'Privacy',
+            ),
+            _buildFooterLink(
+              context,
+              AppLocalizations.of(context)?.terms ?? 'Terms',
+            ),
+            _buildFooterLink(
+              context,
+              AppLocalizations.of(context)?.footerHelp ?? 'Help',
+            ),
           ],
         ),
       ],
@@ -283,25 +332,34 @@ class LoginPage extends ConsumerWidget {
   }
 
   List<PlatformFeature> _features(BuildContext context) => [
-        PlatformFeature(
-          icon: Icons.folder_open_outlined,
-          title: AppLocalizations.of(context)?.feature1_title ?? 'Document management',
-          description: AppLocalizations.of(context)?.feature1_desc ?? 'Store and organize all documents in one place',
-        ),
-        PlatformFeature(
-          icon: Icons.smart_toy_outlined,
-          title: AppLocalizations.of(context)?.feature2_title ?? 'AI assistant',
-          description: AppLocalizations.of(context)?.feature2_desc ?? 'Smart document processing and workflow automation',
-        ),
-        PlatformFeature(
-          icon: Icons.people_outline,
-          title: AppLocalizations.of(context)?.feature3_title ?? 'Teamwork',
-          description: AppLocalizations.of(context)?.feature3_desc ?? 'Collaborate on documents with colleagues in real time',
-        ),
-        PlatformFeature(
-          icon: Icons.security_outlined,
-          title: AppLocalizations.of(context)?.feature4_title ?? 'Data security',
-          description: AppLocalizations.of(context)?.feature4_desc ?? 'Enterprise-grade protection for your confidential documents',
-        ),
-      ];
+    PlatformFeature(
+      icon: Icons.folder_open_outlined,
+      title:
+          AppLocalizations.of(context)?.feature1_title ?? 'Document management',
+      description:
+          AppLocalizations.of(context)?.feature1_desc ??
+          'Store and organize all documents in one place',
+    ),
+    PlatformFeature(
+      icon: Icons.smart_toy_outlined,
+      title: AppLocalizations.of(context)?.feature2_title ?? 'AI assistant',
+      description:
+          AppLocalizations.of(context)?.feature2_desc ??
+          'Smart document processing and workflow automation',
+    ),
+    PlatformFeature(
+      icon: Icons.people_outline,
+      title: AppLocalizations.of(context)?.feature3_title ?? 'Teamwork',
+      description:
+          AppLocalizations.of(context)?.feature3_desc ??
+          'Collaborate on documents with colleagues in real time',
+    ),
+    PlatformFeature(
+      icon: Icons.security_outlined,
+      title: AppLocalizations.of(context)?.feature4_title ?? 'Data security',
+      description:
+          AppLocalizations.of(context)?.feature4_desc ??
+          'Enterprise-grade protection for your confidential documents',
+    ),
+  ];
 }

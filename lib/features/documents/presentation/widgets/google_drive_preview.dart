@@ -26,12 +26,13 @@ class _GoogleDrivePreviewState extends State<GoogleDrivePreview> {
     final previewUrl = _toPreviewUrl(widget.webViewLink);
 
     ui_web.platformViewRegistry.registerViewFactory(_viewId, (int id) {
-      final iframe = web.document.createElement('iframe') as web.HTMLIFrameElement
-        ..src = previewUrl
-        ..style.border = 'none'
-        ..style.width = '100%'
-        ..style.height = '100%'
-        ..allowFullscreen = true;
+      final iframe =
+          web.document.createElement('iframe') as web.HTMLIFrameElement
+            ..src = previewUrl
+            ..style.border = 'none'
+            ..style.width = '100%'
+            ..style.height = '100%'
+            ..allowFullscreen = true;
       return iframe;
     });
   }

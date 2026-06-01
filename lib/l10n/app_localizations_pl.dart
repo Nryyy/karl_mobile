@@ -66,7 +66,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get aboutApp => 'O aplikacji';
 
   @override
-  String get cachedDataBanner => 'Wyświetlane dane z pamięci podręcznej (offline)';
+  String get cachedDataBanner =>
+      'Wyświetlane dane z pamięci podręcznej (offline)';
 
   @override
   String get adminPanel => 'Panel administracyjny';
@@ -81,7 +82,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get tooltipArchive => 'Archiwalne dokumenty';
 
   @override
-  String get tooltipAdminPanel => 'Panel administracyjny (tylko dla administratorów)';
+  String get tooltipAdminPanel =>
+      'Panel administracyjny (tylko dla administratorów)';
 
   @override
   String get tooltipSettings => 'Ustawienia profilu';
@@ -96,7 +98,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get templates => 'Szablony';
 
   @override
-  String get templatesDescription => 'Tutaj możesz przechowywać szablony dokumentów.';
+  String get templatesDescription =>
+      'Tutaj możesz przechowywać szablony dokumentów.';
 
   @override
   String get helpDescription => 'Wsparcie, FAQ i przydatne zasoby.';
@@ -138,16 +141,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get approvalsEmptyTitle => 'Brak dokumentów do zatwierdzenia';
 
   @override
-  String get approvalsEmptySubtitle => 'Gdy ktoś wyśle Ci dokument do podpisu, pojawi się on tutaj.';
+  String get approvalsEmptySubtitle =>
+      'Gdy ktoś wyśle Ci dokument do podpisu, pojawi się on tutaj.';
 
   @override
   String get archiveEmptyTitle => 'Archiwum puste';
 
   @override
-  String get archiveEmptySubtitle => 'Zarchiwizowane dokumenty pojawią się tutaj';
+  String get archiveEmptySubtitle =>
+      'Zarchiwizowane dokumenty pojawią się tutaj';
 
   @override
-  String get loginSubtitle => 'Wprowadź dane logowania, aby uzyskać dostęp do platformy';
+  String get loginSubtitle =>
+      'Wprowadź dane logowania, aby uzyskać dostęp do platformy';
 
   @override
   String get appTagline => 'Inteligentna platforma do obiegu dokumentów';
@@ -159,25 +165,29 @@ class AppLocalizationsPl extends AppLocalizations {
   String get feature1_title => 'Zarządzanie dokumentami';
 
   @override
-  String get feature1_desc => 'Przechowuj i organizuj wszystkie dokumenty w jednym miejscu';
+  String get feature1_desc =>
+      'Przechowuj i organizuj wszystkie dokumenty w jednym miejscu';
 
   @override
   String get feature2_title => 'Asystent AI';
 
   @override
-  String get feature2_desc => 'Inteligentne przetwarzanie dokumentów i automatyzacja procesów';
+  String get feature2_desc =>
+      'Inteligentne przetwarzanie dokumentów i automatyzacja procesów';
 
   @override
   String get feature3_title => 'Praca zespołowa';
 
   @override
-  String get feature3_desc => 'Współpraca nad dokumentami z kolegami w czasie rzeczywistym';
+  String get feature3_desc =>
+      'Współpraca nad dokumentami z kolegami w czasie rzeczywistym';
 
   @override
   String get feature4_title => 'Bezpieczeństwo danych';
 
   @override
-  String get feature4_desc => 'Ochrona klasy korporacyjnej dla Twoich poufnych dokumentów';
+  String get feature4_desc =>
+      'Ochrona klasy korporacyjnej dla Twoich poufnych dokumentów';
 
   @override
   String get newUser => 'Nowy użytkownik?';
@@ -255,7 +265,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get viewDocument => 'Przegląd dokumentu';
 
   @override
-  String get signConfirm => 'Czy potwierdzasz zatwierdzenie tego dokumentu? Nie można cofnąć tej operacji.';
+  String get signConfirm =>
+      'Czy potwierdzasz zatwierdzenie tego dokumentu? Nie można cofnąć tej operacji.';
 
   @override
   String get rejectHint => 'Powód odrzucenia...';
@@ -285,7 +296,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get archiveDocumentTitle => 'Archiwizować dokument?';
 
   @override
-  String get archiveDocumentContent => 'Dokument zostanie przeniesiony do archiwum.';
+  String get archiveDocumentContent =>
+      'Dokument zostanie przeniesiony do archiwum.';
 
   @override
   String get archiveCancel => 'Anuluj';
@@ -312,7 +324,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get deleteDocumentTitle => 'Usunąć dokument?';
 
   @override
-  String get deleteDocumentContent => 'Tej operacji nie można cofnąć. Jesteś pewien?';
+  String get deleteDocumentContent =>
+      'Tej operacji nie można cofnąć. Jesteś pewien?';
 
   @override
   String get deleteConfirm => 'Usuń';
@@ -363,7 +376,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get nothingFound => 'Nic nie znaleziono';
 
   @override
-  String get noDocumentsDescription => 'API nie zwróciło jeszcze żadnych dokumentów.';
+  String get noDocumentsDescription =>
+      'API nie zwróciło jeszcze żadnych dokumentów.';
 
   @override
   String get failedToLoadDocuments => 'Nie udało się pobrać dokumentów.';
@@ -378,7 +392,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get forgotPasswordTitle => 'Reset your password';
 
   @override
-  String get forgotPasswordDescription => 'Enter your email address and we\'ll send you a link to reset your password.';
+  String get forgotPasswordDescription =>
+      'Enter your email address and we\'ll send you a link to reset your password.';
 
   @override
   String get sendResetLink => 'Send Reset Link';
@@ -390,7 +405,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get resetEmailSent => 'Reset Email Sent';
 
   @override
-  String get resetEmailSentDescription => 'We\'ve sent a password reset link to\n';
+  String get resetEmailSentDescription =>
+      'We\'ve sent a password reset link to\n';
 
   @override
   String get connected => 'Połączono';
@@ -420,7 +436,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get greetingPrefix => 'Witamy,';
 
   @override
-  String get greetingSubtitle => 'Oto, co dzieje się z Twoimi dokumentami dzisiaj';
+  String get greetingSubtitle =>
+      'Oto, co dzieje się z Twoimi dokumentami dzisiaj';
 
   @override
   String get statsWaiting => 'Oczekujące';
@@ -450,8 +467,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get helpTitle => 'Potrzebujesz wskazówki?';
 
   @override
-  String get helpSubtitle => 'Nasz asystent AI pomoże Ci zrozumieć funkcje systemu';
+  String get helpSubtitle =>
+      'Nasz asystent AI pomoże Ci zrozumieć funkcje systemu';
 
   @override
-  String get tryDifferentQuery => 'Spróbuj innego zapytania lub wyczyść filtry.';
+  String get tryDifferentQuery =>
+      'Spróbuj innego zapytania lub wyczyść filtry.';
 }

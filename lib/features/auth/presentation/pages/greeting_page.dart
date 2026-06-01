@@ -35,7 +35,9 @@ class _GreetingPageState extends State<GreetingPage> {
       if (!mounted) {
         return;
       }
-      _showMessage(AppLocalizations.of(context)?.signOutError ?? 'Unable to sign out.');
+      _showMessage(
+        AppLocalizations.of(context)?.signOutError ?? 'Unable to sign out.',
+      );
     } finally {
       if (mounted) {
         setState(() => _isSigningOut = false);
@@ -144,7 +146,10 @@ class _GreetingPageState extends State<GreetingPage> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : Text(AppLocalizations.of(context)?.signOut ?? 'Sign out'),
+                            : Text(
+                                AppLocalizations.of(context)?.signOut ??
+                                    'Sign out',
+                              ),
                       ),
                     ),
                   ],

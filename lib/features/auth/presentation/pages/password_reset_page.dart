@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:karl_mobile/generated/app_localizations.dart';
+// import 'package:karl_mobile/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/firebase_auth_service.dart';
@@ -18,7 +18,7 @@ class PasswordResetPage extends StatefulWidget {
 class _PasswordResetPageState extends State<PasswordResetPage> {
   final _formKey = GlobalKey<FormState>();
   var _autovalidateMode = AutovalidateMode.disabled;
-  
+
   bool _isLoading = false;
   bool _emailSent = false;
   final AuthService _authService = FirebaseAuthService();
@@ -39,7 +39,9 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
     setState(() => _isLoading = true);
 
     try {
-      await _authService.sendPasswordResetEmail(email: _emailController.text.trim());
+      await _authService.sendPasswordResetEmail(
+        email: _emailController.text.trim(),
+      );
       setState(() {
         _emailSent = true;
         _isLoading = false;
@@ -61,7 +63,6 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final localizations = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
@@ -74,10 +75,7 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
         ),
         title: Text(
           'Забули пароль?',
-          style: GoogleFonts.inter(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600),
         ),
       ),
       body: SafeArea(
@@ -131,14 +129,14 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  
+
                   // Email field
                   EmailFormField(
                     controller: _emailController,
                     textInputAction: TextInputAction.done,
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Reset button
                   SizedBox(
                     width: double.infinity,
@@ -159,7 +157,9 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(Colors.white),
+                                valueColor: AlwaysStoppedAnimation(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Text(
@@ -172,7 +172,7 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Back to login
                   Center(
                     child: TextButton(

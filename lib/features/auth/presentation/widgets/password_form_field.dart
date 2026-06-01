@@ -62,10 +62,7 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
         ),
         errorMaxLines: 2,
       ),
-      style: GoogleFonts.inter(
-        fontSize: 16,
-        color: colorScheme.onSurface,
-      ),
+      style: GoogleFonts.inter(fontSize: 16, color: colorScheme.onSurface),
     );
   }
 }
