@@ -135,7 +135,25 @@ class AppLocalizationsUk extends AppLocalizations {
   String get loginTitle => 'Вхід до системи';
 
   @override
+  String get approvalsEmptyTitle => 'Немає документів для погодження';
+
+  @override
+  String get approvalsEmptySubtitle => 'Коли вам надішлють документ на підпис, він з\'явиться тут.';
+
+  @override
+  String get archiveEmptyTitle => 'Архів порожній';
+
+  @override
+  String get archiveEmptySubtitle => 'Архівовані документи з’являться тут';
+
+  @override
   String get loginSubtitle => 'Введіть ваші облікові дані для доступу до платформи';
+
+  @override
+  String get appTagline => 'Інтелектуальна платформа для документообігу';
+
+  @override
+  String get refresh => 'Оновити';
 
   @override
   String get feature1_title => 'Управління документами';
@@ -184,4 +202,256 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get googleSignInError => 'Не вдалося увійти через Google.';
+
+  @override
+  String get newDocument => 'Новий документ';
+
+  @override
+  String get loadingDocuments => 'Завантаження документів...';
+
+  @override
+  String get tryAgain => 'Спробувати ще раз';
+
+  @override
+  String get documentSigned => 'Документ підписано';
+
+  @override
+  String get documentRejected => 'Документ відхилено';
+
+  @override
+  String get signDocument => 'Підписати';
+
+  @override
+  String get rejectDocument => 'Відхилити';
+
+  @override
+  String get account => 'Акаунт';
+
+  @override
+  String get approvals => 'Погодження';
+
+  @override
+  String get documentNotFound => 'Документ не знайдено.';
+
+  @override
+  String get signDocumentTitle => 'Підписати документ';
+
+  @override
+  String get rejectDocumentTitle => 'Відхилити документ';
+
+  @override
+  String get rejectPrompt => 'Вкажіть причину відхилення (необов\'язково):';
+
+  @override
+  String get cancel => 'Скасувати';
+
+  @override
+  String get fromLabel => 'Від';
+
+  @override
+  String get document => 'Документ';
+
+  @override
+  String get viewDocument => 'Перегляд документа';
+
+  @override
+  String get signConfirm => 'Ви підтверджуєте погодження цього документа? Дію скасувати неможливо.';
+
+  @override
+  String get rejectHint => 'Причина відхилення...';
+
+  @override
+  String get pending => 'Очікує';
+
+  @override
+  String get authorPrefix => 'Автор:';
+
+  @override
+  String get statusPrefix => 'Статус:';
+
+  @override
+  String get chooseAction => 'Оберіть дію:';
+
+  @override
+  String get commentLabel => 'Коментар (необов\'язково)';
+
+  @override
+  String get signOutError => 'Не вдалося вийти. Спробуйте ще раз.';
+
+  @override
+  String get repositoryNotAvailable => 'Репозиторій недоступний.';
+
+  @override
+  String get archiveDocumentTitle => 'Архівувати документ?';
+
+  @override
+  String get archiveDocumentContent => 'Документ буде переміщено в архів.';
+
+  @override
+  String get archiveCancel => 'Скасувати';
+
+  @override
+  String get archiveConfirm => 'Архівувати';
+
+  @override
+  String get archiveDone => 'Документ архівовано.';
+
+  @override
+  String get archiveCancelled => 'Архівацію скасовано.';
+
+  @override
+  String get restoreFailed => 'Не вдалося відновити документ.';
+
+  @override
+  String get archiveFailed => 'Не вдалося архівувати документ.';
+
+  @override
+  String get deleteOnlyFromArchive => 'Видалення дозволено лише з архіву.';
+
+  @override
+  String get deleteDocumentTitle => 'Видалити документ?';
+
+  @override
+  String get deleteDocumentContent => 'Цю операцію не можна скасувати. Ви впевнені?';
+
+  @override
+  String get deleteConfirm => 'Видалити';
+
+  @override
+  String get deleteDone => 'Документ видалено.';
+
+  @override
+  String get deleteCancelled => 'Видалення скасовано.';
+
+  @override
+  String get deleteFailed => 'Не вдалося видалити документ.';
+
+  @override
+  String get restoreDone => 'Документ відновлено.';
+
+  @override
+  String get untitled => 'Без назви';
+
+  @override
+  String get chooseFileType => 'Оберіть тип файлу';
+
+  @override
+  String get chooseApprover => 'Оберіть погоджувача';
+
+  @override
+  String get statusAll => 'Усі';
+
+  @override
+  String get statusWaiting => 'Очікують';
+
+  @override
+  String get statusInProgress => 'В процесі';
+
+  @override
+  String get statusApproved => 'Затверджено';
+
+  @override
+  String get statusRejected => 'Відхилено';
+
+  @override
+  String get selectAndUpload => 'Вибрати та завантажити файл';
+
+  @override
+  String get uploadFile => 'Завантажити файл';
+
+  @override
+  String get nothingFound => 'Нічого не знайдено';
+
+  @override
+  String get noDocumentsDescription => 'API поки не повернув жодного документа.';
+
+  @override
+  String get failedToLoadDocuments => 'Не вдалося завантажити документи.';
+
+  @override
+  String get googleDrive => 'Google Drive';
+
+  @override
+  String get forgotPassword => 'Забули пароль?';
+
+  @override
+  String get forgotPasswordTitle => 'Скинути пароль';
+
+  @override
+  String get forgotPasswordDescription => 'Введіть вашу email адресу і ми надішлемо вам посилання для скидання пароля.';
+
+  @override
+  String get sendResetLink => 'Надіслати посилання для скидання';
+
+  @override
+  String get backToLogin => 'Повернутися до входу';
+
+  @override
+  String get resetEmailSent => 'Лист для скидання пароля надіслано';
+
+  @override
+  String get resetEmailSentDescription => 'Ми надіслали посилання для скидання пароля на\n';
+
+  @override
+  String get connected => 'Підключено';
+
+  @override
+  String get googleDriveDescription => 'Файли зберігаються на Google Drive';
+
+  @override
+  String get fileUploaded => 'Файл завантажено';
+
+  @override
+  String get settingsSubtitle => 'Тема, мова, параметри';
+
+  @override
+  String get unknownAuthor => 'Невідомий автор';
+
+  @override
+  String get notSpecified => 'Не вказано';
+
+  @override
+  String get typePrefix => 'Тип:';
+
+  @override
+  String get createdPrefix => 'Створено:';
+
+  @override
+  String get greetingPrefix => 'Вітаємо,';
+
+  @override
+  String get greetingSubtitle => 'Ось що відбувається з вашими документами сьогодні';
+
+  @override
+  String get statsWaiting => 'Очікують';
+
+  @override
+  String get statsApproved => 'Затверджено';
+
+  @override
+  String get statsLast7Days => 'За 7 днів';
+
+  @override
+  String get statsTotal => 'Всього';
+
+  @override
+  String get quickActions => 'Швидкі дії';
+
+  @override
+  String get activityTitle => 'Активність';
+
+  @override
+  String get activitySubtitle => 'Останні сповіщення';
+
+  @override
+  String get noNotifications => 'Сповіщень немає';
+
+  @override
+  String get helpTitle => 'Потребуєте підказку?';
+
+  @override
+  String get helpSubtitle => 'Наш AI асистент допоможе вам розібратися з функціями системи';
+
+  @override
+  String get tryDifferentQuery => 'Спробуйте інший запит або очистіть фільтри.';
 }

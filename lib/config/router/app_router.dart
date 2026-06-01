@@ -8,6 +8,7 @@ import 'package:karl_mobile/generated/app_localizations.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/password_reset_page.dart';
 import '../../features/documents/data/documents_repository.dart';
 import '../../features/documents/presentation/pages/approvals_page.dart';
 import '../../features/documents/presentation/pages/documents_page.dart';
@@ -31,12 +32,18 @@ final GoRouter appRouter = GoRouter(
     final location = state.matchedLocation;
     final isOnLogin = location == '/';
     final isOnRegister = location == '/register';
+    final isOnPasswordReset = location == '/password-reset';
 
     if (!isLoggedIn) {
-      return (isOnLogin || isOnRegister) ? null : '/';
+      return (isOnLogin || isOnRegister || isOnPasswordReset) ? null : '/';
     }
 
     if (isOnLogin || isOnRegister) {
+      return '/dashboard';
+    }
+
+    // Redirect logged-in users away from password reset
+    if (isOnPasswordReset) {
       return '/dashboard';
     }
 
@@ -52,6 +59,11 @@ final GoRouter appRouter = GoRouter(
       path: '/register',
       builder: (context, state) => const RegisterPage(),
       name: 'register',
+    ),
+    GoRoute(
+      path: '/password-reset',
+      builder: (context, state) => const PasswordResetPage(),
+      name: 'password-reset',
     ),
     ShellRoute(
       builder: (context, state, child) {

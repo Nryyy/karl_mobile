@@ -135,7 +135,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginTitle => 'Sign in';
 
   @override
+  String get approvalsEmptyTitle => 'No documents for approval';
+
+  @override
+  String get approvalsEmptySubtitle => 'When someone sends you a document to sign, it will appear here.';
+
+  @override
+  String get archiveEmptyTitle => 'Archive is empty';
+
+  @override
+  String get archiveEmptySubtitle => 'Archived documents will appear here';
+
+  @override
   String get loginSubtitle => 'Enter your credentials to access the platform';
+
+  @override
+  String get appTagline => 'Intelligent document circulation platform';
+
+  @override
+  String get refresh => 'Refresh';
 
   @override
   String get feature1_title => 'Document management';
@@ -184,4 +202,256 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googleSignInError => 'Unable to sign in with Google.';
+
+  @override
+  String get newDocument => 'New document';
+
+  @override
+  String get loadingDocuments => 'Loading documents...';
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String get documentSigned => 'Document signed';
+
+  @override
+  String get documentRejected => 'Document rejected';
+
+  @override
+  String get signDocument => 'Sign';
+
+  @override
+  String get rejectDocument => 'Reject';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get approvals => 'Approvals';
+
+  @override
+  String get documentNotFound => 'Document not found.';
+
+  @override
+  String get signDocumentTitle => 'Sign document';
+
+  @override
+  String get rejectDocumentTitle => 'Reject document';
+
+  @override
+  String get rejectPrompt => 'Please provide a reason for rejection (optional):';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get fromLabel => 'From';
+
+  @override
+  String get document => 'Document';
+
+  @override
+  String get viewDocument => 'View document';
+
+  @override
+  String get signConfirm => 'Do you confirm approval of this document? This action cannot be undone.';
+
+  @override
+  String get rejectHint => 'Reason for rejection...';
+
+  @override
+  String get pending => 'Pending';
+
+  @override
+  String get authorPrefix => 'Author:';
+
+  @override
+  String get statusPrefix => 'Status:';
+
+  @override
+  String get chooseAction => 'Choose an action:';
+
+  @override
+  String get commentLabel => 'Comment (optional)';
+
+  @override
+  String get signOutError => 'Unable to sign out. Please try again.';
+
+  @override
+  String get repositoryNotAvailable => 'Repository not available.';
+
+  @override
+  String get archiveDocumentTitle => 'Archive document?';
+
+  @override
+  String get archiveDocumentContent => 'The document will be moved to the archive.';
+
+  @override
+  String get archiveCancel => 'Cancel';
+
+  @override
+  String get archiveConfirm => 'Archive';
+
+  @override
+  String get archiveDone => 'Document archived.';
+
+  @override
+  String get archiveCancelled => 'Archive cancelled.';
+
+  @override
+  String get restoreFailed => 'Failed to restore document.';
+
+  @override
+  String get archiveFailed => 'Failed to archive document.';
+
+  @override
+  String get deleteOnlyFromArchive => 'Deletion allowed only from the archive.';
+
+  @override
+  String get deleteDocumentTitle => 'Delete document?';
+
+  @override
+  String get deleteDocumentContent => 'This action cannot be undone. Are you sure?';
+
+  @override
+  String get deleteConfirm => 'Delete';
+
+  @override
+  String get deleteDone => 'Document deleted.';
+
+  @override
+  String get deleteCancelled => 'Deletion cancelled.';
+
+  @override
+  String get deleteFailed => 'Failed to delete document.';
+
+  @override
+  String get restoreDone => 'Document restored.';
+
+  @override
+  String get untitled => 'Untitled';
+
+  @override
+  String get chooseFileType => 'Choose file type';
+
+  @override
+  String get chooseApprover => 'Choose approver';
+
+  @override
+  String get statusAll => 'All';
+
+  @override
+  String get statusWaiting => 'Waiting';
+
+  @override
+  String get statusInProgress => 'In progress';
+
+  @override
+  String get statusApproved => 'Approved';
+
+  @override
+  String get statusRejected => 'Rejected';
+
+  @override
+  String get selectAndUpload => 'Select and upload file';
+
+  @override
+  String get uploadFile => 'Upload file';
+
+  @override
+  String get nothingFound => 'Nothing found';
+
+  @override
+  String get noDocumentsDescription => 'API did not return any documents yet.';
+
+  @override
+  String get failedToLoadDocuments => 'Failed to load documents.';
+
+  @override
+  String get googleDrive => 'Google Drive';
+
+  @override
+  String get forgotPassword => 'Forgot Password?';
+
+  @override
+  String get forgotPasswordTitle => 'Reset your password';
+
+  @override
+  String get forgotPasswordDescription => 'Enter your email address and we\'ll send you a link to reset your password.';
+
+  @override
+  String get sendResetLink => 'Send Reset Link';
+
+  @override
+  String get backToLogin => 'Back to Login';
+
+  @override
+  String get resetEmailSent => 'Reset Email Sent';
+
+  @override
+  String get resetEmailSentDescription => 'We\'ve sent a password reset link to\n';
+
+  @override
+  String get connected => 'Connected';
+
+  @override
+  String get googleDriveDescription => 'Files are stored on Google Drive';
+
+  @override
+  String get fileUploaded => 'File uploaded';
+
+  @override
+  String get settingsSubtitle => 'Theme, language, preferences';
+
+  @override
+  String get unknownAuthor => 'Unknown author';
+
+  @override
+  String get notSpecified => 'Not specified';
+
+  @override
+  String get typePrefix => 'Type:';
+
+  @override
+  String get createdPrefix => 'Created:';
+
+  @override
+  String get greetingPrefix => 'Welcome,';
+
+  @override
+  String get greetingSubtitle => 'Here\'s what\'s happening with your documents today';
+
+  @override
+  String get statsWaiting => 'Waiting';
+
+  @override
+  String get statsApproved => 'Approved';
+
+  @override
+  String get statsLast7Days => 'Last 7 days';
+
+  @override
+  String get statsTotal => 'Total';
+
+  @override
+  String get quickActions => 'Quick actions';
+
+  @override
+  String get activityTitle => 'Activity';
+
+  @override
+  String get activitySubtitle => 'Latest notifications';
+
+  @override
+  String get noNotifications => 'No notifications';
+
+  @override
+  String get helpTitle => 'Need a hint?';
+
+  @override
+  String get helpSubtitle => 'Our AI assistant can help you understand system features';
+
+  @override
+  String get tryDifferentQuery => 'Try a different query or clear filters.';
 }

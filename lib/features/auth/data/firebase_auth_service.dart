@@ -165,6 +165,17 @@ class FirebaseAuthService implements AuthService {
     ]);
   }
 
+  @override
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (error) {
+      throw AuthFailure(_messageForPasswordResetError(error));
+    } on Exception {
+      throw const AuthFailure('Не вдалося надіслати лист для скидання пароля. Спробуйте ще раз.');
+    }
+  }
+
   String _displayNameForUser(User? user, {required String fallbackEmail}) {
     final displayName = user?.displayName?.trim();
     if (displayName != null && displayName.isNotEmpty) {
@@ -212,6 +223,17 @@ class FirebaseAuthService implements AuthService {
       'operation-not-allowed' =>
         'Google провайдер вимкнений у Firebase Authentication.',
       _ => 'Не вдалося виконати вхід. Спробуйте ще раз.',
+    };
+  }
+
+  String _messageForPasswordResetError(FirebaseAuthException error) {
+    return switch (error.code) {
+      'user-not-found' => 'Користувача з таким email не знайдено.',
+      'invalid-email' => 'Некоректний формат email.',
+      'user-disabled' => 'Обліковий запис заблоковано.',
+      'operation-not-allowed' => 'Скидання пароля вимкнено.',
+      'too-many-requests' => 'Забагато запитів. Спробуйте пізніше.',
+      _ => 'Не вдалося надіслати лист для скидання пароля. Спробуйте ще раз.',
     };
   }
 }
