@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 /// Material Form email field with built-in validation.
 class EmailFormField extends StatelessWidget {
@@ -14,15 +15,17 @@ class EmailFormField extends StatelessWidget {
     this.textInputAction,
   });
 
-  static String? defaultValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email адреса обов\'язкова';
-    }
-    const emailRegex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
-    if (!RegExp(emailRegex).hasMatch(value)) {
-      return 'Введіть дійсну email адресу';
-    }
-    return null;
+  static String? Function(String?) defaultValidatorWith(BuildContext context) {
+    return (String? value) {
+      if (value == null || value.isEmpty) {
+        return AppLocalizations.of(context)?.emailRequired ?? 'Email address is required';
+      }
+      const emailRegex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+      if (!RegExp(emailRegex).hasMatch(value)) {
+        return AppLocalizations.of(context)?.emailInvalid ?? 'Enter a valid email address';
+      }
+      return null;
+    };
   }
 
   @override
@@ -33,16 +36,16 @@ class EmailFormField extends StatelessWidget {
       controller: controller,
       keyboardType: TextInputType.emailAddress,
       textInputAction: textInputAction ?? TextInputAction.next,
-      validator: validator ?? defaultValidator,
+      validator: validator ?? defaultValidatorWith(context),
       decoration: InputDecoration(
-        labelText: 'Email адреса',
+        labelText: AppLocalizations.of(context)?.emailLabel ?? 'Email address',
         hintText: 'your.email@example.com',
         prefixIcon: Icon(
           Icons.email_outlined,
           color: colorScheme.onSurfaceVariant,
         ),
         errorMaxLines: 2,
-        helperText: 'Ми не надсилатимемо спам',
+        helperText: AppLocalizations.of(context)?.emailHelperText ?? 'We won\'t send spam',
         helperStyle: GoogleFonts.inter(
           fontSize: 12,
           color: colorScheme.onSurfaceVariant,

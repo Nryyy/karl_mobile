@@ -468,4 +468,166 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get tryDifferentQuery => 'Спробуйте інший запит або очистіть фільтри.';
+
+  @override
+  String selectedPhotos(Object count) => 'Обрані фото ($count)';
+
+  @override
+  String get uploadToFirebase => 'Завантажити в Firebase';
+
+  @override
+  String get clearAll => 'Очистити всі';
+
+  @override
+  String get photoCameraAdded => 'Фото з камери додано';
+
+  @override
+  String photoCameraError(Object error) => 'Помилка при виборі фото з камери: $error';
+
+  @override
+  String get photoGalleryAdded => 'Фото з галереї додано';
+
+  @override
+  String photoGalleryError(Object error) => 'Помилка при виборі фото з галереї: $error';
+
+  @override
+  String photosAddedCount(Object count) => 'Додано $count фото з галереї';
+
+  @override
+  String get noPhotosToUpload => 'Немає фото для завантаження';
+
+  @override
+  String photosUploadedSuccess(Object count) => 'Успішно завантажено $count фото в Firebase Storage';
+
+  @override
+  String photosUploadError(Object error) => 'Помилка при завантаженні фото: $error';
+
+  @override
+  String get takePhoto => 'Зробити фото';
+
+  @override
+  String get choosePhotoFromGallery => 'Вибрати фото з галереї';
+
+  @override
+  String get chooseMultiplePhotos => 'Вибрати декілька фото';
+
+  @override
+  String qrCodeGenerationError(Object error) => 'Помилка генерації QR коду: $error';
+
+  @override
+  String get qrCodeCopied => 'QR код скопійовано в буфер обміну';
+
+  @override
+  String errorGeneric(Object error) => 'Помилка: $error';
+
+  @override
+  String get loadingError => 'Помилка завантаження';
+
+  @override
+  String get noQrCodes => 'Немає QR кодів';
+
+  @override
+  String get qrCodesHint => 'Генеруйте QR коди для документів,\nщоб побачити їх тут';
+
+  @override
+  String get noDocumentsHint => 'Документи з\'являться тут після створення';
+
+  @override
+  String get qrValidationTitle => 'QR код валідації';
+
+  @override
+  String get qrValidationDescription => 'Генеруйте QR код для валідації документа. Цей код може бути використаний для перевірки автентичності документа.';
+
+  @override
+  String get qrCodeLabel => 'QR код';
+
+  @override
+  String get qrCodePrefix => 'QR код:';
+
+  @override
+  String get sessionExpired => 'Сесія авторизації недійсна. Увійдіть ще раз.';
+
+  @override
+  String get fileUploadFailed => 'Не вдалося завантажити файл.';
+
+  @override
+  String get viewDocumentLabel => 'Перегляд документа';
+
+  @override
+  String get enterDocumentTitle => 'Введіть назву документа.';
+
+  @override
+  String selectApproverForStep(Object step) => 'Оберіть погоджувача для кроку $step.';
+
+  @override
+  String get documentCreatedAndUploaded => 'Документ створено та файл завантажено.';
+
+  @override
+  String get documentCreatedFileNotUploaded => 'Документ створено, але файл не завантажено.';
+
+  @override
+  String get documentCreated => 'Документ створено.';
+
+  @override
+  String get documentSaveFailed => 'Не вдалося зберегти документ.';
+
+  @override
+  String get documentTitleLabel => 'Назва документа';
+
+  @override
+  String get documentTitleHint => 'Введіть назву документа';
+
+  @override
+  String get fileTypeLabel => 'Тип файлу';
+
+  @override
+  String get documentFileLabel => 'Файл документа';
+
+  @override
+  String get removeFile => 'Видалити файл';
+
+  @override
+  String get tapToSelectFile => 'Натисніть, щоб вибрати файл';
+
+  @override
+  String get approvalRouteLabel => 'Маршрут погодження';
+
+  @override
+  String get addStep => 'Додати крок';
+
+  @override
+  String get noApprovalRoute => 'Без маршруту погодження';
+
+  @override
+  String get undoLabel => 'Відмінити';
+
+  @override
+  String get emailLabel => 'Email адреса';
+
+  @override
+  String get emailRequired => 'Email адреса обов\'язкова';
+
+  @override
+  String get emailInvalid => 'Введіть дійсну email адресу';
+
+  @override
+  String get emailHelperText => 'Ми не надсилатимемо спам';
+
+  @override
+  String get passwordLabel => 'Пароль';
+
+  @override
+  String get passwordRequired => 'Пароль обов\'язковий';
+
+  @override
+  String get passwordMinLength => 'Пароль мусить містити мінімум 8 символів';
+
+  @override
+  String get signInWithEmail => 'Увійти через email';
+
+  @override
+  String get signInWithGoogle => 'Увійти через Google';
+
+  @override
+  String get orDivider => 'або';
 }

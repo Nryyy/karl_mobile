@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/services/firestore_qr_service.dart';
+import '../../../../generated/app_localizations.dart';
 
 /// Page showing QR validation history with real-time updates
 class QRValidationHistoryPage extends ConsumerStatefulWidget {
@@ -47,7 +48,7 @@ class _QRValidationHistoryPageState
                   Icon(Icons.error_outline, size: 48, color: colorScheme.error),
                   const SizedBox(height: 16),
                   Text(
-                    'Помилка завантаження',
+                    AppLocalizations.of(context)?.loadingError ?? 'Loading error',
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -82,7 +83,7 @@ class _QRValidationHistoryPageState
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Немає QR кодів',
+                    AppLocalizations.of(context)?.noQrCodes ?? 'No QR codes',
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -91,7 +92,7 @@ class _QRValidationHistoryPageState
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Генеруйте QR коди для документів,\nщоб побачити їх тут',
+                    AppLocalizations.of(context)?.qrCodesHint ?? 'Generate QR codes for documents\nto see them here',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: colorScheme.onSurfaceVariant,
@@ -168,7 +169,7 @@ class _QRValidationHistoryPageState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'QR код:',
+                    AppLocalizations.of(context)?.qrCodePrefix ?? 'QR code:',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

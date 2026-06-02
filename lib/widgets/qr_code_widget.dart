@@ -5,6 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/services/firestore_qr_service.dart';
+import '../generated/app_localizations.dart';
 import '../features/documents/domain/document_models.dart';
 
 /// Widget for generating and displaying QR codes for document validation
@@ -73,7 +74,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
         setState(() => _isGenerating = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Помилка генерації QR коду: $e'),
+            content: Text(AppLocalizations.of(context)?.qrCodeGenerationError(e) ?? 'QR code generation error: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -92,7 +93,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('QR код скопійовано в буфер обміну'),
+            content: Text(AppLocalizations.of(context)?.qrCodeCopied ?? 'QR code copied to clipboard'),
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
@@ -101,7 +102,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Помилка: $e'),
+            content: Text(AppLocalizations.of(context)?.errorGeneric(e) ?? 'Error: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -134,7 +135,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'QR код валідації',
+                  AppLocalizations.of(context)?.qrValidationTitle ?? 'QR validation code',
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -175,7 +176,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
 
             if (_qrValidationData == null) ...[
               Text(
-                'Генеруйте QR код для валідації документа. Цей код може бути використаний для перевірки автентичності документа.',
+                AppLocalizations.of(context)?.qrValidationDescription ?? 'Generate a QR code to validate the document. This code can be used to verify the authenticity of the document.',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: colorScheme.onSurfaceVariant,
@@ -248,7 +249,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'QR код',
+                                    AppLocalizations.of(context)?.qrCodeLabel ?? 'QR code',
                                     style: GoogleFonts.inter(
                                       fontSize: 14,
                                       color: colorScheme.onSurfaceVariant,
@@ -355,12 +356,12 @@ class QRValidationStatusWidget extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return Text('Помилка: ${snapshot.error}');
+          return Text(AppLocalizations.of(context)?.errorGeneric(snapshot.error ?? '') ?? 'Error: ${snapshot.error}');
         }
 
         final validations = snapshot.data ?? [];
         if (validations.isEmpty) {
-          return const Text('QR код не згенеровано');
+          return Text(AppLocalizations.of(context)?.noQrCodes ?? 'No QR codes');
         }
 
         final latestValidation = validations.first;

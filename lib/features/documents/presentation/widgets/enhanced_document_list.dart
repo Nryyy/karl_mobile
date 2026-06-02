@@ -321,14 +321,14 @@ class EnhancedDocumentList extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Немає документів',
+                    AppLocalizations.of(context)?.noDocuments ?? 'No documents',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Документи з\'являться тут після створення',
+                    AppLocalizations.of(context)?.noDocumentsHint ?? 'Documents will appear here after creation',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -412,7 +412,7 @@ class DocumentErrorWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Помилка завантаження',
+                    AppLocalizations.of(context)?.loadingError ?? 'Loading error',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),

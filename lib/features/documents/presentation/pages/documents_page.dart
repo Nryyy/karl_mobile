@@ -214,7 +214,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Обрані фото (${_selectedImages.length})',
+                                  AppLocalizations.of(context)?.selectedPhotos(_selectedImages.length) ?? 'Selected photos (${_selectedImages.length})',
                                   style: Theme.of(context).textTheme.titleSmall
                                       ?.copyWith(fontWeight: FontWeight.w600),
                                 ),
@@ -239,7 +239,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                                         Icons.cloud_upload,
                                         size: 16,
                                       ),
-                                      label: Text('Завантажити в Firebase'),
+                                      label: Text(AppLocalizations.of(context)?.uploadToFirebase ?? 'Upload to Firebase'),
                                     ),
                                     IconButton(
                                       onPressed: () => setState(
@@ -249,7 +249,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                                         Icons.clear_all,
                                         size: 20,
                                       ),
-                                      tooltip: 'Очистити всі',
+                                      tooltip: AppLocalizations.of(context)?.clearAll ?? 'Clear all',
                                     ),
                                   ],
                                 ),
@@ -370,10 +370,10 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
         setState(() {
           _selectedImages.add(image);
         });
-        _showMessage('Фото з камери додано');
+        _showMessage(AppLocalizations.of(context)?.photoCameraAdded ?? 'Photo from camera added');
       }
     } catch (e) {
-      _showMessage('Помилка при виборі фото з камери: $e');
+      _showMessage(AppLocalizations.of(context)?.photoCameraError(e) ?? 'Error picking photo from camera: $e');
     }
   }
 
@@ -384,10 +384,10 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
         setState(() {
           _selectedImages.add(image);
         });
-        _showMessage('Фото з галереї додано');
+        _showMessage(AppLocalizations.of(context)?.photoGalleryAdded ?? 'Photo from gallery added');
       }
     } catch (e) {
-      _showMessage('Помилка при виборі фото з галереї: $e');
+      _showMessage(AppLocalizations.of(context)?.photoGalleryError(e) ?? 'Error picking photo from gallery: $e');
     }
   }
 
@@ -398,10 +398,10 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
         setState(() {
           _selectedImages.addAll(images);
         });
-        _showMessage('Додано ${images.length} фото з галереї');
+        _showMessage(AppLocalizations.of(context)?.photosAddedCount(images.length) ?? '${images.length} photos from gallery added');
       }
     } catch (e) {
-      _showMessage('Помилка при виборі фото з галереї: $e');
+      _showMessage(AppLocalizations.of(context)?.photoGalleryError(e) ?? 'Error picking photo from gallery: $e');
     }
   }
 
@@ -413,7 +413,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
 
   Future<void> _uploadImagesToFirebase() async {
     if (_selectedImages.isEmpty) {
-      _showMessage('Немає фото для завантаження');
+      _showMessage(AppLocalizations.of(context)?.noPhotosToUpload ?? 'No photos to upload');
       return;
     }
 
@@ -440,10 +440,10 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
       });
 
       _showMessage(
-        'Успішно завантажено ${uploadedUrls.length} фото в Firebase Storage',
+        AppLocalizations.of(context)?.photosUploadedSuccess(uploadedUrls.length) ?? 'Successfully uploaded ${uploadedUrls.length} photos to Firebase Storage',
       );
     } catch (e) {
-      _showMessage('Помилка при завантаженні фото: $e');
+      _showMessage(AppLocalizations.of(context)?.photosUploadError(e) ?? 'Error uploading photos: $e');
     } finally {
       setState(() {
         _isUploadingImage = false;
@@ -461,7 +461,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.camera_alt),
-                title: const Text('Зробити фото'),
+                title: Text(AppLocalizations.of(context)?.takePhoto ?? 'Take photo'),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImageFromCamera();
@@ -469,7 +469,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: const Text('Вибрати фото з галереї'),
+                title: Text(AppLocalizations.of(context)?.choosePhotoFromGallery ?? 'Choose photo from gallery'),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImageFromGallery();
@@ -477,7 +477,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Вибрати декілька фото'),
+                title: Text(AppLocalizations.of(context)?.chooseMultiplePhotos ?? 'Choose multiple photos'),
                 onTap: () {
                   Navigator.pop(context);
                   _pickMultipleImagesFromGallery();
@@ -668,7 +668,7 @@ class _SimpleDocumentCardState extends ConsumerState<SimpleDocumentCard> {
               AppLocalizations.of(context)?.archiveDone ?? 'Document archived.',
             ),
             action: SnackBarAction(
-              label: 'Відмінити',
+              label: AppLocalizations.of(context)?.undoLabel ?? 'Undo',
               onPressed: () async {
                 try {
                   await ref
@@ -1003,7 +1003,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      _showMessage('Сесія авторизації недійсна. Увійдіть ще раз.');
+      _showMessage(AppLocalizations.of(context)?.sessionExpired ?? 'Session expired. Please sign in again.');
       return;
     }
 
@@ -1028,7 +1028,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
       _showMessage(e.message);
     } catch (_) {
       if (!mounted) return;
-      _showMessage('Не вдалося завантажити файл.');
+      _showMessage(AppLocalizations.of(context)?.fileUploadFailed ?? 'Failed to upload file.');
     } finally {
       if (mounted) setState(() => _isUploading = false);
       repository.dispose();
@@ -1087,7 +1087,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
           if (item.webViewLink.isNotEmpty) ...[
             const SizedBox(height: 20),
             Text(
-              'Перегляд документа',
+              AppLocalizations.of(context)?.viewDocumentLabel ?? 'Document preview',
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
@@ -1249,13 +1249,13 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
   Future<void> _save() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      _showMessage('Введіть назву документа.');
+      _showMessage(AppLocalizations.of(context)?.enterDocumentTitle ?? 'Enter document title.');
       return;
     }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      _showMessage('Сесія авторизації недійсна. Увійдіть ще раз.');
+      _showMessage(AppLocalizations.of(context)?.sessionExpired ?? 'Session expired. Please sign in again.');
       return;
     }
 
@@ -1263,7 +1263,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
     for (var i = 0; i < _approvalSteps.length; i++) {
       final entry = _approvalSteps[i];
       if (entry.selectedUser == null) {
-        _showMessage('Оберіть погоджувача для кроку ${i + 1}.');
+        _showMessage(AppLocalizations.of(context)?.selectApproverForStep(i + 1) ?? 'Select approver for step ${i + 1}.');
         return;
       }
       steps.add(
@@ -1318,14 +1318,14 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                 fileName: _pickedFile!.name,
               );
           if (!mounted) return;
-          _showMessage('Документ створено та файл завантажено.');
+          _showMessage(AppLocalizations.of(context)?.documentCreatedAndUploaded ?? 'Document created and file uploaded.');
           GoRouter.of(context).go('/documents');
         } on DocumentsRepositoryException catch (e) {
           if (!mounted) return;
           final isGDrive = e.message.toLowerCase().contains('google drive');
           if (isGDrive) {
             setState(() => _googleDriveError = true);
-            _showMessage('Документ створено, але файл не завантажено.');
+            _showMessage(AppLocalizations.of(context)?.documentCreatedFileNotUploaded ?? 'Document created, but file not uploaded.');
           } else {
             _showMessage(e.message);
             GoRouter.of(context).go('/documents');
@@ -1333,7 +1333,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
         }
       } else {
         if (!mounted) return;
-        _showMessage('Документ створено.');
+        _showMessage(AppLocalizations.of(context)?.documentCreated ?? 'Document created.');
         GoRouter.of(context).go('/documents');
       }
     } on DocumentsRepositoryException catch (e) {
@@ -1341,7 +1341,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
       _showMessage(e.message);
     } catch (_) {
       if (!mounted) return;
-      _showMessage('Не вдалося зберегти документ.');
+      _showMessage(AppLocalizations.of(context)?.documentSaveFailed ?? 'Failed to save document.');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -1374,13 +1374,13 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
         children: [
           _SectionCard(
             children: [
-              _FieldLabel('Назва документа', required: true),
+              _FieldLabel(AppLocalizations.of(context)?.documentTitleLabel ?? 'Document title', required: true),
               const SizedBox(height: 6),
               TextField(
                 controller: _titleController,
                 style: theme.textTheme.bodyLarge,
                 decoration: InputDecoration(
-                  hintText: 'Введіть назву документа',
+                  hintText: AppLocalizations.of(context)?.documentTitleHint ?? 'Enter document title',
                   filled: true,
                   fillColor: colorScheme.surfaceContainerLowest,
                   border: OutlineInputBorder(
@@ -1405,7 +1405,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              _FieldLabel('Тип файлу'),
+              _FieldLabel(AppLocalizations.of(context)?.fileTypeLabel ?? 'File type'),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 initialValue: _selectedFileType,
@@ -1467,7 +1467,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'Файл документа',
+                    AppLocalizations.of(context)?.documentFileLabel ?? 'Document file',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: colorScheme.onSurface,
@@ -1547,7 +1547,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                                 color: colorScheme.onSurfaceVariant,
                               ),
                               visualDensity: VisualDensity.compact,
-                              tooltip: 'Видалити файл',
+                              tooltip: AppLocalizations.of(context)?.removeFile ?? 'Remove file',
                             ),
                           ],
                         )
@@ -1562,7 +1562,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              'Натисніть, щоб вибрати файл',
+                              AppLocalizations.of(context)?.tapToSelectFile ?? 'Tap to select a file',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.primary,
                                 fontWeight: FontWeight.w500,
@@ -1603,7 +1603,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        'Маршрут погодження',
+                        AppLocalizations.of(context)?.approvalRouteLabel ?? 'Approval route',
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: colorScheme.onSurface,
@@ -1632,9 +1632,9 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                         ),
                       ),
                       icon: const Icon(Icons.add_circle_outline, size: 16),
-                      label: const Text(
-                        'Додати крок',
-                        style: TextStyle(fontSize: 13),
+                      label: Text(
+                        AppLocalizations.of(context)?.addStep ?? 'Add step',
+                        style: const TextStyle(fontSize: 13),
                       ),
                     ),
                 ],
@@ -1663,7 +1663,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Без маршруту погодження',
+                        AppLocalizations.of(context)?.noApprovalRoute ?? 'No approval route',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),

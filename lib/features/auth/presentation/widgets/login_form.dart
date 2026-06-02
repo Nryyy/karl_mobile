@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 import 'email_form_field.dart';
 import 'password_form_field.dart';
 
@@ -70,7 +71,6 @@ class _LoginFormState extends State<LoginForm> {
           // Password field with built-in validation
           PasswordFormField(
             controller: _passwordController,
-            labelText: 'Пароль',
             textInputAction: TextInputAction.done,
           ),
           const SizedBox(height: 12),
@@ -86,7 +86,7 @@ class _LoginFormState extends State<LoginForm> {
                     },
               style: TextButton.styleFrom(padding: EdgeInsets.zero),
               child: Text(
-                'Забули пароль?',
+                AppLocalizations.of(context)?.forgotPassword ?? 'Forgot Password?',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -113,7 +113,7 @@ class _LoginFormState extends State<LoginForm> {
                       ),
                     )
                   : Text(
-                      'Увійти через email',
+                      AppLocalizations.of(context)?.signInWithEmail ?? 'Sign in with email',
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -128,7 +128,7 @@ class _LoginFormState extends State<LoginForm> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
-                  'або',
+                  AppLocalizations.of(context)?.orDivider ?? 'or',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -146,7 +146,7 @@ class _LoginFormState extends State<LoginForm> {
             label: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(
-                'Увійти через Google',
+                AppLocalizations.of(context)?.signInWithGoogle ?? 'Sign in with Google',
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -161,7 +161,7 @@ class _LoginFormState extends State<LoginForm> {
                   ? null
                   : () => GoRouter.of(context).go('/password-reset'),
               child: Text(
-                'Забули пароль?',
+                AppLocalizations.of(context)?.forgotPassword ?? 'Forgot Password?',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,

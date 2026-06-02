@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 /// Material Form password field with show/hide toggle and validation.
 class PasswordFormField extends StatefulWidget {
   final TextEditingController controller;
   final String? Function(String?)? validator;
-  final String labelText;
+  final String? labelText;
   final TextInputAction? textInputAction;
   final String? hintText;
 
@@ -13,19 +14,21 @@ class PasswordFormField extends StatefulWidget {
     super.key,
     required this.controller,
     this.validator,
-    this.labelText = 'Пароль',
+    this.labelText,
     this.textInputAction,
     this.hintText,
   });
 
-  static String? defaultValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Пароль обов\'язковий';
-    }
-    if (value.length < 8) {
-      return 'Пароль мусить містити мінімум 8 символів';
-    }
-    return null;
+  static String? Function(String?) defaultValidatorWith(BuildContext context) {
+    return (String? value) {
+      if (value == null || value.isEmpty) {
+        return AppLocalizations.of(context)?.passwordRequired ?? 'Password is required';
+      }
+      if (value.length < 8) {
+        return AppLocalizations.of(context)?.passwordMinLength ?? 'Password must be at least 8 characters';
+      }
+      return null;
+    };
   }
 
   @override
@@ -43,9 +46,9 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
       controller: widget.controller,
       obscureText: _isObscured,
       textInputAction: widget.textInputAction ?? TextInputAction.done,
-      validator: widget.validator ?? PasswordFormField.defaultValidator,
+      validator: widget.validator ?? PasswordFormField.defaultValidatorWith(context),
       decoration: InputDecoration(
-        labelText: widget.labelText,
+        labelText: widget.labelText ?? AppLocalizations.of(context)?.passwordLabel ?? 'Password',
         hintText: widget.hintText ?? '••••••••',
         prefixIcon: Icon(
           Icons.lock_outline,

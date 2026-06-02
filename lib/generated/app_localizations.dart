@@ -826,6 +826,9 @@ abstract class AppLocalizations {
   /// **'Google Drive'**
   String get googleDrive;
 
+  /// No description provided for @forgotPassword.
+  String get forgotPassword;
+
   /// No description provided for @connected.
   ///
   /// In en, this message translates to:
@@ -951,6 +954,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try a different query or clear filters.'**
   String get tryDifferentQuery;
+
+  /// No description provided for @selectedPhotos.
+  String selectedPhotos(Object count);
+
+  /// No description provided for @uploadToFirebase.
+  String get uploadToFirebase;
+
+  /// No description provided for @clearAll.
+  String get clearAll;
+
+  /// No description provided for @photoCameraAdded.
+  String get photoCameraAdded;
+
+  /// No description provided for @photoCameraError.
+  String photoCameraError(Object error);
+
+  /// No description provided for @photoGalleryAdded.
+  String get photoGalleryAdded;
+
+  /// No description provided for @photoGalleryError.
+  String photoGalleryError(Object error);
+
+  /// No description provided for @photosAddedCount.
+  String photosAddedCount(Object count);
+
+  /// No description provided for @noPhotosToUpload.
+  String get noPhotosToUpload;
+
+  /// No description provided for @photosUploadedSuccess.
+  String photosUploadedSuccess(Object count);
+
+  /// No description provided for @photosUploadError.
+  String photosUploadError(Object error);
+
+  /// No description provided for @takePhoto.
+  String get takePhoto;
+
+  /// No description provided for @choosePhotoFromGallery.
+  String get choosePhotoFromGallery;
+
+  /// No description provided for @chooseMultiplePhotos.
+  String get chooseMultiplePhotos;
+
+  /// No description provided for @qrCodeGenerationError.
+  String qrCodeGenerationError(Object error);
+
+  /// No description provided for @qrCodeCopied.
+  String get qrCodeCopied;
+
+  /// No description provided for @errorGeneric.
+  String errorGeneric(Object error);
+
+  /// No description provided for @loadingError.
+  String get loadingError;
+
+  /// No description provided for @noQrCodes.
+  String get noQrCodes;
+
+  /// No description provided for @qrCodesHint.
+  String get qrCodesHint;
+
+  /// No description provided for @noDocumentsHint.
+  String get noDocumentsHint;
+
+  /// No description provided for @qrValidationTitle.
+  String get qrValidationTitle;
+
+  /// No description provided for @qrValidationDescription.
+  String get qrValidationDescription;
+
+  /// No description provided for @qrCodeLabel.
+  String get qrCodeLabel;
+
+  /// No description provided for @qrCodePrefix.
+  String get qrCodePrefix;
+
+  /// No description provided for @sessionExpired.
+  String get sessionExpired;
+
+  /// No description provided for @fileUploadFailed.
+  String get fileUploadFailed;
+
+  /// No description provided for @viewDocumentLabel.
+  String get viewDocumentLabel;
+
+  /// No description provided for @enterDocumentTitle.
+  String get enterDocumentTitle;
+
+  /// No description provided for @selectApproverForStep.
+  String selectApproverForStep(Object step);
+
+  /// No description provided for @documentCreatedAndUploaded.
+  String get documentCreatedAndUploaded;
+
+  /// No description provided for @documentCreatedFileNotUploaded.
+  String get documentCreatedFileNotUploaded;
+
+  /// No description provided for @documentCreated.
+  String get documentCreated;
+
+  /// No description provided for @documentSaveFailed.
+  String get documentSaveFailed;
+
+  /// No description provided for @documentTitleLabel.
+  String get documentTitleLabel;
+
+  /// No description provided for @documentTitleHint.
+  String get documentTitleHint;
+
+  /// No description provided for @fileTypeLabel.
+  String get fileTypeLabel;
+
+  /// No description provided for @documentFileLabel.
+  String get documentFileLabel;
+
+  /// No description provided for @removeFile.
+  String get removeFile;
+
+  /// No description provided for @tapToSelectFile.
+  String get tapToSelectFile;
+
+  /// No description provided for @approvalRouteLabel.
+  String get approvalRouteLabel;
+
+  /// No description provided for @addStep.
+  String get addStep;
+
+  /// No description provided for @noApprovalRoute.
+  String get noApprovalRoute;
+
+  /// No description provided for @undoLabel.
+  String get undoLabel;
+
+  /// No description provided for @emailLabel.
+  String get emailLabel;
+
+  /// No description provided for @emailRequired.
+  String get emailRequired;
+
+  /// No description provided for @emailInvalid.
+  String get emailInvalid;
+
+  /// No description provided for @emailHelperText.
+  String get emailHelperText;
+
+  /// No description provided for @passwordLabel.
+  String get passwordLabel;
+
+  /// No description provided for @passwordRequired.
+  String get passwordRequired;
+
+  /// No description provided for @passwordMinLength.
+  String get passwordMinLength;
+
+  /// No description provided for @signInWithEmail.
+  String get signInWithEmail;
+
+  /// No description provided for @signInWithGoogle.
+  String get signInWithGoogle;
+
+  /// No description provided for @orDivider.
+  String get orDivider;
 }
 
 class _AppLocalizationsDelegate

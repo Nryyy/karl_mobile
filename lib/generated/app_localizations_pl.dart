@@ -450,4 +450,169 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get tryDifferentQuery =>
       'Spróbuj innego zapytania lub wyczyść filtry.';
+
+  @override
+  String selectedPhotos(Object count) => 'Wybrane zdjęcia ($count)';
+
+  @override
+  String get uploadToFirebase => 'Prześlij do Firebase';
+
+  @override
+  String get clearAll => 'Wyczyść wszystko';
+
+  @override
+  String get photoCameraAdded => 'Zdjęcie z aparatu dodane';
+
+  @override
+  String photoCameraError(Object error) => 'Błąd wyboru zdjęcia z aparatu: $error';
+
+  @override
+  String get photoGalleryAdded => 'Zdjęcie z galerii dodane';
+
+  @override
+  String photoGalleryError(Object error) => 'Błąd wyboru zdjęcia z galerii: $error';
+
+  @override
+  String photosAddedCount(Object count) => 'Dodano $count zdjęć z galerii';
+
+  @override
+  String get noPhotosToUpload => 'Brak zdjęć do przesłania';
+
+  @override
+  String photosUploadedSuccess(Object count) => 'Pomyślnie przesłano $count zdjęć do Firebase Storage';
+
+  @override
+  String photosUploadError(Object error) => 'Błąd przesyłania zdjęć: $error';
+
+  @override
+  String get takePhoto => 'Zrób zdjęcie';
+
+  @override
+  String get choosePhotoFromGallery => 'Wybierz zdjęcie z galerii';
+
+  @override
+  String get chooseMultiplePhotos => 'Wybierz kilka zdjęć';
+
+  @override
+  String qrCodeGenerationError(Object error) => 'Błąd generowania kodu QR: $error';
+
+  @override
+  String get qrCodeCopied => 'Kod QR skopiowano do schowka';
+
+  @override
+  String errorGeneric(Object error) => 'Błąd: $error';
+
+  @override
+  String get loadingError => 'Błąd ładowania';
+
+  @override
+  String get noQrCodes => 'Brak kodów QR';
+
+  @override
+  String get qrCodesHint => 'Generuj kody QR dla dokumentów,\naby zobaczyć je tutaj';
+
+  @override
+  String get noDocumentsHint => 'Dokumenty pojawią się tutaj po utworzeniu';
+
+  @override
+  String get qrValidationTitle => 'Kod QR walidacji';
+
+  @override
+  String get qrValidationDescription => 'Wygeneruj kod QR do walidacji dokumentu. Ten kod może być użyty do weryfikacji autentyczności dokumentu.';
+
+  @override
+  String get qrCodeLabel => 'Kod QR';
+
+  @override
+  String get qrCodePrefix => 'Kod QR:';
+
+  @override
+  String get sessionExpired => 'Sesja wygasła. Zaloguj się ponownie.';
+
+  @override
+  String get fileUploadFailed => 'Nie udało się przesłać pliku.';
+
+  @override
+  String get viewDocumentLabel => 'Podgląd dokumentu';
+
+  @override
+  String get enterDocumentTitle => 'Wprowadź tytuł dokumentu.';
+
+  @override
+  String selectApproverForStep(Object step) => 'Wybierz zatwierdzającego dla kroku $step.';
+
+  @override
+  String get documentCreatedAndUploaded => 'Dokument utworzony i plik przesłany.';
+
+  @override
+  String get documentCreatedFileNotUploaded => 'Dokument utworzony, ale plik nie został przesłany.';
+
+  @override
+  String get documentCreated => 'Dokument utworzony.';
+
+  @override
+  String get documentSaveFailed => 'Nie udało się zapisać dokumentu.';
+
+  @override
+  String get documentTitleLabel => 'Tytuł dokumentu';
+
+  @override
+  String get documentTitleHint => 'Wprowadź tytuł dokumentu';
+
+  @override
+  String get fileTypeLabel => 'Typ pliku';
+
+  @override
+  String get documentFileLabel => 'Plik dokumentu';
+
+  @override
+  String get removeFile => 'Usuń plik';
+
+  @override
+  String get tapToSelectFile => 'Kliknij, aby wybrać plik';
+
+  @override
+  String get approvalRouteLabel => 'Trasa zatwierdzania';
+
+  @override
+  String get addStep => 'Dodaj krok';
+
+  @override
+  String get noApprovalRoute => 'Brak trasy zatwierdzania';
+
+  @override
+  String get undoLabel => 'Cofnij';
+
+  @override
+  String get forgotPassword => 'Zapomniałeś hasła?';
+
+  @override
+  String get emailLabel => 'Adres email';
+
+  @override
+  String get emailRequired => 'Adres email jest wymagany';
+
+  @override
+  String get emailInvalid => 'Wprowadź prawidłowy adres email';
+
+  @override
+  String get emailHelperText => 'Nie wysyłamy spamu';
+
+  @override
+  String get passwordLabel => 'Hasło';
+
+  @override
+  String get passwordRequired => 'Hasło jest wymagane';
+
+  @override
+  String get passwordMinLength => 'Hasło musi mieć co najmniej 8 znaków';
+
+  @override
+  String get signInWithEmail => 'Zaloguj się przez email';
+
+  @override
+  String get signInWithGoogle => 'Zaloguj się przez Google';
+
+  @override
+  String get orDivider => 'lub';
 }

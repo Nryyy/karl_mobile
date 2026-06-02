@@ -444,4 +444,169 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tryDifferentQuery => 'Try a different query or clear filters.';
+
+  @override
+  String selectedPhotos(Object count) => 'Selected photos ($count)';
+
+  @override
+  String get uploadToFirebase => 'Upload to Firebase';
+
+  @override
+  String get clearAll => 'Clear all';
+
+  @override
+  String get photoCameraAdded => 'Photo from camera added';
+
+  @override
+  String photoCameraError(Object error) => 'Error picking photo from camera: $error';
+
+  @override
+  String get photoGalleryAdded => 'Photo from gallery added';
+
+  @override
+  String photoGalleryError(Object error) => 'Error picking photo from gallery: $error';
+
+  @override
+  String photosAddedCount(Object count) => '$count photos from gallery added';
+
+  @override
+  String get noPhotosToUpload => 'No photos to upload';
+
+  @override
+  String photosUploadedSuccess(Object count) => 'Successfully uploaded $count photos to Firebase Storage';
+
+  @override
+  String photosUploadError(Object error) => 'Error uploading photos: $error';
+
+  @override
+  String get takePhoto => 'Take photo';
+
+  @override
+  String get choosePhotoFromGallery => 'Choose photo from gallery';
+
+  @override
+  String get chooseMultiplePhotos => 'Choose multiple photos';
+
+  @override
+  String qrCodeGenerationError(Object error) => 'QR code generation error: $error';
+
+  @override
+  String get qrCodeCopied => 'QR code copied to clipboard';
+
+  @override
+  String errorGeneric(Object error) => 'Error: $error';
+
+  @override
+  String get loadingError => 'Loading error';
+
+  @override
+  String get noQrCodes => 'No QR codes';
+
+  @override
+  String get qrCodesHint => 'Generate QR codes for documents\nto see them here';
+
+  @override
+  String get noDocumentsHint => 'Documents will appear here after creation';
+
+  @override
+  String get qrValidationTitle => 'QR validation code';
+
+  @override
+  String get qrValidationDescription => 'Generate a QR code to validate the document. This code can be used to verify the authenticity of the document.';
+
+  @override
+  String get qrCodeLabel => 'QR code';
+
+  @override
+  String get qrCodePrefix => 'QR code:';
+
+  @override
+  String get sessionExpired => 'Session expired. Please sign in again.';
+
+  @override
+  String get fileUploadFailed => 'Failed to upload file.';
+
+  @override
+  String get viewDocumentLabel => 'Document preview';
+
+  @override
+  String get enterDocumentTitle => 'Enter document title.';
+
+  @override
+  String selectApproverForStep(Object step) => 'Select approver for step $step.';
+
+  @override
+  String get documentCreatedAndUploaded => 'Document created and file uploaded.';
+
+  @override
+  String get documentCreatedFileNotUploaded => 'Document created, but file not uploaded.';
+
+  @override
+  String get documentCreated => 'Document created.';
+
+  @override
+  String get documentSaveFailed => 'Failed to save document.';
+
+  @override
+  String get documentTitleLabel => 'Document title';
+
+  @override
+  String get documentTitleHint => 'Enter document title';
+
+  @override
+  String get fileTypeLabel => 'File type';
+
+  @override
+  String get documentFileLabel => 'Document file';
+
+  @override
+  String get removeFile => 'Remove file';
+
+  @override
+  String get tapToSelectFile => 'Tap to select a file';
+
+  @override
+  String get approvalRouteLabel => 'Approval route';
+
+  @override
+  String get addStep => 'Add step';
+
+  @override
+  String get noApprovalRoute => 'No approval route';
+
+  @override
+  String get undoLabel => 'Undo';
+
+  @override
+  String get forgotPassword => 'Forgot Password?';
+
+  @override
+  String get emailLabel => 'Email address';
+
+  @override
+  String get emailRequired => 'Email address is required';
+
+  @override
+  String get emailInvalid => 'Enter a valid email address';
+
+  @override
+  String get emailHelperText => 'We won\'t send spam';
+
+  @override
+  String get passwordLabel => 'Password';
+
+  @override
+  String get passwordRequired => 'Password is required';
+
+  @override
+  String get passwordMinLength => 'Password must be at least 8 characters';
+
+  @override
+  String get signInWithEmail => 'Sign in with email';
+
+  @override
+  String get signInWithGoogle => 'Sign in with Google';
+
+  @override
+  String get orDivider => 'or';
 }
