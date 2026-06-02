@@ -5,7 +5,7 @@ import 'package:karl_mobile/generated/app_localizations.dart';
 
 import '../../data/documents_repository.dart';
 import '../../domain/document_models.dart';
-import '../pages/documents_page.dart';
+import '../widgets/document_card_widget.dart';
 import '../../providers/document_actions_provider.dart';
 
 class ArchiveNotifier extends AsyncNotifier<List<DocumentListItem>> {
