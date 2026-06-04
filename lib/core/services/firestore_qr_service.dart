@@ -9,6 +9,7 @@ class QRValidationData {
   final String documentTitle;
   final String qrCode;
   final String generatedBy;
+  final String userId;
   final DateTime generatedAt;
   final DateTime? validatedAt;
   final String? validatedBy;
@@ -20,6 +21,7 @@ class QRValidationData {
     required this.documentTitle,
     required this.qrCode,
     required this.generatedBy,
+    this.userId = '',
     required this.generatedAt,
     this.validatedAt,
     this.validatedBy,
@@ -33,6 +35,7 @@ class QRValidationData {
       'documentTitle': documentTitle,
       'qrCode': qrCode,
       'generatedBy': generatedBy,
+      'userId': userId,
       'generatedAt': generatedAt.toIso8601String(),
       'validatedAt': validatedAt?.toIso8601String(),
       'validatedBy': validatedBy,
@@ -47,6 +50,7 @@ class QRValidationData {
       documentTitle: json['documentTitle'] as String,
       qrCode: json['qrCode'] as String,
       generatedBy: json['generatedBy'] as String,
+      userId: (json['userId'] as String?) ?? '',
       generatedAt: DateTime.parse(json['generatedAt'] as String),
       validatedAt: json['validatedAt'] != null
           ? DateTime.parse(json['validatedAt'] as String)
@@ -91,6 +95,7 @@ class FirestoreQRService {
         documentTitle: documentTitle,
         qrCode: qrCode,
         generatedBy: generatedBy,
+        userId: user.uid,
         generatedAt: DateTime.now(),
       );
 
@@ -200,18 +205,39 @@ class FirestoreQRService {
       return Stream.value([]);
     }
 
-    return _qrCollection
-        .where('generatedBy', isEqualTo: user.uid)
+    final byUid = _qrCollection
+        .where('userId', isEqualTo: user.uid)
         .orderBy('generatedAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(
-                (doc) => QRValidationData.fromJson(
-                  doc.data() as Map<String, dynamic>,
-                ),
-              )
-              .toList(),
-        );
+        .snapshots();
+
+    final displayName = user.displayName?.trim() ?? '';
+    final byName = displayName.isNotEmpty
+        ? _qrCollection
+            .where('generatedBy', isEqualTo: displayName)
+            .orderBy('generatedAt', descending: true)
+            .snapshots()
+        : null;
+
+    if (byName == null) {
+      return byUid.map(
+        (s) => s.docs
+            .map((d) => QRValidationData.fromJson(d.data() as Map<String, dynamic>))
+            .toList(),
+      );
+    }
+
+    return byUid.asyncExpand((uidSnap) {
+      return byName.map((nameSnap) {
+        final seen = <String>{};
+        final merged = <QRValidationData>[];
+        for (final doc in [...uidSnap.docs, ...nameSnap.docs]) {
+          if (seen.add(doc.id)) {
+            merged.add(QRValidationData.fromJson(doc.data() as Map<String, dynamic>));
+          }
+        }
+        merged.sort((a, b) => b.generatedAt.compareTo(a.generatedAt));
+        return merged;
+      });
+    });
   }
 }

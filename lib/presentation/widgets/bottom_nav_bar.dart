@@ -40,10 +40,10 @@ class BottomNavBar extends StatelessWidget {
         route: '/approvals',
       ),
       _NavItem(
-        label: loc?.archive ?? 'Archive',
-        icon: Icons.archive_outlined,
-        selectedIcon: Icons.archive,
-        route: '/archive',
+        label: loc?.templates ?? 'Templates',
+        icon: Icons.article_outlined,
+        selectedIcon: Icons.article,
+        route: '/templates',
       ),
       _NavItem(
         label: loc?.account ?? 'Account',
@@ -64,8 +64,8 @@ class BottomNavBar extends StatelessWidget {
       indicatorShape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      height: 80,
+      labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+      height: 64,
       destinations: items.map((item) {
         return NavigationDestination(
           icon: Icon(item.icon),

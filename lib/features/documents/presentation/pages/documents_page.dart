@@ -42,7 +42,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
   String _searchQuery = '';
   String _selectedStatusFilter = 'all';
   bool _isSigningOut = false;
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   bool _isUploadingImage = false;
 
   @override

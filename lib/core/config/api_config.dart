@@ -1,6 +1,10 @@
 /// API configuration for the application.
+import 'package:flutter/foundation.dart';
+
 abstract final class ApiConfig {
   /// Base URL for the documents API.
+  /// Use HTTPS for localhost (server listens HTTPS). In debug the HTTP client
+  /// accepts self-signed localhost certificates so local testing works.
   static const String baseUrl = 'https://localhost:7229';
 
   /// API version prefix.

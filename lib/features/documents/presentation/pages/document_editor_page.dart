@@ -214,6 +214,8 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
               );
           if (!mounted) return;
           _showMessage(AppLocalizations.of(context)?.documentCreatedAndUploaded ?? 'Document created and file uploaded.');
+          await ref.read(documentsProvider.notifier).refresh();
+          if (!mounted) return;
           GoRouter.of(context).go('/documents');
         } on DocumentsRepositoryException catch (e) {
           if (!mounted) return;
@@ -223,12 +225,16 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
             _showMessage(AppLocalizations.of(context)?.documentCreatedFileNotUploaded ?? 'Document created, but file not uploaded.');
           } else {
             _showMessage(e.message);
+            await ref.read(documentsProvider.notifier).refresh();
+            if (!mounted) return;
             GoRouter.of(context).go('/documents');
           }
         }
       } else {
         if (!mounted) return;
         _showMessage(AppLocalizations.of(context)?.documentCreated ?? 'Document created.');
+        await ref.read(documentsProvider.notifier).refresh();
+        if (!mounted) return;
         GoRouter.of(context).go('/documents');
       }
     } on DocumentsRepositoryException catch (e) {
@@ -303,7 +309,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
               _FieldLabel(AppLocalizations.of(context)?.fileTypeLabel ?? 'File type'),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                value: _selectedFileType,
+                initialValue: _selectedFileType,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: colorScheme.surfaceContainerLowest,
@@ -482,30 +488,36 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: colorScheme.tertiary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: colorScheme.tertiary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.route_rounded,
+                            color: colorScheme.tertiary,
+                            size: 20,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.route_rounded,
-                          color: colorScheme.tertiary,
-                          size: 20,
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            AppLocalizations.of(context)?.approvalRouteLabel ?? 'Approval route',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        AppLocalizations.of(context)?.approvalRouteLabel ?? 'Approval route',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   if (_isLoadingUsers)
                     SizedBox(
                       width: 18,
@@ -818,7 +830,7 @@ class _ApprovalStepRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: DropdownButtonFormField<UserProfile>(
-              value: selectedUser,
+              initialValue: selectedUser,
               hint: Text(
                 AppLocalizations.of(context)?.chooseApprover ??
                     'Choose approver',

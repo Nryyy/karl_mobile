@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:karl_mobile/generated/app_localizations.dart';
@@ -16,6 +15,8 @@ import '../../features/documents/presentation/pages/archive_page.dart';
 import '../../features/documents/domain/document_models.dart';
 import '../../features/navigation/presentation/pages/account_page.dart';
 import '../../features/navigation/presentation/pages/dashboard_page.dart';
+import '../../features/documents/presentation/pages/qr_validation_history_page.dart';
+import '../../features/documents/presentation/pages/templates_page.dart';
 import '../../features/navigation/presentation/pages/section_page.dart';
 import '../../features/navigation/presentation/pages/settings_page.dart';
 import '../../presentation/widgets/bottom_nav_bar.dart';
@@ -66,14 +67,15 @@ final GoRouter appRouter = GoRouter(
     ),
     ShellRoute(
       builder: (context, state, child) {
-        return Column(
-          children: <Widget>[
-            Expanded(child: child),
-            BottomNavBar(
+        return Scaffold(
+          body: child,
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: BottomNavBar(
               currentRoute: state.uri.toString(),
               onNavigate: (route) => GoRouter.of(context).go(route),
             ),
-          ],
+          ),
         );
       },
       routes: <RouteBase>[
@@ -132,12 +134,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/templates',
           name: 'templates',
-          builder: (context, state) => SectionPage(
-            title: AppLocalizations.of(context)?.templates ?? 'Templates',
-            icon: Icons.article_outlined,
-            description:
-                AppLocalizations.of(context)?.templatesDescription ??
-                'Here you can store templates for your documents.',
+          builder: (context, state) => TemplatesPage(
+            repository: HttpDocumentsRepository(
+              accessTokenProvider: _firebaseAccessToken,
+            ),
           ),
         ),
         GoRoute(
@@ -166,6 +166,11 @@ final GoRouter appRouter = GoRouter(
           path: '/account',
           name: 'account',
           builder: (context, state) => const AccountPage(),
+        ),
+        GoRoute(
+          path: '/qr-history',
+          name: 'qr_history',
+          builder: (context, state) => const QRValidationHistoryPage(),
         ),
         GoRoute(
           path: '/settings',

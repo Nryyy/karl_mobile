@@ -64,7 +64,7 @@ class ApprovalsPage extends ConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
               itemCount: docs.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 return _ApprovalCard(
                   document: docs[index],
@@ -321,6 +321,7 @@ class ApprovalDetailPage extends ConsumerStatefulWidget {
 
 class _ApprovalDetailPageState extends ConsumerState<ApprovalDetailPage> {
   bool _isProcessing = false;
+  bool _actionDone = false;
 
   @override
   Widget build(BuildContext context) {
@@ -407,7 +408,7 @@ class _ApprovalDetailPageState extends ConsumerState<ApprovalDetailPage> {
                 const SizedBox(height: 32),
 
                 // Action buttons
-                if (_isPendingForCurrentUser)
+                if (_isPendingForCurrentUser && !_actionDone)
                   Row(
                     children: [
                       Expanded(
@@ -448,7 +449,13 @@ class _ApprovalDetailPageState extends ConsumerState<ApprovalDetailPage> {
                 // Google Drive preview
                 if (document.webViewLink.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  GoogleDrivePreview(webViewLink: document.webViewLink),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: SizedBox(
+                      height: 500,
+                      child: GoogleDrivePreview(webViewLink: document.webViewLink),
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -459,17 +466,26 @@ class _ApprovalDetailPageState extends ConsumerState<ApprovalDetailPage> {
     final document = widget.args?.document;
     if (document == null) return false;
     final flow = document.approvalFlow;
-    if (!flow.isActive) return false;
-    if (flow.steps.isEmpty) return false;
-    if (flow.currentStep >= flow.steps.length) return false;
+    if (!flow.isActive || flow.steps.isEmpty) return false;
 
-    final currentStep = flow.steps[flow.currentStep];
-    final statusId = currentStep.status.id.toLowerCase();
-    final statusName = currentStep.status.name.toLowerCase();
+    final userEmail = widget.args?.userEmail ?? '';
+    if (userEmail.isEmpty) return false;
 
-    return statusId == 'pending' ||
+    final myStep = flow.steps
+        .where((s) => s.approverEmail.toLowerCase() == userEmail.toLowerCase())
+        .firstOrNull;
+    if (myStep == null) return false;
+
+    final statusId = myStep.status.id.toLowerCase();
+    final statusName = myStep.status.name.toLowerCase();
+    final isPending =
+        statusId == 'pending' ||
         statusName.contains('pending') ||
         statusName.contains('очіку');
+    if (!isPending) return false;
+
+    return myStep.stepOrder == flow.currentStep ||
+        myStep.stepOrder == flow.currentStep + 1;
   }
 
   Future<void> _sign(
@@ -487,6 +503,7 @@ class _ApprovalDetailPageState extends ConsumerState<ApprovalDetailPage> {
             userEmail: userEmail,
           );
       if (!mounted) return;
+      setState(() => _actionDone = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -535,6 +552,7 @@ class _ApprovalDetailPageState extends ConsumerState<ApprovalDetailPage> {
             comment: comment.isNotEmpty ? comment : null,
           );
       if (!mounted) return;
+      setState(() => _actionDone = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

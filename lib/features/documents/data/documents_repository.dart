@@ -65,6 +65,18 @@ abstract class DocumentsRepository {
     String? comment,
   });
 
+  /// Returns all active document templates.
+  Future<List<DocumentTemplate>> fetchTemplates({String? organizationId});
+
+  /// Downloads a template file by [templateId]. Returns raw bytes.
+  Future<Uint8List> downloadTemplate(String templateId);
+
+  /// Returns unread notifications for [userId].
+  Future<List<AppNotification>> fetchUnreadNotifications(String userId);
+
+  /// Marks a notification as read.
+  Future<void> markNotificationAsRead(String notificationId);
+
   /// Archives a document (soft archive).
   Future<void> archiveDocument(String documentId);
 
@@ -498,6 +510,122 @@ class HttpDocumentsRepository implements DocumentsRepository {
   }
 
   @override
+  Future<List<DocumentTemplate>> fetchTemplates({String? organizationId}) async {
+    final query = organizationId != null && organizationId.isNotEmpty
+        ? '?organizationId=$organizationId'
+        : '';
+    final response = await _apiClient.get('/DocumentTemplates/active$query');
+
+    if (response.statusCode == 401) {
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
+    }
+
+    if (response.statusCode != 200) {
+      developer.log(
+        'DocumentTemplates API returned ${response.statusCode}.',
+        name: 'karl.templates',
+        error: response.body,
+      );
+      throw DocumentsRepositoryException(
+        'Не вдалося завантажити шаблони (${response.statusCode}).',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) return const [];
+
+    return decoded
+        .map(
+          (value) => DocumentTemplate.fromJson(
+            Map<String, dynamic>.from(value as Map),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<Uint8List> downloadTemplate(String templateId) async {
+    final response = await _apiClient.get(
+      '/DocumentTemplates/$templateId/download',
+    );
+
+    if (response.statusCode == 401) {
+      throw DocumentsRepositoryException(
+        'Сесія авторизації недійсна. Увійдіть ще раз.',
+      );
+    }
+
+    if (response.statusCode == 404) {
+      throw DocumentsRepositoryException('Шаблон не знайдено.');
+    }
+
+    if (response.statusCode != 200) {
+      throw DocumentsRepositoryException(
+        'Не вдалося завантажити файл шаблону (${response.statusCode}).',
+      );
+    }
+
+    return response.bodyBytes;
+  }
+
+  @override
+  Future<List<AppNotification>> fetchUnreadNotifications(String userId) async {
+    try {
+      final response = await _apiClient.get(
+        '/Notifications/user/$userId/unread',
+      );
+
+      if (response.statusCode == 401) {
+        throw DocumentsRepositoryException(
+          'Сесія авторизації недійсна. Увійдіть ще раз.',
+        );
+      }
+
+      if (response.statusCode != 200) {
+        developer.log(
+          'Notifications API returned ${response.statusCode}.',
+          name: 'karl.notifications',
+          error: response.body,
+        );
+        return const [];
+      }
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! List) return const [];
+
+      return decoded
+          .map(
+            (value) => AppNotification.fromJson(
+              Map<String, dynamic>.from(value as Map),
+            ),
+          )
+          .toList(growable: false);
+    } catch (e) {
+      developer.log(
+        'Notifications API request failed.',
+        name: 'karl.notifications',
+        error: e,
+      );
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> markNotificationAsRead(String notificationId) async {
+    try {
+      await _apiClient.put('/Notifications/$notificationId/mark-as-read');
+    } catch (e) {
+      developer.log(
+        'Mark-as-read API request failed.',
+        name: 'karl.notifications',
+        error: e,
+      );
+    }
+  }
+
+  @override
   Future<void> archiveDocument(String documentId) async {
     final response = await _apiClient.put(
       '/Documents/$documentId',
@@ -641,8 +769,9 @@ class HttpDocumentsRepository implements DocumentsRepository {
           error: response.body,
         );
         final cached = await LocalStorage.loadCachedDocuments();
-        if (cached.isNotEmpty)
+        if (cached.isNotEmpty) {
           return _filterArchivedDocuments(cached, archived: archived);
+        }
         throw DocumentsRepositoryException(
           'Не вдалося завантажити документи (${response.statusCode}).',
         );
@@ -674,8 +803,9 @@ class HttpDocumentsRepository implements DocumentsRepository {
         error: e,
       );
       final cached = await LocalStorage.loadCachedDocuments();
-      if (cached.isNotEmpty)
+      if (cached.isNotEmpty) {
         return _filterArchivedDocuments(cached, archived: archived);
+      }
       rethrow;
     }
   }

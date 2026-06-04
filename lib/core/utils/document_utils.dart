@@ -1,4 +1,5 @@
 /// Utilities for document-related operations.
+library;
 
 /// Checks if a status name matches any of the provided keywords.
 ///

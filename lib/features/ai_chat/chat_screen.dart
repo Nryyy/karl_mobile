@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:karl_mobile/generated/app_localizations.dart';
 
 import 'ai_chat_service.dart';
 import 'models/ai_chat_response.dart';
 import 'models/ai_chat_request.dart';
-import 'package:flutter/services.dart';
-import 'package:karl_mobile/generated/app_localizations.dart';
 
 class ChatScreen extends StatefulWidget {
   final AiChatService service;
@@ -76,42 +77,76 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)?.aiChatTitle ?? 'AI Chat'),
       ),
+      backgroundColor: const Color(0xFFF5F6FA),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
               controller: _scroll,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               itemCount: _messages.length,
               itemBuilder: (context, i) {
                 final entry = _messages[i];
                 final m = entry.message;
                 final isUser = m.role == 'user';
                 final isSystem = m.role == 'system';
-                final bg = isSystem
-                    ? Colors.red.shade50
+
+                final userBubbleColor = Theme.of(context).colorScheme.primary;
+                final aiBubbleColor = Colors.white;
+                final systemBubbleColor = Colors.red.shade50;
+
+                final bubbleColor = isSystem
+                    ? systemBubbleColor
                     : isUser
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey.shade100;
-                final textColor = isUser ? Colors.white : Colors.black87;
+                    ? userBubbleColor
+                    : aiBubbleColor;
+
+                final userRadius = const BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
+                  bottomLeft: Radius.circular(18),
+                  bottomRight: Radius.circular(4),
+                );
+                final aiRadius = const BorderRadius.only(
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(18),
+                  bottomLeft: Radius.circular(18),
+                  bottomRight: Radius.circular(18),
+                );
+                final bubbleRadius = isUser ? userRadius : aiRadius;
+
+                void copyContent() {
+                  Clipboard.setData(ClipboardData(text: m.content));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppLocalizations.of(context)?.copied ?? 'Copied',
+                      ),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                }
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisAlignment: isUser
                         ? MainAxisAlignment.end
                         : MainAxisAlignment.start,
                     children: [
                       if (!isUser) ...[
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.secondary.withOpacity(0.2),
-                          child: const Icon(
-                            Icons.smart_toy,
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.smart_toy_rounded,
                             size: 18,
-                            color: Colors.black54,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -119,143 +154,228 @@ class _ChatScreenState extends State<ChatScreen> {
                       Flexible(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width * 0.75,
+                            maxWidth: MediaQuery.of(context).size.width * 0.78,
                           ),
-                          child: Material(
-                            elevation: 0.5,
-                            borderRadius: BorderRadius.circular(12),
-                            color: bg,
-                            child: InkWell(
-                              onLongPress: () {
-                                Clipboard.setData(
-                                  ClipboardData(text: m.content),
-                                );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      AppLocalizations.of(context)?.copied ??
-                                          'Copied',
-                                    ),
+                          child: GestureDetector(
+                            onLongPress: copyContent,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: bubbleColor,
+                                borderRadius: bubbleRadius,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.06),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
                                   ),
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
+                                ],
+                              ),
+                              padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (isUser)
                                     Text(
                                       m.content,
-                                      style: TextStyle(color: textColor),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          _formatTime(entry.time),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: Colors.grey.shade600,
-                                              ),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        height: 1.4,
+                                      ),
+                                    )
+                                  else
+                                    MarkdownBody(
+                                      data: m.content,
+                                      styleSheet: MarkdownStyleSheet(
+                                        p: const TextStyle(
+                                          color: Color(0xFF1A1A2E),
+                                          fontSize: 15,
+                                          height: 1.5,
                                         ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.copy,
-                                            size: 18,
-                                            color: Colors.grey.shade600,
+                                        strong: const TextStyle(
+                                          color: Color(0xFF1A1A2E),
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15,
+                                        ),
+                                        em: const TextStyle(
+                                          color: Color(0xFF1A1A2E),
+                                          fontStyle: FontStyle.italic,
+                                          fontSize: 15,
+                                        ),
+                                        code: TextStyle(
+                                          backgroundColor: Colors.grey.shade200,
+                                          color: const Color(0xFF5C2D91),
+                                          fontFamily: 'monospace',
+                                          fontSize: 13,
+                                        ),
+                                        codeblockDecoration: BoxDecoration(
+                                          color: const Color(0xFF1E1E2E),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        codeblockPadding: const EdgeInsets.all(12),
+                                        blockquoteDecoration: BoxDecoration(
+                                          border: Border(
+                                            left: BorderSide(
+                                              color: Theme.of(context).colorScheme.primary,
+                                              width: 3,
+                                            ),
                                           ),
-                                          onPressed: () {
-                                            Clipboard.setData(
-                                              ClipboardData(text: m.content),
-                                            );
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  AppLocalizations.of(
-                                                        context,
-                                                      )?.copied ??
-                                                      'Copied',
-                                                ),
-                                              ),
-                                            );
-                                          },
                                         ),
-                                      ],
+                                        blockquotePadding: const EdgeInsets.only(left: 10),
+                                        listBullet: const TextStyle(
+                                          color: Color(0xFF1A1A2E),
+                                          fontSize: 15,
+                                        ),
+                                        h1: const TextStyle(
+                                          color: Color(0xFF1A1A2E),
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        h2: const TextStyle(
+                                          color: Color(0xFF1A1A2E),
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        h3: const TextStyle(
+                                          color: Color(0xFF1A1A2E),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                     ),
-                                  ],
-                                ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          _formatTime(entry.time),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: isUser
+                                                ? Colors.white70
+                                                : Colors.grey.shade500,
+                                          ),
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: copyContent,
+                                        child: Icon(
+                                          Icons.copy_rounded,
+                                          size: 14,
+                                          color: isUser
+                                              ? Colors.white70
+                                              : Colors.grey.shade500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ),
                       ),
-                      if (isUser) const SizedBox(width: 8),
-                      if (isUser)
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary.withOpacity(0.2),
+                      if (isUser) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
                           child: const Icon(
-                            Icons.person,
+                            Icons.person_rounded,
                             size: 18,
                             color: Colors.white,
                           ),
                         ),
+                      ],
                     ],
                   ),
                 );
               },
             ),
           ),
-          SafeArea(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
-                    ),
-                    child: TextField(
-                      controller: _ctrl,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _send(),
-                      decoration: InputDecoration(
-                        hintText:
-                            AppLocalizations.of(context)?.typeMessageHint ??
-                            'Type a message...',
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: _isSending
-                      ? const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(),
-                          ),
-                        )
-                      : IconButton(
-                          onPressed: _send,
-                          icon: const Icon(Icons.send),
-                        ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
                 ),
               ],
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F6FA),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: TextField(
+                          controller: _ctrl,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _send(),
+                          maxLines: null,
+                          decoration: InputDecoration(
+                            hintText:
+                                AppLocalizations.of(context)?.typeMessageHint ??
+                                'Type a message...',
+                            hintStyle: TextStyle(color: Colors.grey.shade500),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: _isSending
+                          ? const SizedBox(
+                              key: ValueKey('loading'),
+                              width: 44,
+                              height: 44,
+                              child: Padding(
+                                padding: EdgeInsets.all(10),
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : Material(
+                              key: const ValueKey('send'),
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(22),
+                              child: InkWell(
+                                onTap: _send,
+                                borderRadius: BorderRadius.circular(22),
+                                child: const SizedBox(
+                                  width: 44,
+                                  height: 44,
+                                  child: Icon(
+                                    Icons.send_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

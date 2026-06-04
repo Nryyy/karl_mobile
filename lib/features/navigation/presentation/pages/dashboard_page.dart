@@ -1,11 +1,15 @@
+import 'dart:developer' as developer;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:karl_mobile/features/ai_chat/ai_chat_service.dart';
 import 'package:karl_mobile/features/ai_chat/chat_screen.dart';
 import 'package:karl_mobile/generated/app_localizations.dart';
+import 'package:karl_mobile/core/config/api_config.dart';
 
 import '../../../documents/data/documents_repository.dart';
+import '../../../documents/domain/document_models.dart';
 import '../../../documents/domain/document_visibility.dart';
 
 /// Mobile-first dashboard page that summarizes the user's documents.
@@ -20,11 +24,13 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   late final Future<_DashboardStats> _statsFuture;
+  late final Future<List<AppNotification>> _notificationsFuture;
 
   @override
   void initState() {
     super.initState();
     _statsFuture = _loadStats();
+    _notificationsFuture = _loadNotifications();
   }
 
   Future<_DashboardStats> _loadStats() async {
@@ -58,27 +64,50 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  Future<List<AppNotification>> _loadNotifications() async {
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null) return const [];
+    final email = firebaseUser.email ?? '';
+    try {
+      final profile = await widget.repository.fetchCurrentUser(email);
+      developer.log(
+        'Loading notifications for userId=${profile.id}',
+        name: 'karl.dashboard',
+      );
+      final notifications =
+          await widget.repository.fetchUnreadNotifications(profile.id);
+      developer.log(
+        'Loaded ${notifications.length} notifications',
+        name: 'karl.dashboard',
+      );
+      return notifications;
+    } catch (e, st) {
+      developer.log(
+        'Failed to load notifications',
+        name: 'karl.dashboard',
+        error: e,
+        stackTrace: st,
+      );
+      return const [];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final String userName = _resolveUserName();
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    // Add extra bottom padding equal to navigation bar height to avoid
+    // small leftover overflows on devices where reserved space differs.
+    const double _navBarHeight = 64.0;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)?.dashboard ?? 'Dashboard'),
-        actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: FilledButton.icon(
-              onPressed: () => GoRouter.of(context).go('/documents/new'),
-              icon: const Icon(Icons.add_circle_outline, size: 18),
-              label: Text(
-                AppLocalizations.of(context)?.newDocument ?? 'New document',
-              ),
-            ),
-          ),
-        ],
+        actions: const <Widget>[],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: EdgeInsets.fromLTRB(16, 12, 16, 24 + bottomPadding + _navBarHeight),
         children: <Widget>[
           _AnimatedGreeting(userName: userName),
           const SizedBox(height: 20),
@@ -95,7 +124,10 @@ class _DashboardPageState extends State<DashboardPage> {
             onOpenTemplates: () => GoRouter.of(context).go('/templates'),
           ),
           const SizedBox(height: 14),
-          const _ActivityCard(),
+          _ActivityCard(
+            notificationsFuture: _notificationsFuture,
+            repository: widget.repository,
+          ),
           const SizedBox(height: 14),
           const _GoogleDriveCard(),
           const SizedBox(height: 14),
@@ -185,9 +217,9 @@ class _StatsGrid extends StatelessWidget {
           crossAxisCount: crossAxisCount,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
+          mainAxisSpacing: 8,
           crossAxisSpacing: 12,
-          childAspectRatio: crossAxisCount == 4 ? 2.2 : 1.9,
+          childAspectRatio: crossAxisCount == 4 ? 3.0 : 2.8,
           children: <Widget>[
             _StatTile(
               label: AppLocalizations.of(context)?.statsWaiting ?? 'Waiting',
@@ -257,16 +289,16 @@ class _StatTile extends StatelessWidget {
       label: '$label: $value',
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: valueColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 20, color: valueColor),
+                child: Icon(icon, size: 18, color: valueColor),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -280,10 +312,10 @@ class _StatTile extends StatelessWidget {
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 1),
                     Text(
                       value,
-                      style: Theme.of(context).textTheme.headlineSmall
+                      style: Theme.of(context).textTheme.titleMedium
                           ?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: valueColor,
@@ -354,39 +386,158 @@ class _QuickActionsCard extends StatelessWidget {
   }
 }
 
-class _ActivityCard extends StatelessWidget {
-  const _ActivityCard();
+class _ActivityCard extends StatefulWidget {
+  const _ActivityCard({
+    required this.notificationsFuture,
+    required this.repository,
+  });
+
+  final Future<List<AppNotification>> notificationsFuture;
+  final DocumentsRepository repository;
+
+  @override
+  State<_ActivityCard> createState() => _ActivityCardState();
+}
+
+class _ActivityCardState extends State<_ActivityCard> {
+  late List<AppNotification> _notifications = const [];
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.notificationsFuture.then((list) {
+      if (mounted) setState(() { _notifications = list; _loaded = true; });
+    });
+  }
+
+  Future<void> _markRead(AppNotification n) async {
+    await widget.repository.markNotificationAsRead(n.id);
+    if (mounted) {
+      setState(() {
+        _notifications = _notifications.where((x) => x.id != n.id).toList();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final loc = AppLocalizations.of(context);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              AppLocalizations.of(context)?.activityTitle ?? 'Activity',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    loc?.activityTitle ?? 'Activity',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (_notifications.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.error,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${_notifications.length}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onError,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 2),
             Text(
-              AppLocalizations.of(context)?.activitySubtitle ??
-                  'Latest notifications',
+              loc?.activitySubtitle ?? 'Latest notifications',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)?.noNotifications ??
-                  'No notifications',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            const SizedBox(height: 12),
+            if (!_loaded)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            else if (_notifications.isEmpty)
+              Text(
+                loc?.noNotifications ?? 'No notifications',
+                style: Theme.of(context).textTheme.bodyLarge,
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _notifications.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final n = _notifications[index];
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      _iconForType(n.type),
+                      color: n.priority == 'high'
+                          ? colorScheme.error
+                          : colorScheme.primary,
+                    ),
+                    title: Text(
+                      n.message,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: n.relatedDocumentTitle.isNotEmpty
+                        ? Text(
+                            n.relatedDocumentTitle,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        : null,
+                    trailing: IconButton(
+                      icon: const Icon(Icons.check, size: 18),
+                      tooltip: 'Позначити як прочитане',
+                      onPressed: () => _markRead(n),
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),
     );
+  }
+
+  IconData _iconForType(String type) {
+    return switch (type.toLowerCase()) {
+      'approval' => Icons.approval_outlined,
+      'rejection' => Icons.cancel_outlined,
+      'signature' => Icons.draw_outlined,
+      'system' => Icons.info_outline,
+      _ => Icons.notifications_outlined,
+    };
   }
 }
 
@@ -509,7 +660,7 @@ class _HelpCard extends StatelessWidget {
                   if (user != null) token = await user.getIdToken();
 
                   final service = AiChatService(
-                    baseUrl: 'https://localhost:7229',
+                    baseUrl: ApiConfig.baseUrl,
                   );
                   if (!context.mounted) return;
                   Navigator.of(context).push(

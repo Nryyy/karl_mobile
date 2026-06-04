@@ -102,12 +102,19 @@ class AccountPage extends StatelessWidget {
                 ),
                 const Divider(height: 1, indent: 56),
                 _AccountTile(
+                  icon: Icons.archive_outlined,
+                  title: AppLocalizations.of(context)?.archive ?? 'Archive',
+                  subtitle: 'Архів документів',
+                  onTap: () => context.push('/archive'),
+                ),
+                const Divider(height: 1, indent: 56),
+                _AccountTile(
                   icon: Icons.settings_outlined,
                   title: AppLocalizations.of(context)?.settings ?? 'Settings',
                   subtitle:
                       AppLocalizations.of(context)?.settingsSubtitle ??
                       'Theme, language, preferences',
-                  onTap: () => context.go('/settings'),
+                  onTap: () => context.push('/settings'),
                 ),
               ],
             ),
@@ -123,12 +130,19 @@ class AccountPage extends StatelessWidget {
             child: Column(
               children: [
                 _AccountTile(
+                  icon: Icons.qr_code_scanner_outlined,
+                  title: 'Історія QR валідацій',
+                  subtitle: 'Перегляд відсканованих QR-кодів',
+                  onTap: () => context.push('/qr-history'),
+                ),
+                const Divider(height: 1, indent: 56),
+                _AccountTile(
                   icon: Icons.help_outline,
                   title: AppLocalizations.of(context)?.help ?? 'Help',
                   subtitle:
                       AppLocalizations.of(context)?.helpDescription ??
                       'Support, FAQ and useful resources.',
-                  onTap: () => context.go('/help'),
+                  onTap: () => context.push('/help'),
                 ),
                 const Divider(height: 1, indent: 56),
                 _AccountTile(
@@ -138,7 +152,7 @@ class AccountPage extends StatelessWidget {
                   subtitle:
                       AppLocalizations.of(context)?.adminDescription ??
                       'Administration tools for the system.',
-                  onTap: () => context.go('/admin'),
+                  onTap: () => context.push('/admin'),
                 ),
               ],
             ),

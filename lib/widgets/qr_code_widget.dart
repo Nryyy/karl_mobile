@@ -32,14 +32,18 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
   @override
   void initState() {
     super.initState();
-    _loadExistingQR();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadExistingQR();
+      }
+    });
   }
 
   Future<void> _loadExistingQR() async {
     try {
-      final existingQR = await _qrService.getQRValidationByDocumentId(
-        widget.document.id,
-      );
+      final existingQR = await _qrService
+          .getQRValidationByDocumentId(widget.document.id)
+          .timeout(const Duration(seconds: 5));
       if (mounted) {
         setState(() {
           _qrValidationData = existingQR;
@@ -74,7 +78,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
         setState(() => _isGenerating = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.qrCodeGenerationError(e) ?? 'QR code generation error: $e'),
+            content: Text(AppLocalizations.of(context)?.qrCodeGenerationError(e.toString()) ?? 'QR code generation error: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -102,7 +106,7 @@ class _QRCodeWidgetState extends ConsumerState<QRCodeWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.errorGeneric(e) ?? 'Error: $e'),
+            content: Text(AppLocalizations.of(context)?.errorGeneric(e.toString()) ?? 'Error: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -356,7 +360,7 @@ class QRValidationStatusWidget extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return Text(AppLocalizations.of(context)?.errorGeneric(snapshot.error ?? '') ?? 'Error: ${snapshot.error}');
+          return Text(AppLocalizations.of(context)?.errorGeneric(snapshot.error?.toString() ?? '') ?? 'Error: ${snapshot.error}');
         }
 
         final validations = snapshot.data ?? [];

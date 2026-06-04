@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'dart:io' as io;
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 
 import '../config/api_config.dart';
 
@@ -11,11 +14,22 @@ class ApiClient {
   ApiClient({
     http.Client? client,
     Future<String?> Function()? accessTokenProvider,
-  }) : _client = client ?? http.Client(),
+  }) : _client = client ?? _createDefaultClient(),
        _accessTokenProvider = accessTokenProvider;
 
   final http.Client _client;
   final Future<String?> Function()? _accessTokenProvider;
+
+  static http.Client _createDefaultClient() {
+    // In debug builds accept self-signed TLS certs for localhost testing.
+    if (kDebugMode && !kIsWeb) {
+      final ioClient = io.HttpClient()
+        ..badCertificateCallback = (cert, host, port) => host == 'localhost';
+      return IOClient(ioClient);
+    }
+
+    return http.Client();
+  }
 
   /// Returns the current access token if available.
   Future<String?> getAccessToken() async => _accessTokenProvider?.call();

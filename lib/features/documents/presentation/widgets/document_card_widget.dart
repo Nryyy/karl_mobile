@@ -8,7 +8,7 @@ import '../../data/documents_repository.dart';
 import '../../providers/document_actions_provider.dart';
 
 class SimpleDocumentCard extends ConsumerStatefulWidget {
-  const SimpleDocumentCard({
+  const SimpleDocumentCard({super.key, 
     required this.document,
     this.onChanged,
     this.allowPermanentDelete = false,

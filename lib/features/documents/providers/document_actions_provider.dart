@@ -198,21 +198,17 @@ class DocumentSigningNotifier extends AsyncNotifier<void> {
     required String userName,
     required String userEmail,
   }) async {
-    state = const AsyncValue.loading();
-
     try {
       await _repository.signDocument(
         documentId: documentId,
         userName: userName,
         userEmail: userEmail,
       );
-      state = const AsyncValue.data(null);
       developer.log(
         'Document signed successfully: $documentId',
         name: 'karl.documents',
       );
     } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
       developer.log(
         'Failed to sign document: $e',
         name: 'karl.documents',
@@ -229,8 +225,6 @@ class DocumentSigningNotifier extends AsyncNotifier<void> {
     required String userEmail,
     String? comment,
   }) async {
-    state = const AsyncValue.loading();
-
     try {
       await _repository.rejectDocument(
         documentId: documentId,
@@ -238,13 +232,11 @@ class DocumentSigningNotifier extends AsyncNotifier<void> {
         userEmail: userEmail,
         comment: comment,
       );
-      state = const AsyncValue.data(null);
       developer.log(
         'Document rejected successfully: $documentId',
         name: 'karl.documents',
       );
     } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
       developer.log(
         'Failed to reject document: $e',
         name: 'karl.documents',

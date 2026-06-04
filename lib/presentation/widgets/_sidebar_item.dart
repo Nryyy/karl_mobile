@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 class SidebarItem extends StatelessWidget {
   const SidebarItem({
-    Key? key,
+    super.key,
     required this.label,
     required this.icon,
     required this.onTap,
     this.selected = false,
     this.tooltip,
     this.showLabel = true,
-  }) : super(key: key);
+  });
 
   final String label;
   final IconData icon;

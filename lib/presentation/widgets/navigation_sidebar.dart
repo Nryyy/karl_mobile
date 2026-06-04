@@ -9,11 +9,11 @@ typedef NavigateCallback = void Function(String route);
 
 class NavigationSidebar extends ConsumerStatefulWidget {
   const NavigationSidebar({
-    Key? key,
+    super.key,
     required this.currentRoute,
     required this.isAdmin,
     required this.onNavigate,
-  }) : super(key: key);
+  });
 
   final String currentRoute;
   final bool isAdmin;
@@ -67,10 +67,11 @@ class _NavigationSidebarState extends ConsumerState<NavigationSidebar> {
                     icon: const Icon(Icons.language),
                     onSelected: (value) async {
                       Locale? locale;
-                      if (value == 'system')
+                      if (value == 'system') {
                         locale = null;
-                      else
+                      } else {
                         locale = Locale(value);
+                      }
                       await ref.read(localeProvider.notifier).setLocale(locale);
                     },
                     itemBuilder: (ctx) => [
@@ -226,10 +227,11 @@ class _NavigationSidebarState extends ConsumerState<NavigationSidebar> {
                           icon: const Icon(Icons.language),
                           onSelected: (value) async {
                             Locale? locale;
-                            if (value == 'system')
+                            if (value == 'system') {
                               locale = null;
-                            else
+                            } else {
                               locale = Locale(value);
+                            }
                             await ref
                                 .read(localeProvider.notifier)
                                 .setLocale(locale);
@@ -287,7 +289,7 @@ class _NavigationSidebarState extends ConsumerState<NavigationSidebar> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       width: _collapsed ? _collapsedWidth : _expandedWidth,
-      color: Theme.of(context).colorScheme.surfaceVariant,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: content,
     );
   }

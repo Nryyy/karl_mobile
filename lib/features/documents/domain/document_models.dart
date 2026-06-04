@@ -524,6 +524,154 @@ class UploadDocumentFileResponse {
   }
 }
 
+/// Represents a document template returned by the API.
+@immutable
+class DocumentTemplate {
+  /// Creates a document template.
+  const DocumentTemplate({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.fileType,
+    required this.originalFileName,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.createdByName,
+    required this.category,
+    required this.organizationId,
+    required this.webViewLink,
+    required this.webContentLink,
+  });
+
+  /// Template identifier.
+  final String id;
+
+  /// Template name.
+  final String name;
+
+  /// Template description.
+  final String description;
+
+  /// File type (e.g. "docx", "pdf").
+  final String fileType;
+
+  /// Original file name.
+  final String originalFileName;
+
+  /// Whether the template is active.
+  final bool isActive;
+
+  /// Creation timestamp.
+  final DateTime? createdAt;
+
+  /// Last update timestamp.
+  final DateTime? updatedAt;
+
+  /// Creator display name.
+  final String createdByName;
+
+  /// Category.
+  final String category;
+
+  /// Organization identifier.
+  final String organizationId;
+
+  /// Google Drive web view link.
+  final String webViewLink;
+
+  /// Google Drive download link.
+  final String webContentLink;
+
+  /// Creates a template from JSON.
+  factory DocumentTemplate.fromJson(Map<String, dynamic> json) {
+    return DocumentTemplate(
+      id: _readString(json['id']),
+      name: _readString(json['name']),
+      description: _readString(json['description']),
+      fileType: _readString(json['fileType']),
+      originalFileName: _readString(json['originalFileName']),
+      isActive: _readBool(json['isActive']),
+      createdAt: _readDateTime(json['createdAt']),
+      updatedAt: _readDateTime(json['updatedAt']),
+      createdByName: _readString(json['createdByName']),
+      category: _readString(json['category']),
+      organizationId: _readString(json['organizationId']),
+      webViewLink: _readString(json['webViewLink']),
+      webContentLink: _readString(json['webContentLink']),
+    );
+  }
+}
+
+/// Notification from the backend.
+@immutable
+class AppNotification {
+  /// Creates a notification.
+  const AppNotification({
+    required this.id,
+    required this.userId,
+    required this.message,
+    required this.type,
+    required this.statusName,
+    required this.relatedDocumentId,
+    required this.relatedDocumentTitle,
+    required this.priority,
+    required this.createdAt,
+    required this.readAt,
+  });
+
+  /// Notification identifier.
+  final String id;
+
+  /// Owner user identifier.
+  final String userId;
+
+  /// Notification message.
+  final String message;
+
+  /// Notification type.
+  final String type;
+
+  /// Status name (e.g. "unread", "read").
+  final String statusName;
+
+  /// Related document identifier.
+  final String relatedDocumentId;
+
+  /// Related document title.
+  final String relatedDocumentTitle;
+
+  /// Priority (e.g. "high", "normal").
+  final String priority;
+
+  /// Creation timestamp.
+  final DateTime? createdAt;
+
+  /// Read timestamp (null if unread).
+  final DateTime? readAt;
+
+  /// Whether this notification has been read.
+  bool get isRead => readAt != null;
+
+  /// Creates a notification from JSON.
+  factory AppNotification.fromJson(Map<String, dynamic> json) {
+    final statusMap = _readMap(json['status']);
+    final relatedDoc = _readMap(json['relatedDocument']);
+    return AppNotification(
+      id: _readString(json['id']),
+      userId: _readString(json['userId']),
+      message: _readString(json['message']),
+      type: _readString(json['type']),
+      statusName: _readString(statusMap['name']),
+      relatedDocumentId: _readString(relatedDoc['documentId']),
+      relatedDocumentTitle: _readString(relatedDoc['documentTitle']),
+      priority: _readString(json['priority']),
+      createdAt: _readDateTime(json['createdAt']),
+      readAt: _readDateTime(json['readAt']),
+    );
+  }
+}
+
 Map<String, dynamic> _readMap(dynamic value) {
   if (value is Map<String, dynamic>) {
     return value;

@@ -18,7 +18,7 @@ class ImageDisplayWidget extends StatelessWidget {
   final Widget? placeholder;
 
   const ImageDisplayWidget({
-    Key? key,
+    super.key,
     this.imageFile,
     this.imageBytes,
     this.imageUrl,
@@ -30,7 +30,7 @@ class ImageDisplayWidget extends StatelessWidget {
     this.showDeleteButton = false,
     this.borderRadius,
     this.placeholder,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +196,7 @@ class ImageGridWidget extends StatelessWidget {
   final bool showDeleteButton;
 
   const ImageGridWidget({
-    Key? key,
+    super.key,
     required this.images,
     this.crossAxisCount = 3,
     this.crossAxisSpacing = 4.0,
@@ -205,7 +205,7 @@ class ImageGridWidget extends StatelessWidget {
     this.onTap,
     this.onDelete,
     this.showDeleteButton = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
